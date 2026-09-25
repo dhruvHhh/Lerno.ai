@@ -14,7 +14,7 @@ This is a from-scratch, production-ready rebuild of the hackathon prototype
 - Create a lesson from a topic + audience; live progress while it generates
 - Lesson view: scene tabs, video, narration text, quiz, AI tutor chat, notes
 - "My lessons" history
-- Hosted for free (Cloudflare Pages, Modal, Supabase)
+- Hosted for free (Cloudflare Workers, Modal, Supabase)
 
 **Not in v1** (deferred): narration audio / TTS, translation, phone tutor (Vapi/Twilio), pricing,
 deleting lessons, shareable lessons, saved chat history, saved quiz scores, error tracking (Sentry).
@@ -25,12 +25,13 @@ deleting lessons, shareable lessons, saved chat history, saved quiz scores, erro
 - Code: clean, simple, modular, DRY. Comments only where absolutely necessary, short and plain.
 - API is strictly CRUD / resource-oriented.
 - No test files.
-- Frontend is built one page at a time; each page waits for the user's review before the next.
+- Frontend is built one page at a time; backend one file at a time. Each page/file waits for the
+  user's review and approval before the next starts.
 
 ## 3. Architecture
 
 ```
-Browser (React + Aceternity, Cloudflare Pages)
+Browser (React + Aceternity, Cloudflare Workers)
   │ login ─────────────────► Supabase Auth (JWT)
   │ API calls + JWT ───────► FastAPI on Modal (single web endpoint)
   │                            ├ verifies JWT, enforces limits
@@ -55,11 +56,11 @@ generate_lesson (Modal function, 15 min timeout)
 | Layer | Choice |
 |---|---|
 | Frontend | Vite, React, TypeScript, Tailwind 4, Aceternity UI (free components via shadcn CLI), React Router, axios, `@supabase/supabase-js` |
-| Backend | Python, FastAPI, `anthropic` SDK, `supabase` Python client, Pydantic, `uv` |
+| Backend | Python, FastAPI, `anthropic` SDK, `supabase` Python client, PyJWT, Pydantic, `uv` |
 | Compute | Modal: `@modal.asgi_app` for the API, a Modal function for generation, Modal Sandboxes for rendering |
 | Data | Supabase Postgres, Auth, Storage (free plan) |
-| LLMs | Claude Sonnet 5 (`claude-sonnet-5`) for lesson plan + Manim code; Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) for the tutor |
-| Hosting | Cloudflare Pages (frontend), Modal (backend), Supabase |
+| LLMs | Claude Sonnet 5 (`claude-sonnet-5`) for lesson plan + Manim code; Claude Haiku 4.5 (`claude-haiku-4-5`) for the tutor |
+| Hosting | Cloudflare Workers static assets (frontend), Modal (backend), Supabase |
 
 No LangChain, no Wikipedia lookup, no TanStack Query.
 
@@ -73,7 +74,7 @@ backend/
   app/
     main.py             FastAPI app, CORS, routers
     config.py           settings from env
-    auth.py             Supabase JWT → user id (FastAPI dependency)
+    auth.py             verifies Supabase JWT via the project's JWKS (PyJWT) → user id
     db.py               Supabase client
     schemas.py          Pydantic request/response models
     routes/  lessons.py, notes.py, messages.py, usage.py
@@ -136,6 +137,8 @@ Another user's lesson/note → `404`.
 - The Manim prompt keeps the prototype's proven rules (simple sequential animations, no loops,
   no overlapping text, safe coordinates, font sizes).
 - Anthropic SDK auto-retries transient errors (2 retries); then the lesson fails.
+- Claude calls use `client.messages.parse(output_format=<Pydantic model>)` for structured output.
+  Sonnet 5 rejects `temperature`/`top_p` and assistant prefill, so neither is used.
 
 ### 5.6 Sandbox renderer
 - Image: Debian + Manim CE + LaTeX (minimal TeX packages) + ffmpeg, defined once in `modal_app.py`.
@@ -179,13 +182,13 @@ Style: dark theme, sparkles, purple/blue gradients — the prototype's look, mor
 
 | Piece | Host | Deploy |
 |---|---|---|
-| Frontend | Cloudflare Pages | auto on push to `main`; `_redirects` SPA fallback |
+| Frontend | Cloudflare Workers (static assets) | Workers Builds: auto on push to `main`; `wrangler.jsonc` with SPA fallback (`not_found_handling: single-page-application`) |
 | Backend | Modal | GitHub Action `modal deploy` on changes to `backend/` |
 | DB/Auth/Storage | Supabase | `supabase/schema.sql` run once in SQL editor |
 
 **Secrets**
 - Modal secret `lerno-secrets`: `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `FRONTEND_URL`
-- Cloudflare Pages: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`
+- Cloudflare build variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`
 - GitHub Actions: `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`
 - Local `.env` files are gitignored.
 
@@ -205,5 +208,5 @@ Style: dark theme, sparkles, purple/blue gradients — the prototype's look, mor
 2. Backend: config/db/auth → lessons/usage/notes/messages routes → pipeline + renderer → Modal app;
    verify with real calls via `modal serve`
 3. Frontend, one page at a time with review: Home → Auth → New lesson → Lesson → My lessons
-4. Deploy: Supabase config (Google OAuth, redirect URLs) → Modal deploy + Action → Cloudflare Pages
+4. Deploy: Supabase config (Google OAuth, redirect URLs) → Modal deploy + Action → Cloudflare Workers
    → keep-alive cron
