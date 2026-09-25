@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 Audience = Literal["school", "high_school", "college"]
+Role = Literal["user", "assistant"]
 
 
 class LessonCreate(BaseModel):
@@ -21,7 +22,7 @@ class NoteUpdate(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    role: Literal["user", "assistant"]
+    role: Role
     content: str = Field(min_length=1, max_length=500)
 
 
