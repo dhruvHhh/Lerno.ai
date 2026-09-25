@@ -75,9 +75,9 @@ backend/
     main.py             FastAPI app, CORS, routers
     config.py           settings from env
     auth.py             verifies Supabase JWT via the project's JWKS (PyJWT) → user id
-    db.py               Supabase client
+    db.py               Supabase client + owned_lesson() lookup
     schemas.py          Pydantic request/response models
-    routes/  lessons.py, notes.py, messages.py, usage.py
+    routes/  lessons.py (incl. /usage), notes.py, messages.py
     services/
       prompts.py        all prompt texts
       llm.py            Claude calls, structured output parsing
@@ -98,7 +98,7 @@ backend/
 | GET | `/lessons/{id}/notes` | Notes for that lesson |
 | PATCH | `/lessons/{id}/notes/{note_id}` | Partial update `{title?, content?}` |
 | DELETE | `/lessons/{id}/notes/{note_id}` | `204` |
-| POST | `/lessons/{id}/messages` | Body `{messages: [{role, content}]}` → `{reply}`; nothing stored |
+| POST | `/lessons/{id}/messages` | Body `{messages: [{role, content}]}` → `201 {role: "assistant", content}`; nothing stored |
 
 Validation: `topic` 3–200 chars; `audience` ∈ `school | high_school | college`;
 note title ≤ 120 chars, content ≤ 5,000; chat: at most 10 messages, each ≤ 500 chars.
@@ -128,7 +128,7 @@ Another user's lesson/note → `404`.
 |---|---|---|---|
 | 0 | queued | Queued | — |
 | 1 | generating | Planning your lesson | 1 Sonnet call, structured output: 3 scenes × {title, narration (≤30 words), animation description, MCQ (4 choices, random correct index), free-response Q + A} |
-| 2 | generating | Writing animations | 3 parallel Sonnet calls → Manim CE code, class `Scene{n}` |
+| 2 | generating | Writing animations | 3 parallel Sonnet calls → Manim CE code, class `LessonScene` |
 | 3 | generating | Rendering videos | 3 parallel sandboxes; fix-and-retry ×2 per scene; upload MP4 |
 | — | ready / failed | — | `ready` if ≥1 video rendered, else `failed` |
 
@@ -141,9 +141,9 @@ Another user's lesson/note → `404`.
   Sonnet 5 rejects `temperature`/`top_p` and assistant prefill, so neither is used.
 
 ### 5.6 Sandbox renderer
-- Image: Debian + Manim CE + LaTeX (minimal TeX packages) + ffmpeg, defined once in `modal_app.py`.
+- Image: official `manimcommunity/manim:v0.19.0` (Manim + LaTeX + ffmpeg), defined in `renderer.py`.
 - Per scene: create sandbox (`block_network=True`, 2 min timeout) → write code → run
-  `manim -ql --media_dir ... scene.py Scene{n}` → read MP4 bytes → terminate.
+  `manim -ql --media_dir /tmp/media /tmp/scene.py LessonScene` → read MP4 bytes → terminate.
 - No secrets or Modal credentials inside the sandbox.
 
 ### 5.7 AI tutor
