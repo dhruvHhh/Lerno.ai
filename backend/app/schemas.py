@@ -6,31 +6,31 @@ Audience = Literal["school", "high_school", "college"]
 Role = Literal["user", "assistant"]
 
 
-class Request(BaseModel):
+class RequestBody(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
-class LessonCreate(Request):
+class LessonCreate(RequestBody):
     topic: str = Field(min_length=3, max_length=200)
     audience: Audience
 
 
-class NoteCreate(Request):
+class NoteCreate(RequestBody):
     title: str = Field(min_length=1, max_length=120)
     content: str = Field(max_length=5000)
 
 
-class NoteUpdate(Request):
+class NoteUpdate(RequestBody):
     title: str | None = Field(default=None, min_length=1, max_length=120)
     content: str | None = Field(default=None, max_length=5000)
 
 
-class ChatMessage(Request):
+class ChatMessage(RequestBody):
     role: Role
     content: str = Field(min_length=1, max_length=500)
 
 
-class MessageCreate(Request):
+class MessageCreate(RequestBody):
     messages: list[ChatMessage] = Field(min_length=1, max_length=10)
 
     @field_validator("messages")
