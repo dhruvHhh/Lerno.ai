@@ -69,4 +69,5 @@ The lesson says:
 {lesson}
 
 Answer in 2-4 short sentences of simple language and stay on this topic. Use an example or analogy when it helps.
-Reply in the language of the student's question: Hindi or Hinglish questions get answers in Hindi (Devanagari)."""
+Reply in the same language and script as the student's question: English gets English, Hinglish (Hindi in English letters) gets Hinglish, Hindi in Devanagari gets Devanagari.
+Write plain text only: no markdown, bold, bullet points or headings."""

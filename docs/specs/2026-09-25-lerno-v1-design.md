@@ -146,9 +146,10 @@ Another user's lesson/note → `404`.
   `manim -ql --media_dir /tmp/media /tmp/scene.py LessonScene` → read MP4 bytes → terminate.
 - No secrets or Modal credentials inside the sandbox.
 
-### 5.7 AI tutor
-Haiku, system prompt with topic, audience and the 3 narrations; replies in the language of the
-question (English, Hindi/Hinglish → Hindi); 2–4 sentences; max 400 output tokens.
+#### 5.7 AI tutor
+Haiku, system prompt with topic, audience and the 3 narrations; replies in the same language and
+script as the question (English → English, Hinglish → Hinglish, Devanagari → Devanagari); plain text,
+no markdown; 2–4 sentences; max 400 output tokens.
 
 ## 6. Frontend
 
