@@ -1,4 +1,5 @@
 import modal
+from modal.exception import SandboxFilesystemNotFoundError
 
 MANIM_IMAGE = modal.Image.from_registry("manimcommunity/manim:v0.19.0")
 SCENE_FILE = "/tmp/scene.py"
@@ -18,6 +19,9 @@ def render(code: str) -> tuple[bytes | None, str]:
         if process.returncode != 0:
             error = process.stderr.read()[-3000:].strip()
             return None, error or "Rendering took longer than 120 seconds. Make the animation shorter and simpler."
-        return sandbox.filesystem.read_bytes(VIDEO_FILE), ""
+        try:
+            return sandbox.filesystem.read_bytes(VIDEO_FILE), ""
+        except SandboxFilesystemNotFoundError:
+            return None, "Manim produced no video. The scene needs at least one self.play() animation."
     finally:
         sandbox.terminate()

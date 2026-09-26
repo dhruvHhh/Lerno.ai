@@ -1,32 +1,36 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Audience = Literal["school", "high_school", "college"]
 Role = Literal["user", "assistant"]
 
 
-class LessonCreate(BaseModel):
+class Request(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+
+class LessonCreate(Request):
     topic: str = Field(min_length=3, max_length=200)
     audience: Audience
 
 
-class NoteCreate(BaseModel):
-    title: str = Field(max_length=120)
+class NoteCreate(Request):
+    title: str = Field(min_length=1, max_length=120)
     content: str = Field(max_length=5000)
 
 
-class NoteUpdate(BaseModel):
-    title: str | None = Field(default=None, max_length=120)
+class NoteUpdate(Request):
+    title: str | None = Field(default=None, min_length=1, max_length=120)
     content: str | None = Field(default=None, max_length=5000)
 
 
-class ChatMessage(BaseModel):
+class ChatMessage(Request):
     role: Role
     content: str = Field(min_length=1, max_length=500)
 
 
-class MessageCreate(BaseModel):
+class MessageCreate(Request):
     messages: list[ChatMessage] = Field(min_length=1, max_length=10)
 
     @field_validator("messages")

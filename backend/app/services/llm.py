@@ -10,7 +10,7 @@ TUTOR = "claude-haiku-4-5"
 client = Anthropic()
 
 
-def _ask(prompt: str, schema: type[BaseModel]):
+def _ask[T: BaseModel](prompt: str, schema: type[T]) -> T:
     response = client.messages.parse(
         model=PLANNER,
         max_tokens=16000,
