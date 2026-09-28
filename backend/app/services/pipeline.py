@@ -1,8 +1,9 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from functools import partial
 
-from app.config import VIDEO_BUCKET
+from app.config import STALE_AFTER_MINUTES, VIDEO_BUCKET
 from app.db import db
 from app.schemas import ScenePlan
 from app.services import llm, renderer
@@ -63,3 +64,14 @@ def run(lesson_id: str) -> None:
     except Exception:
         log.exception("Lesson %s failed", lesson_id)
         _update(lesson_id, status="failed", error="Something went wrong while creating this lesson. Please try again.")
+
+
+def expire_stale_lessons() -> None:
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
+    (
+        db.table("lessons")
+        .update({"status": "failed", "error": "This lesson took too long. Please try again."})
+        .in_("status", ["queued", "generating"])
+        .lt("created_at", cutoff.isoformat())
+        .execute()
+    )

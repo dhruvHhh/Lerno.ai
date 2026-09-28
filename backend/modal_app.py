@@ -10,3 +10,10 @@ def generate_lesson(lesson_id: str) -> None:
     from app.services import pipeline
 
     pipeline.run(lesson_id)
+
+
+@app.function(image=image, secrets=secrets, schedule=modal.Period(minutes=5))
+def expire_stale_lessons() -> None:
+    from app.services import pipeline
+
+    pipeline.expire_stale_lessons()
