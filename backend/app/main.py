@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import FRONTEND_URL, IS_LOCAL
+from app.config import FRONTEND_URL, IS_PRODUCTION
 from app.db import db
 from app.routes import lessons, messages, notes, usage
 
-app = FastAPI(title="Lerno API", openapi_url="/openapi.json" if IS_LOCAL else None, redoc_url=None)
+app = FastAPI(title="Lerno API", openapi_url=None if IS_PRODUCTION else "/openapi.json", redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_URL, "http://localhost:5173"],
