@@ -12,7 +12,9 @@ def current_user(creds: HTTPAuthorizationCredentials = Depends(bearer)) -> str:
     token = creds.credentials
     try:
         key = jwks.get_signing_key_from_jwt(token).key
-        claims = jwt.decode(token, key, algorithms=["ES256", "RS256"], audience="authenticated")
+        claims = jwt.decode(
+            token, key, algorithms=["ES256", "RS256"], audience="authenticated", options={"require": ["exp", "sub"]}
+        )
     except jwt.PyJWTError:
         raise HTTPException(401, "Invalid or expired token")
     return claims["sub"]
