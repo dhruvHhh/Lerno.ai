@@ -35,6 +35,6 @@ def fix_manim(code: str, error: str) -> str:
 
 
 def tutor_reply(system: str, messages: list[dict]) -> str:
-    response = client.messages.create(model=TUTOR, max_tokens=400, system=system, messages=messages)
+    response = client.with_options(timeout=30).messages.create(model=TUTOR, max_tokens=400, system=system, messages=messages)
     text = "".join(block.text for block in response.content if block.type == "text")
     return text or "Sorry, I can't help with that. Try asking about the lesson."

@@ -9,6 +9,7 @@ create table lessons (
   created_at timestamptz not null default now()
 );
 create index lessons_user_created on lessons (user_id, created_at desc);
+create index lessons_created on lessons (created_at);
 
 create table scenes (
   id uuid primary key default gen_random_uuid(),
@@ -35,6 +36,7 @@ create table notes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+create index notes_lesson_created on notes (lesson_id, created_at);
 
 -- Only the backend (service key) may touch these tables.
 alter table lessons enable row level security;

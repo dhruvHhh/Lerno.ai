@@ -8,7 +8,7 @@ from app.routes import lessons, messages, notes, usage
 app = FastAPI(title="Lerno API", openapi_url=None if IS_PRODUCTION else "/openapi.json", redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:5173"],
+    allow_origins=[FRONTEND_URL],
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
