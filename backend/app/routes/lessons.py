@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.auth import current_user
 from app.config import DAILY_LESSON_LIMIT, GLOBAL_DAILY_LESSON_LIMIT, VIDEO_BUCKET, VIDEO_URL_TTL_SECONDS
-from app.db import db, lessons_today, owned_lesson
+from app.db import db, lessons_last_24h, owned_lesson
 from app.schemas import LessonCreate
 
 router = APIRouter(prefix="/lessons")
@@ -17,10 +17,10 @@ SCENE_FIELDS = (
 
 
 def _limit_error(user_id: str) -> str | None:
-    if lessons_today(user_id) > DAILY_LESSON_LIMIT:
-        return "You've used all your lessons for today. Come back tomorrow!"
-    if lessons_today() > GLOBAL_DAILY_LESSON_LIMIT:
-        return "Lerno is at capacity for today. Please try again tomorrow."
+    if lessons_last_24h(user_id) > DAILY_LESSON_LIMIT:
+        return f"You can create {DAILY_LESSON_LIMIT} lessons every 24 hours. Please try again later."
+    if lessons_last_24h() > GLOBAL_DAILY_LESSON_LIMIT:
+        return "Lerno is at capacity right now. Please try again later."
     return None
 
 

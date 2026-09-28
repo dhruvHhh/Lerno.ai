@@ -25,7 +25,7 @@ def _found(rows: list[dict]) -> dict:
 
 @router.post("", status_code=201)
 def create_note(body: NoteCreate, lesson_id: str = Depends(owned_lesson_id), user_id: str = Depends(current_user)):
-    if db.table("notes").select("id", count="exact").eq("lesson_id", lesson_id).execute().count >= NOTES_PER_LESSON_LIMIT:
+    if db.table("notes").select("id", count="exact", head=True).eq("lesson_id", lesson_id).execute().count >= NOTES_PER_LESSON_LIMIT:
         raise HTTPException(429, f"A lesson can have at most {NOTES_PER_LESSON_LIMIT} notes.")
     row = {"lesson_id": lesson_id, "user_id": user_id, **body.model_dump()}
     return _found(db.table("notes").insert(row).select(*NOTE_FIELDS).execute().data)

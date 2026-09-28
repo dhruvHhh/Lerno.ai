@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import httpx
@@ -19,9 +19,9 @@ def owned_lesson(lesson_id: UUID, user_id: str, fields: tuple[str, ...] = ("*",)
     return rows[0]
 
 
-def lessons_today(user_id: str | None = None) -> int:
-    midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    query = db.table("lessons").select("id", count="exact").neq("status", "failed").gte("created_at", midnight.isoformat())
+def lessons_last_24h(user_id: str | None = None) -> int:
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    query = db.table("lessons").select("id", count="exact", head=True).gte("created_at", since.isoformat())
     if user_id:
         query = query.eq("user_id", user_id)
     return query.execute().count
