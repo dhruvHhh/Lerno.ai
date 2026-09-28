@@ -24,10 +24,11 @@ def _limit_error(user_id: str) -> str | None:
     return None
 
 
-def _video_url(path: str | None) -> str | None:
-    if not path:
-        return None
-    return db.storage.from_(VIDEO_BUCKET).create_signed_url(path, VIDEO_URL_TTL_SECONDS)["signedURL"]
+def _video_urls(paths: list[str]) -> dict[str, str | None]:
+    if not paths:
+        return {}
+    signed = db.storage.from_(VIDEO_BUCKET).create_signed_urls(paths, VIDEO_URL_TTL_SECONDS)
+    return {item["path"]: item["signedURL"] for item in signed}
 
 
 @router.post("", status_code=201)
@@ -53,6 +54,7 @@ def list_lessons(user_id: str = Depends(current_user)):
 def read_lesson(lesson_id: UUID, user_id: str = Depends(current_user)):
     lesson = owned_lesson(lesson_id, user_id, LESSON_FIELDS)
     scenes = db.table("scenes").select(*SCENE_FIELDS).eq("lesson_id", lesson["id"]).order("position").execute().data
+    urls = _video_urls([scene["video_path"] for scene in scenes if scene["video_path"]])
     for scene in scenes:
-        scene["video_url"] = _video_url(scene.pop("video_path"))
+        scene["video_url"] = urls.get(scene.pop("video_path"))
     return lesson | {"scenes": scenes}
