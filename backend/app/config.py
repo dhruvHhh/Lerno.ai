@@ -3,6 +3,7 @@ import os
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 FRONTEND_URL = os.environ["FRONTEND_URL"].rstrip("/")
+IS_LOCAL = FRONTEND_URL.startswith("http://localhost")
 
 DAILY_LESSON_LIMIT = 3
 GLOBAL_DAILY_LESSON_LIMIT = 50
