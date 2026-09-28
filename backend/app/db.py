@@ -19,9 +19,12 @@ def owned_lesson(lesson_id: UUID, user_id: str, fields: tuple[str, ...] = ("*",)
     return rows[0]
 
 
-def lessons_last_24h(user_id: str | None = None) -> int:
-    window_start = datetime.now(timezone.utc) - timedelta(hours=24)
-    query = db.table("lessons").select("id", count="exact", head=True).gte("created_at", window_start.isoformat())
+def window_start() -> str:
+    return (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+
+
+def count_last_24h(table: str, user_id: str | None = None) -> int:
+    query = db.table(table).select("id", count="exact", head=True).gte("created_at", window_start())
     if user_id:
         query = query.eq("user_id", user_id)
     return query.execute().count

@@ -38,10 +38,18 @@ create table notes (
 );
 create index notes_lesson_created on notes (lesson_id, created_at);
 
+create table tutor_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index tutor_messages_user_created on tutor_messages (user_id, created_at);
+
 -- Only the backend (service key) may touch these tables.
 alter table lessons enable row level security;
 alter table scenes enable row level security;
 alter table notes enable row level security;
-grant select, insert, update, delete on lessons, scenes, notes to service_role;
+alter table tutor_messages enable row level security;
+grant select, insert, update, delete on lessons, scenes, notes, tutor_messages to service_role;
 
 insert into storage.buckets (id, name, public) values ('videos', 'videos', false);

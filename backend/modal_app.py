@@ -22,7 +22,7 @@ def api():
 
 
 @app.function(schedule=modal.Period(minutes=5))
-def expire_stale_lessons() -> None:
+def clean_up() -> None:
     from app.services import pipeline
 
-    pipeline.expire_stale_lessons()
+    pipeline.clean_up()

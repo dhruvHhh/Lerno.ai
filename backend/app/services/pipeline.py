@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partial
 
 from app.config import STALE_AFTER_MINUTES, VIDEO_BUCKET
-from app.db import db
+from app.db import db, window_start
 from app.schemas import ScenePlan
 from app.services import llm, renderer
 
@@ -74,3 +74,12 @@ def expire_stale_lessons() -> None:
         .lt("created_at", stale_before.isoformat())
         .execute()
     )
+
+
+def delete_old_tutor_logs() -> None:
+    db.table("tutor_messages").delete().lt("created_at", window_start()).execute()
+
+
+def clean_up() -> None:
+    expire_stale_lessons()
+    delete_old_tutor_logs()
