@@ -1,7 +1,6 @@
 from uuid import UUID
 
-import anthropic
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.auth import current_user
 from app.db import db, owned_lesson
@@ -16,8 +15,4 @@ def create_message(lesson_id: UUID, body: MessageCreate, user_id: str = Depends(
     lesson = owned_lesson(lesson_id, user_id, ("id", "topic", "audience"))
     scenes = db.table("scenes").select("narration").eq("lesson_id", lesson["id"]).order("position").execute().data
     system = prompts.tutor_prompt(lesson["topic"], lesson["audience"], [scene["narration"] for scene in scenes])
-    try:
-        reply = llm.tutor_reply(system, body.model_dump()["messages"])
-    except anthropic.APIError:
-        raise HTTPException(503, "The tutor is busy right now. Please try again in a moment.")
-    return {"role": "assistant", "content": reply}
+    return {"role": "assistant", "content": llm.tutor_reply(system, body.model_dump()["messages"])}
