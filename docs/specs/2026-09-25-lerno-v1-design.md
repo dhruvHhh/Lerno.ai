@@ -172,7 +172,7 @@ Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`.
 3. **New lesson** `/new` — Placeholders And Vanish Input for topic, audience pills
    (School / High school / College), "N of 3 lessons left today".
 4. **Lesson** `/lessons/:id` — Multi Step Loader while generating (labels from §5.5);
-   when ready: scene tabs 1–3, video, narration, quiz (MCQ instant feedback, free response shows
+   when ready: scene tabs 1–3, video, narration, quiz (MCQ instant feedback; if `mcq_correct_index` is outside the choices, show the quiz without marking an answer; free response shows
    model answer), tutor chat, notes drawer (Floating Dock). Failed scenes show content without video.
 5. **My lessons** `/lessons` — grid with status badges.
 
