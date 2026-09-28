@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import httpx
 from fastapi import HTTPException
 from supabase import Client, create_client
@@ -14,3 +16,11 @@ def owned_lesson(lesson_id: str, user_id: str, fields: tuple[str, ...] = ("*",))
     if not rows:
         raise HTTPException(404, "Lesson not found")
     return rows[0]
+
+
+def lessons_today(user_id: str | None = None) -> int:
+    midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    query = db.table("lessons").select("id", count="exact").neq("status", "failed").gte("created_at", midnight.isoformat())
+    if user_id:
+        query = query.eq("user_id", user_id)
+    return query.execute().count

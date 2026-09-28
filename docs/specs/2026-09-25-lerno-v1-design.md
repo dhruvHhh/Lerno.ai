@@ -77,7 +77,7 @@ backend/
     auth.py             verifies Supabase JWT via the project's JWKS (PyJWT) → user id
     db.py               Supabase client + owned_lesson() lookup
     schemas.py          Pydantic request/response models
-    routes/  lessons.py (incl. /usage), notes.py, messages.py
+    routes/  lessons.py, usage.py, notes.py, messages.py (one resource per file, each with a prefix)
     services/
       prompts.py        all prompt texts
       llm.py            Claude calls, structured output parsing

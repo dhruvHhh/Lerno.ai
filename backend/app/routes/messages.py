@@ -7,10 +7,10 @@ from app.db import db, owned_lesson
 from app.schemas import MessageCreate
 from app.services import llm, prompts
 
-router = APIRouter()
+router = APIRouter(prefix="/lessons/{lesson_id}/messages")
 
 
-@router.post("/lessons/{lesson_id}/messages", status_code=201)
+@router.post("", status_code=201)
 def create_message(lesson_id: UUID, body: MessageCreate, user_id: str = Depends(current_user)):
     lesson = owned_lesson(str(lesson_id), user_id, ("id", "topic", "audience"))
     scenes = db.table("scenes").select("narration").eq("lesson_id", lesson["id"]).order("position").execute().data

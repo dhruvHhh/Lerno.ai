@@ -1,14 +1,13 @@
-from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.auth import current_user
 from app.config import DAILY_LESSON_LIMIT, GLOBAL_DAILY_LESSON_LIMIT, VIDEO_BUCKET, VIDEO_URL_TTL_SECONDS
-from app.db import db, owned_lesson
+from app.db import db, lessons_today, owned_lesson
 from app.schemas import LessonCreate
 
-router = APIRouter()
+router = APIRouter(prefix="/lessons")
 
 LESSON_FIELDS = ("id", "topic", "audience", "status", "step", "error", "created_at")
 SCENE_FIELDS = (
@@ -17,18 +16,10 @@ SCENE_FIELDS = (
 )
 
 
-def _lessons_today(user_id: str | None = None) -> int:
-    midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    query = db.table("lessons").select("id", count="exact").neq("status", "failed").gte("created_at", midnight.isoformat())
-    if user_id:
-        query = query.eq("user_id", user_id)
-    return query.execute().count
-
-
 def _limit_error(user_id: str) -> str | None:
-    if _lessons_today(user_id) > DAILY_LESSON_LIMIT:
+    if lessons_today(user_id) > DAILY_LESSON_LIMIT:
         return "You've used all your lessons for today. Come back tomorrow!"
-    if _lessons_today() > GLOBAL_DAILY_LESSON_LIMIT:
+    if lessons_today() > GLOBAL_DAILY_LESSON_LIMIT:
         return "Lerno is at capacity for today. Please try again tomorrow."
     return None
 
@@ -39,12 +30,7 @@ def _video_url(path: str | None) -> str | None:
     return db.storage.from_(VIDEO_BUCKET).create_signed_url(path, VIDEO_URL_TTL_SECONDS)["signedURL"]
 
 
-@router.get("/usage")
-def read_usage(user_id: str = Depends(current_user)):
-    return {"used": _lessons_today(user_id), "limit": DAILY_LESSON_LIMIT}
-
-
-@router.post("/lessons", status_code=201)
+@router.post("", status_code=201)
 def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(current_user)):
     lesson = db.table("lessons").insert({"user_id": user_id, **body.model_dump()}).execute().data[0]
     # Counting after the insert stops parallel requests from slipping past the limits.
@@ -55,12 +41,12 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
     return {"id": lesson["id"]}
 
 
-@router.get("/lessons")
+@router.get("")
 def list_lessons(user_id: str = Depends(current_user)):
     return db.table("lessons").select(*LESSON_FIELDS).eq("user_id", user_id).order("created_at", desc=True).execute().data
 
 
-@router.get("/lessons/{lesson_id}")
+@router.get("/{lesson_id}")
 def read_lesson(lesson_id: UUID, user_id: str = Depends(current_user)):
     lesson = owned_lesson(str(lesson_id), user_id, LESSON_FIELDS)
     scenes = db.table("scenes").select(*SCENE_FIELDS).eq("lesson_id", lesson["id"]).order("position").execute().data
