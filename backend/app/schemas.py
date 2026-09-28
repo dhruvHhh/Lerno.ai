@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Audience = Literal["school", "high_school", "college"]
 Role = Literal["user", "assistant"]
@@ -27,7 +27,13 @@ class NoteUpdate(RequestBody):
 
 class ChatMessage(RequestBody):
     role: Role
-    content: str = Field(min_length=1, max_length=500)
+    content: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def short_questions(self) -> "ChatMessage":
+        if self.role == "user" and len(self.content) > 500:
+            raise ValueError("Questions can be at most 500 characters")
+        return self
 
 
 class MessageCreate(RequestBody):
