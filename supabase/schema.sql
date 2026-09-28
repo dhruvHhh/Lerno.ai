@@ -17,7 +17,7 @@ create table scenes (
   position int not null,
   title text not null,
   narration text not null,
-  manim_code text not null,
+  manim_code text,
   video_path text,
   mcq_question text not null,
   mcq_choices jsonb not null,

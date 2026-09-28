@@ -29,13 +29,15 @@ def _animate(lesson: dict, position: int, code: str) -> tuple[str | None, str]:
     return None, code
 
 
-def _scene_row(lesson: dict, position: int, scene: ScenePlan, code: str) -> dict:
+def _scene_row(lesson: dict, position: int, scene: ScenePlan) -> dict:
+    code = video_path = None
     # One scene crashing must not take down the other two.
     try:
+        code = llm.write_manim(scene)
+        _update(lesson["id"], step=3)
         video_path, code = _animate(lesson, position, code)
     except Exception:
         log.exception("Scene %s of lesson %s crashed", position, lesson["id"])
-        video_path = None
     return {
         "lesson_id": lesson["id"],
         "position": position,
@@ -50,12 +52,9 @@ def run(lesson_id: str) -> None:
     try:
         _update(lesson_id, status="generating", step=1)
         scenes = llm.plan_lesson(lesson["topic"], lesson["audience"]).scenes[:3]
+        _update(lesson_id, step=2)
         with ThreadPoolExecutor() as pool:
-            _update(lesson_id, step=2)
-            codes = list(pool.map(llm.write_manim, scenes))
-            _update(lesson_id, step=3)
-            positions = range(1, len(scenes) + 1)
-            rows = list(pool.map(partial(_scene_row, lesson), positions, scenes, codes))
+            rows = list(pool.map(partial(_scene_row, lesson), range(1, len(scenes) + 1), scenes))
         db.table("scenes").insert(rows).execute()
         if any(row["video_path"] for row in rows):
             _update(lesson_id, status="ready")
