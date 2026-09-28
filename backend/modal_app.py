@@ -12,6 +12,16 @@ def generate_lesson(lesson_id: str) -> None:
     pipeline.run(lesson_id)
 
 
+@app.function(image=image, secrets=secrets)
+@modal.concurrent(max_inputs=50)
+@modal.asgi_app()
+def api():
+    from app.main import app as web_app
+
+    web_app.state.start_generation = generate_lesson.spawn
+    return web_app
+
+
 @app.function(image=image, secrets=secrets, schedule=modal.Period(minutes=5))
 def expire_stale_lessons() -> None:
     from app.services import pipeline
