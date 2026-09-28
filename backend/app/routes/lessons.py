@@ -32,13 +32,16 @@ def _video_url(path: str | None) -> str | None:
 
 @router.post("", status_code=201)
 def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(current_user)):
-    lesson = db.table("lessons").insert({"user_id": user_id, **body.model_dump()}).execute().data[0]
+    lesson_id = db.table("lessons").insert({"user_id": user_id, **body.model_dump()}).execute().data[0]["id"]
     # Counting after the insert stops parallel requests from slipping past the limits.
-    if error := _limit_error(user_id):
-        db.table("lessons").delete().eq("id", lesson["id"]).execute()
-        raise HTTPException(429, error)
-    request.app.state.start_generation(lesson["id"])
-    return {"id": lesson["id"]}
+    try:
+        if error := _limit_error(user_id):
+            raise HTTPException(429, error)
+        request.app.state.start_generation(lesson_id)
+    except Exception:
+        db.table("lessons").delete().eq("id", lesson_id).execute()
+        raise
+    return {"id": lesson_id}
 
 
 @router.get("")
@@ -48,7 +51,7 @@ def list_lessons(user_id: str = Depends(current_user)):
 
 @router.get("/{lesson_id}")
 def read_lesson(lesson_id: UUID, user_id: str = Depends(current_user)):
-    lesson = owned_lesson(str(lesson_id), user_id, LESSON_FIELDS)
+    lesson = owned_lesson(lesson_id, user_id, LESSON_FIELDS)
     scenes = db.table("scenes").select(*SCENE_FIELDS).eq("lesson_id", lesson["id"]).order("position").execute().data
     for scene in scenes:
         scene["video_url"] = _video_url(scene.pop("video_path"))

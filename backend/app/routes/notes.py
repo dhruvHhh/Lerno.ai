@@ -14,7 +14,7 @@ NOTE_FIELDS = ("id", "title", "content", "created_at", "updated_at")
 
 
 def owned_lesson_id(lesson_id: UUID, user_id: str = Depends(current_user)) -> str:
-    return owned_lesson(str(lesson_id), user_id, ("id",))["id"]
+    return owned_lesson(lesson_id, user_id, ("id",))["id"]
 
 
 def _found(rows: list[dict]) -> dict:
