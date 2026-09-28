@@ -66,11 +66,11 @@ def run(lesson_id: str) -> None:
 
 
 def expire_stale_lessons() -> None:
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
+    stale_before = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
     (
         db.table("lessons")
         .update({"status": "failed", "error": "This lesson took too long. Please try again."})
         .in_("status", ["queued", "generating"])
-        .lt("created_at", cutoff.isoformat())
+        .lt("created_at", stale_before.isoformat())
         .execute()
     )

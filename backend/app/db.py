@@ -20,8 +20,8 @@ def owned_lesson(lesson_id: UUID, user_id: str, fields: tuple[str, ...] = ("*",)
 
 
 def lessons_last_24h(user_id: str | None = None) -> int:
-    one_day_ago = datetime.now(timezone.utc) - timedelta(hours=24)
-    query = db.table("lessons").select("id", count="exact", head=True).gte("created_at", one_day_ago.isoformat())
+    window_start = datetime.now(timezone.utc) - timedelta(hours=24)
+    query = db.table("lessons").select("id", count="exact", head=True).gte("created_at", window_start.isoformat())
     if user_id:
         query = query.eq("user_id", user_id)
     return query.execute().count
