@@ -3,7 +3,7 @@ import { DEMO_LESSON } from "@/lib/demo-lesson";
 
 export default function Demo() {
   return (
-    <section id="demo" className="relative mx-auto -mt-20 max-w-6xl px-4 md:-mt-28 2xl:max-w-7xl">
+    <section id="demo" className="relative mx-auto -mt-20 max-w-5xl px-4 md:-mt-28 2xl:max-w-6xl">
       <p className="text-center text-lg font-medium sm:text-xl">
         See a real lesson. <span className="text-muted-foreground">Made by Lerno in about a minute.</span>
       </p>
