@@ -40,6 +40,7 @@ export default function LessonPlayer({ lesson }: { lesson: Lesson }) {
       <LessonVideo
         ref={videoRef}
         lesson={lesson}
+        preload="metadata"
         onClick={toggle}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
