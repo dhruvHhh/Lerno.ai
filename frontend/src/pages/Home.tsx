@@ -1,9 +1,19 @@
-import Logo from "@/components/Logo";
+import Demo from "@/components/home/Demo";
+import Features from "@/components/home/Features";
+import Hero from "@/components/home/Hero";
+import HowItWorks from "@/components/home/HowItWorks";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
-    <main className="grid min-h-screen place-items-center">
-      <Logo className="text-3xl" />
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <Demo />
+        <Features />
+        <HowItWorks />
+      </main>
+    </>
   );
 }
