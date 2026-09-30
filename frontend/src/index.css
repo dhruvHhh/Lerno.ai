@@ -1,67 +1,37 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 @import "lenis/dist/lenis.css";
 
-@theme inline {
-  --font-sans: "Geist Variable", sans-serif;
-  --font-heading: var(--font-sans);
-
-  --color-background: var(--background);
-  --color-background-soft: var(--background-soft);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-foreground: var(--text-primary);
-  --color-secondary-foreground: var(--text-secondary);
-  --color-muted-foreground: var(--text-muted);
-  --color-border: var(--border);
-  --color-border-soft: var(--border-soft);
-  --color-border-active: var(--border-active);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-accent-deep: var(--accent-deep);
-  --color-accent-surface: color-mix(in oklab, var(--accent) 10%, var(--background));
-
-  --color-card: var(--surface);
-  --color-card-foreground: var(--text-primary);
-  --color-popover: var(--surface-elevated);
-  --color-popover-foreground: var(--text-primary);
-  --color-primary: var(--text-primary);
-  --color-primary-foreground: var(--background);
-  --color-secondary: var(--surface-elevated);
-  --color-muted: var(--surface);
-  --color-accent-foreground: var(--text-primary);
-  --color-destructive: #f87171;
-  --color-input: var(--border);
-  --color-ring: var(--accent);
-
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
+@custom-variant cta-hover (&:is(:where(.cta):is(:hover, :focus-visible) *));
 
 /* Lerno.ai palette (docs/design.md) — dark only. */
+@theme {
+  --font-sans: "Geist Variable", sans-serif;
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --color-background: #050609;
+  --color-surface: #0b0d14;
+  --color-foreground: #f5f5f7;
+  --color-secondary-foreground: #a7aab8;
+  --color-muted-foreground: #737789;
+  --color-border: #242733;
+  --color-accent: #9b7cff;
+  --color-accent-soft: #b7a4ff;
+  --color-accent-surface: color-mix(in oklab, var(--color-accent) 10%, var(--color-background));
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.05rem;
+  --radius-2xl: 1.35rem;
+}
+
 :root {
-  --background: #050609;
-  --background-soft: #080a10;
-  --surface: #0b0d14;
-  --surface-elevated: #10121a;
-  --border: #242733;
-  --border-soft: #1b1e29;
-  --border-active: #35394a;
-  --text-primary: #f5f5f7;
-  --text-secondary: #a7aab8;
-  --text-muted: #737789;
-  --accent: #9b7cff;
-  --accent-soft: #b7a4ff;
-  --accent-deep: #7657e8;
-  --radius: 0.75rem;
   color-scheme: dark;
+}
+
+@property --reveal-r {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
 }
 
 @property --glow-angle {
@@ -74,6 +44,10 @@
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
+}
+
+@utility bg-brand-gradient {
+  background-image: linear-gradient(to right, #a996ff, #efeaff 40%, #e2b6ff);
 }
 
 @utility page-width {
@@ -89,7 +63,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-accent/50;
   }
   html {
     @apply font-sans antialiased;

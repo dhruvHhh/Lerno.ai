@@ -2,9 +2,10 @@ import { ReactLenis } from "lenis/react";
 import { LazyMotion } from "motion/react";
 import { Route, Routes } from "react-router-dom";
 
+import { prefersReducedMotion } from "@/lib/utils";
 import Home from "@/pages/Home";
 
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduceMotion = prefersReducedMotion();
 
 const SMOOTH_SCROLL = {
   smoothWheel: !reduceMotion,

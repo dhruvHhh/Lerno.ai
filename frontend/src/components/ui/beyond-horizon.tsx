@@ -1,4 +1,6 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+
+import { afterPageLoad, prefersReducedMotion } from "@/lib/utils";
 
 const REF_ASPECT = 1314 / 2860;
 
@@ -9,6 +11,18 @@ const RENDER_SCALE = 0.5;
 const PIXEL_BUDGET = 2_200_000;
 
 const REVEAL_SECONDS = 2.5;
+
+const FPS = 15;
+
+const MID_COLOR = "#B79BFA";
+
+const DEEP_COLOR = "#3A2A78";
+
+const HAZE = 3;
+
+const FIT = 0.5;
+
+const HORIZON_RADIUS = 1.867;
 
 const VERT = `
 attribute vec2 aPos;
@@ -196,63 +210,27 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
-export interface BeyondHorizonProps {
-  background?: string;
-  coreColor?: string;
-  midColor?: string;
-  deepColor?: string;
-  brightness?: number;
-  coreSize?: number;
-  haze?: number;
-  speed?: number;
-  fit?: number;
-  horizonY?: number;
-  horizonRadius?: number;
-  fps?: number;
-  breathe?: number;
+interface BeyondHorizonProps {
+  background: string;
+  coreColor: string;
+  brightness: number;
+  coreSize: number;
+  speed: number;
+  horizonY: number;
+  breathe: number;
 }
 
-export function BeyondHorizon(props: BeyondHorizonProps) {
-  const {
-    background = "#08080A",
-    coreColor = "#FFFFFF",
-    midColor = "#B79BFA",
-    deepColor = "#3A2A78",
-    brightness = 2,
-    coreSize = 0.04,
-    haze = 3,
-    speed = 1,
-    fit = 50,
-    horizonY = 0.7055,
-    horizonRadius = 1.867,
-    fps = 15,
-    breathe = 0,
-  } = props;
-
+export function BeyondHorizon({
+  background,
+  coreColor,
+  brightness,
+  coreSize,
+  speed,
+  horizonY,
+  breathe,
+}: BeyondHorizonProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  const settings = {
-    colors: {
-      bg: hexToRgb(background),
-      core: hexToRgb(coreColor),
-      mid: hexToRgb(midColor),
-      deep: hexToRgb(deepColor),
-    },
-    brightness,
-    coreSize,
-    haze,
-    speed,
-    fit,
-    horizonY,
-    horizonRadius,
-    fps,
-    breathe,
-  };
-  const live = useRef(settings);
-  useLayoutEffect(() => {
-    live.current = settings;
-  });
 
   useEffect(() => {
     const host = hostRef.current;
@@ -303,7 +281,13 @@ export function BeyondHorizon(props: BeyondHorizonProps) {
       deep: U("uDeep"),
     };
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
+    const colors = {
+      bg: hexToRgb(background),
+      core: hexToRgb(coreColor),
+      mid: hexToRgb(MID_COLOR),
+      deep: hexToRgb(DEEP_COLOR),
+    };
 
     let w = 0;
     let h = 0;
@@ -333,27 +317,27 @@ export function BeyondHorizon(props: BeyondHorizonProps) {
     };
 
     const draw = (tSec: number) => {
-      const L = live.current;
       gl.uniform2f(u.res, w, h);
-      gl.uniform1f(u.time, tSec * L.speed);
-      gl.uniform1f(u.bright, L.brightness * (1 + L.breathe * Math.sin((tSec * Math.PI) / 3)));
+      gl.uniform1f(u.time, tSec * speed);
+      gl.uniform1f(u.bright, brightness * (1 + breathe * Math.sin((tSec * Math.PI) / 3)));
       gl.uniform1f(u.reveal, reduceMotion ? 1 : easeOut(Math.min(tSec / REVEAL_SECONDS, 1)));
-      gl.uniform1f(u.horizonY, L.horizonY);
-      gl.uniform1f(u.horizonR, L.horizonRadius);
-      gl.uniform1f(u.haze, L.haze);
-      gl.uniform1f(u.coreSize, L.coreSize);
-      gl.uniform1f(u.fit, Math.min(Math.max(L.fit, 0), 100) / 100);
-      gl.uniform3fv(u.bg, L.colors.bg);
-      gl.uniform3fv(u.core, L.colors.core);
-      gl.uniform3fv(u.mid, L.colors.mid);
-      gl.uniform3fv(u.deep, L.colors.deep);
+      gl.uniform1f(u.horizonY, horizonY);
+      gl.uniform1f(u.horizonR, HORIZON_RADIUS);
+      gl.uniform1f(u.haze, HAZE);
+      gl.uniform1f(u.coreSize, coreSize);
+      gl.uniform1f(u.fit, FIT);
+      gl.uniform3fv(u.bg, colors.bg);
+      gl.uniform3fv(u.core, colors.core);
+      gl.uniform3fv(u.mid, colors.mid);
+      gl.uniform3fv(u.deep, colors.deep);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
     let raf = 0;
+    let timer = 0;
+    let playing = false;
     let lastT = 0;
     let start = 0;
-    let lastDraw = 0;
 
     resize();
     draw(0);
@@ -364,31 +348,30 @@ export function BeyondHorizon(props: BeyondHorizonProps) {
     const ro = new ResizeObserver(onResize);
     ro.observe(host);
 
-    const loop = (now: number) => {
-      raf = requestAnimationFrame(loop);
+    const tick = (now: number) => {
       if (!start) start = now;
       lastT = (now - start) / 1000;
-      const revealing = lastT < REVEAL_SECONDS;
-      if (!revealing && now - lastDraw < 1000 / live.current.fps) return;
-      lastDraw = now;
       draw(lastT);
+      if (lastT < REVEAL_SECONDS) raf = requestAnimationFrame(tick);
+      else timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), 1000 / FPS);
     };
 
     const play = () => {
-      if (!raf && !reduceMotion) raf = requestAnimationFrame(loop);
+      if (playing || reduceMotion) return;
+      playing = true;
+      raf = requestAnimationFrame(tick);
     };
     const pause = () => {
+      playing = false;
       cancelAnimationFrame(raf);
-      raf = 0;
+      clearTimeout(timer);
     };
     const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? play() : pause()));
-    const begin = () => io.observe(host);
-    if (document.readyState === "complete") begin();
-    else window.addEventListener("load", begin, { once: true });
+    const cancelWait = afterPageLoad(() => io.observe(host));
 
     return () => {
       pause();
-      window.removeEventListener("load", begin);
+      cancelWait();
       io.disconnect();
       ro.disconnect();
       gl.deleteProgram(prog);
@@ -396,7 +379,7 @@ export function BeyondHorizon(props: BeyondHorizonProps) {
       gl.deleteShader(fs);
       gl.deleteBuffer(buf);
     };
-  }, []);
+  }, [background, coreColor, brightness, coreSize, speed, horizonY, breathe]);
 
   return (
     <div ref={hostRef} style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", background }}>

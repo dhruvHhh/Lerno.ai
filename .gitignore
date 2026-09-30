@@ -22,3 +22,7 @@ Thumbs.db
 
 # Local planning docs
 docs/
+
+# Local Claude Code skills
+.claude/
+skills-lock.json

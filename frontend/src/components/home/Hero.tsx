@@ -47,8 +47,8 @@ export default function Hero() {
               className="bg-accent-surface text-foreground flex items-center gap-3 rounded-full py-2 pr-2 pl-6 font-medium"
             >
               Watch demo
-              <span className="bg-foreground grid size-9 place-items-center rounded-full">
-                <PlayIcon weight="fill" className="text-background size-4" />
+              <span className="grid size-8 place-items-center rounded-full bg-white/10">
+                <PlayIcon weight="fill" className="size-3.5" />
               </span>
             </a>
           </HoverBorderGradient>

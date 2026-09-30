@@ -1,11 +1,7 @@
-import { useRef } from "react";
-
-import useAutoPlay from "@/hooks/useAutoPlay";
+import LessonVideo from "@/components/LessonVideo";
+import { DEMO_LESSON } from "@/lib/demo-lesson";
 
 export default function Demo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  useAutoPlay(videoRef);
-
   return (
     <section id="demo" className="relative mx-auto -mt-20 max-w-6xl px-4 md:-mt-28 2xl:max-w-7xl">
       <p className="text-center text-lg font-medium sm:text-xl">
@@ -27,24 +23,12 @@ export default function Demo() {
                   <span className="size-2.5 rounded-full bg-white/15" />
                 </span>
                 <span className="text-muted-foreground truncate">
-                  Lerno · <span className="text-foreground">Adding vectors tip to tail</span>
+                  Lerno · <span className="text-foreground">{DEMO_LESSON.title}</span>
                 </span>
               </div>
               <span className="text-muted-foreground shrink-0">3 scenes</span>
             </div>
-            <video
-              ref={videoRef}
-              src="/videos/vectors-demo.mp4"
-              poster="/videos/vectors-demo.webp"
-              aria-label="An AI-generated Lerno lesson on adding vectors tip to tail"
-              width={1280}
-              height={720}
-              preload="none"
-              muted
-              loop
-              playsInline
-              className="aspect-video w-full"
-            />
+            <LessonVideo lesson={DEMO_LESSON} />
           </div>
         </div>
       </div>
