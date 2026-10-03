@@ -1,8 +1,8 @@
 import { useId, type PointerEvent } from "react";
 import { Link } from "react-router-dom";
 
-import { LOGO_FACES } from "@/lib/logo-shape";
-import { SECTION_LINKS } from "@/lib/site-links";
+import { LOGO_FACES } from "@/content/logo-shape";
+import { SECTION_LINKS } from "@/content/site-links";
 
 const COLUMNS = [
   { title: "Product", links: SECTION_LINKS },

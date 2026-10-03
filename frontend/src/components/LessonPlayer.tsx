@@ -4,7 +4,7 @@ import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type MouseEvent, type SyntheticEvent } from "react";
 
 import LessonVideo from "@/components/LessonVideo";
-import type { Lesson } from "@/lib/demo-lessons";
+import type { Lesson } from "@/content/demo-lessons";
 import { cn } from "@/lib/utils";
 
 const ZOOM = { duration: 0.6, ease: [0.16, 1, 0.3, 1] } as const;

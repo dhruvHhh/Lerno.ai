@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import CtaLink from "@/components/CtaLink";
 import Logo from "@/components/Logo";
-import { SECTION_LINKS } from "@/lib/site-links";
+import { SECTION_LINKS } from "@/content/site-links";
 import { cn } from "@/lib/utils";
 
 const SHRINK = { type: "spring", stiffness: 260, damping: 34 } as const;

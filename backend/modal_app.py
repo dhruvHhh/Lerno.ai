@@ -1,6 +1,11 @@
 import modal
 
-image = modal.Image.debian_slim(python_version="3.12").uv_sync().add_local_python_source("app")
+# The app ships with its non-Python files too, so the render sandbox gets the scene kit's logo.
+image = (
+    modal.Image.debian_slim(python_version="3.12")
+    .uv_sync()
+    .add_local_python_source("app", ignore=["**/__pycache__/**"])
+)
 app = modal.App("lerno", image=image, secrets=[modal.Secret.from_name("lerno-secrets")])
 
 

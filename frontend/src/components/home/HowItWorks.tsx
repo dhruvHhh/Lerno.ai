@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PlanDiagram from "@/components/home/PlanDiagram";
 import SectionHeading from "@/components/home/SectionHeading";
 import LessonPlayer from "@/components/LessonPlayer";
-import { DEMO_LESSONS } from "@/lib/demo-lessons";
+import { DEMO_LESSONS } from "@/content/demo-lessons";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { KEY } from "@/lib/styles";
@@ -37,7 +37,7 @@ function Stage({ children, className }: { children: ReactNode; className?: strin
 }
 
 // Step 3 opens on the strips scene, so the result picks up where the step 2 plan leaves off.
-const STRIPS_LESSON = { ...DEMO_LESSONS[0], start: 10.5, poster: "/videos/area-under-curve-strips.webp" };
+const STRIPS_LESSON = { ...DEMO_LESSONS[0], start: 12.5, poster: "/videos/area-under-curve-strips.webp" };
 
 const STEPS = [
   {

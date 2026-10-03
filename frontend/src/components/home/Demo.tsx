@@ -2,7 +2,7 @@ import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import LessonVideo from "@/components/LessonVideo";
-import { DEMO_LESSONS, type Lesson } from "@/lib/demo-lessons";
+import { DEMO_LESSONS, type Lesson } from "@/content/demo-lessons";
 import { KEY } from "@/lib/styles";
 import { afterPageLoad, cn } from "@/lib/utils";
 

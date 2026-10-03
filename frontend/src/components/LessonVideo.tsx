@@ -1,7 +1,7 @@
 import { useRef, type ComponentProps, type RefObject } from "react";
 
 import useAutoPlay from "@/hooks/useAutoPlay";
-import type { Lesson } from "@/lib/demo-lessons";
+import type { Lesson } from "@/content/demo-lessons";
 import { cn } from "@/lib/utils";
 
 interface LessonVideoProps extends Omit<ComponentProps<"video">, "ref"> {
