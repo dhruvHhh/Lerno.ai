@@ -1,4 +1,4 @@
-import { GearSixIcon, PlayCircleIcon, PlayIcon, UserIcon } from "@phosphor-icons/react";
+import { ChatCircleDotsIcon, PlayIcon, StackIcon, TimerIcon } from "@phosphor-icons/react";
 
 import CtaLink from "@/components/CtaLink";
 import GradientText from "@/components/GradientText";
@@ -6,9 +6,9 @@ import { BeyondHorizon } from "@/components/ui/beyond-horizon";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 
 const VALUES = [
-  { icon: PlayCircleIcon, label: "Animated explanations" },
-  { icon: GearSixIcon, label: "Step-by-step visuals" },
-  { icon: UserIcon, label: "Personalized to you" },
+  { icon: StackIcon, label: "3 levels" },
+  { icon: TimerIcon, label: "1-minute lessons" },
+  { icon: ChatCircleDotsIcon, label: "AI tutor" },
 ];
 
 export default function Hero() {
@@ -26,15 +26,15 @@ export default function Hero() {
         />
       </div>
 
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pt-28 pb-[300px] text-center md:pt-32 md:pb-[360px]">
-        <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight sm:text-5xl lg:text-6xl 2xl:text-7xl">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pt-32 pb-[300px] text-center md:pt-40 md:pb-[360px]">
+        <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl 2xl:text-7xl">
           Turn your curiosity <br className="hidden sm:block" />
           into <GradientText>visual understanding</GradientText>
         </h1>
 
         <p className="text-secondary-foreground mt-6 max-w-xl text-base sm:text-lg">
-          Lerno.ai creates personalized, high-quality animated lessons using AI — so you can explore any mathematical
-          concept, visually.
+          Ask about any maths topic and Lerno builds a short animated lesson that explains it step by step, at your
+          level.
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -54,11 +54,11 @@ export default function Hero() {
           </HoverBorderGradient>
         </div>
 
-        <ul className="text-foreground mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm">
+        <ul className="text-foreground mt-10 flex justify-center gap-x-5 text-xs whitespace-nowrap sm:gap-x-6 sm:text-sm">
           {VALUES.map(({ icon: Icon, label }, index) => (
             <li key={label} className="flex items-center gap-2">
               {index > 0 && <span aria-hidden="true" className="bg-border mr-4 hidden h-4 w-px sm:block" />}
-              <Icon weight="light" className="size-5" />
+              <Icon weight="light" className="size-4 sm:size-5" />
               {label}
             </li>
           ))}

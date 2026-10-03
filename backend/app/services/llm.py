@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.schemas import LessonPlan, ManimCode, ScenePlan
 from app.services import prompts
 
-PLANNER = "claude-sonnet-5"
+PLANNER = "claude-sonnet-5-5"
 TUTOR = "claude-haiku-4-5"
 
 client = Anthropic()

@@ -1,7 +1,7 @@
 import { useRef, type ComponentProps, type RefObject } from "react";
 
 import useAutoPlay from "@/hooks/useAutoPlay";
-import type { Lesson } from "@/lib/demo-lesson";
+import type { Lesson } from "@/lib/demo-lessons";
 import { cn } from "@/lib/utils";
 
 interface LessonVideoProps extends Omit<ComponentProps<"video">, "ref"> {
@@ -18,7 +18,7 @@ export default function LessonVideo({ lesson, ref, className, ...props }: Lesson
   return (
     <video
       ref={videoRef}
-      src={lesson.src}
+      src={`${lesson.src}#t=${lesson.start}`}
       poster={lesson.poster}
       aria-label={lesson.label}
       width={1280}

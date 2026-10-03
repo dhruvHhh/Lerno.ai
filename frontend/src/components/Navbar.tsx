@@ -5,19 +5,15 @@ import { Link } from "react-router-dom";
 
 import CtaLink from "@/components/CtaLink";
 import Logo from "@/components/Logo";
+import { SECTION_LINKS } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 
 const SHRINK = { type: "spring", stiffness: 260, damping: 34 } as const;
 
-const LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how-it-works" },
-];
-
-const LINK_CLASS = "text-secondary-foreground hover:text-foreground text-sm transition";
+const LINK_CLASS = "text-secondary-foreground hover:text-foreground py-2 text-sm transition";
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  return LINKS.map((link) => (
+  return SECTION_LINKS.map((link) => (
     <a key={link.href} href={link.href} onClick={onNavigate} className={LINK_CLASS}>
       {link.label}
     </a>
@@ -53,7 +49,7 @@ export default function Navbar() {
           layout
           style={{ borderRadius: 9999 }}
           className={cn(
-            "border-foreground/10 bg-foreground/5 mx-auto mt-6 flex max-w-7xl items-center justify-between border px-5 py-3 2xl:max-w-[88rem]",
+            "border-foreground/10 bg-foreground/5 mx-auto mt-6 flex max-w-6xl items-center justify-between border px-5 py-3 2xl:max-w-7xl",
             scrolled && "mt-3 max-w-4xl py-2 backdrop-blur-lg 2xl:max-w-4xl",
           )}
         >

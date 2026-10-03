@@ -16,7 +16,7 @@ export default function SectionHeading({ tag, title, children }: SectionHeadingP
           {tag}
         </span>
       </HoverBorderGradient>
-      <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{title}</h2>
+      <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">{title}</h2>
       <p className="text-secondary-foreground mt-4 max-w-2xl text-base sm:text-lg">{children}</p>
     </div>
   );

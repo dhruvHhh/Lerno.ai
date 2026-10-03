@@ -8,6 +8,20 @@
 @theme {
   --font-sans: "Geist Variable", sans-serif;
   --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scene-fill: scene-fill 5s linear forwards;
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes scene-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
 
   --color-background: #050609;
   --color-surface: #0b0d14;
@@ -52,12 +66,12 @@
 
 @utility page-width {
   width: 100%;
-  max-width: 80rem;
+  max-width: 72rem;
   margin-inline: auto;
   padding-inline: 1rem;
 
   @media (width >= 96rem) {
-    max-width: 88rem;
+    max-width: 80rem;
   }
 }
 
@@ -70,5 +84,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  ::selection {
+    @apply bg-accent/35 text-foreground;
   }
 }

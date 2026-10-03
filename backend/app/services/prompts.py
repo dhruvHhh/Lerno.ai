@@ -18,10 +18,14 @@ Rules:
   Polygon, SurroundingRectangle, Brace, VGroup
 - Animations: Create, Write, FadeIn, FadeOut, Transform, GrowArrow, Indicate
 - No images, SVGs, sounds, file access or imports other than manim
-- Text: font_size 24-36, at most 10 words per Text, never overlapping; titles use .to_edge(UP, buff=0.5);
+- Text: font_size 32-44 (titles 40), at most 10 words per Text, never overlapping; titles use .to_edge(UP, buff=0.4);
+  put labels and equations beside the diagram with .next_to(diagram, RIGHT, buff=0.5) or below it;
   stack several texts in a VGroup with .arrange(DOWN, buff=0.4)
-- Keep everything within 3 units of the center; scale large diagrams to 0.7
-- Colors: WHITE, YELLOW, BLUE, GREEN, RED, PURPLE, ORANGE
+- Layout: below the title the safe area is x from -6 to 6 and y from -3.4 to 2.7; the main diagram fills most of
+  it (about 9 units wide or 5 units tall) and nothing leaves it
+- Axes: size them with x_length and y_length (for example x_length=10, y_length=5) and place points on them
+  with axes.c2p(x, y)
+- Colors: WHITE, YELLOW, BLUE, GREEN, RED, PURPLE, ORANGE; keep the default black background
 - Arrows: Arrow(start=ORIGIN, end=[2, 1, 0], buff=0, color=YELLOW); never use scale_tips or add_tip()
 - 2D points are [x, y, 0]
 
@@ -30,9 +34,10 @@ from manim import *
 
 class LessonScene(Scene):
     def construct(self):
-        axes = Axes(x_range=[-5, 5, 1], y_range=[-3, 3, 1], axis_config={"color": BLUE})
-        vector = Arrow(start=ORIGIN, end=[2, 1, 0], buff=0, color=YELLOW)
-        label = MathTex(r"\vec{v} = (2, 1)").next_to(vector, UP)
+        axes = Axes(x_range=[-5, 5, 1], y_range=[-3, 3, 1], x_length=10, y_length=5, axis_config={"color": BLUE})
+        axes.shift(DOWN * 0.4)
+        vector = Arrow(start=axes.c2p(0, 0), end=axes.c2p(2, 1), buff=0, color=YELLOW)
+        label = MathTex(r"\vec{v} = (2, 1)", font_size=40).next_to(vector.get_end(), UR, buff=0.2)
         self.play(Create(axes))
         self.wait(0.5)
         self.play(GrowArrow(vector), Write(label))

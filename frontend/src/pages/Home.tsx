@@ -1,7 +1,9 @@
+import ClosingCta from "@/components/home/ClosingCta";
 import Demo from "@/components/home/Demo";
 import Features from "@/components/home/Features";
 import Hero from "@/components/home/Hero";
 import HowItWorks from "@/components/home/HowItWorks";
+import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
 export default function Home() {
@@ -13,7 +15,9 @@ export default function Home() {
         <Demo />
         <Features />
         <HowItWorks />
+        <ClosingCta />
       </main>
+      <Footer />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { afterPageLoad, prefersReducedMotion } from "@/lib/utils";
+import { prefersReducedMotion } from "@/lib/utils";
+import { animateWhileVisible, createFullscreenProgram, hexToRgb } from "@/lib/webgl";
 
 const REF_ASPECT = 1314 / 2860;
 
@@ -190,24 +191,6 @@ void main() {
 }
 `;
 
-function hexToRgb(hex: string): [number, number, number] {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
-}
-
-function compile(gl: WebGLRenderingContext, type: number, src: string) {
-  const sh = gl.createShader(type);
-  if (!sh) return null;
-  gl.shaderSource(sh, src);
-  gl.compileShader(sh);
-  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-    console.error("BeyondHorizon shader:", gl.getShaderInfoLog(sh));
-    gl.deleteShader(sh);
-    return null;
-  }
-  return sh;
-}
-
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 interface BeyondHorizonProps {
@@ -243,28 +226,10 @@ export function BeyondHorizon({
       return;
     }
 
-    const vs = compile(gl, gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if (!vs || !fs) return;
-    const prog = gl.createProgram();
-    if (!prog) return;
-    gl.attachShader(prog, vs);
-    gl.attachShader(prog, fs);
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.error("BeyondHorizon link:", gl.getProgramInfoLog(prog));
-      return;
-    }
-    gl.useProgram(prog);
+    const shader = createFullscreenProgram(gl, VERT, FRAG);
+    if (!shader) return;
 
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const aPos = gl.getAttribLocation(prog, "aPos");
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const U = (n: string) => gl.getUniformLocation(prog, n);
+    const U = (n: string) => gl.getUniformLocation(shader.program, n);
     const u = {
       res: U("uRes"),
       time: U("uTime"),
@@ -316,7 +281,10 @@ export function BeyondHorizon({
       return true;
     };
 
+    let lastT = 0;
+
     const draw = (tSec: number) => {
+      lastT = tSec;
       gl.uniform2f(u.res, w, h);
       gl.uniform1f(u.time, tSec * speed);
       gl.uniform1f(u.bright, brightness * (1 + breathe * Math.sin((tSec * Math.PI) / 3)));
@@ -333,12 +301,6 @@ export function BeyondHorizon({
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
-    let raf = 0;
-    let timer = 0;
-    let playing = false;
-    let lastT = 0;
-    let start = 0;
-
     resize();
     draw(0);
 
@@ -348,36 +310,12 @@ export function BeyondHorizon({
     const ro = new ResizeObserver(onResize);
     ro.observe(host);
 
-    const tick = (now: number) => {
-      if (!start) start = now;
-      lastT = (now - start) / 1000;
-      draw(lastT);
-      if (lastT < REVEAL_SECONDS) raf = requestAnimationFrame(tick);
-      else timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), 1000 / FPS);
-    };
-
-    const play = () => {
-      if (playing || reduceMotion) return;
-      playing = true;
-      raf = requestAnimationFrame(tick);
-    };
-    const pause = () => {
-      playing = false;
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-    };
-    const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? play() : pause()));
-    const cancelWait = afterPageLoad(() => io.observe(host));
+    const stopAnimation = animateWhileVisible(host, draw, { fps: FPS, smoothSeconds: REVEAL_SECONDS });
 
     return () => {
-      pause();
-      cancelWait();
-      io.disconnect();
+      stopAnimation();
       ro.disconnect();
-      gl.deleteProgram(prog);
-      gl.deleteShader(vs);
-      gl.deleteShader(fs);
-      gl.deleteBuffer(buf);
+      shader.dispose();
     };
   }, [background, coreColor, brightness, coreSize, speed, horizonY, breathe]);
 

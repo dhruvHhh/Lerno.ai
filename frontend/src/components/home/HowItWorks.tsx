@@ -1,11 +1,12 @@
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
-import planToAnimation from "@/assets/illustrations/plan-to-animation.webp";
-import GradientText from "@/components/GradientText";
+import PlanDiagram from "@/components/home/PlanDiagram";
 import SectionHeading from "@/components/home/SectionHeading";
 import LessonPlayer from "@/components/LessonPlayer";
-import { DEMO_LESSON } from "@/lib/demo-lesson";
+import { DEMO_LESSONS } from "@/lib/demo-lessons";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { cn } from "@/lib/utils";
 
 const EXAMPLE_TOPICS = [
   "Explain Bayes' theorem",
@@ -14,43 +15,73 @@ const EXAMPLE_TOPICS = [
   "Area under a curve",
 ];
 
+const LEVELS = ["School", "High school", "College"];
+
 function TopicInput() {
   const navigate = useNavigate();
-  return <PlaceholdersAndVanishInput placeholders={EXAMPLE_TOPICS} onSubmit={() => navigate("/signup")} />;
+  const [level, setLevel] = useState(LEVELS[1]);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-3">
+      <PlaceholdersAndVanishInput placeholders={EXAMPLE_TOPICS} onSubmit={() => navigate("/signup")} />
+      <div role="group" aria-label="Level" className="flex gap-2">
+        {LEVELS.map((name) => (
+          <button
+            key={name}
+            type="button"
+            aria-pressed={name === level}
+            onClick={() => setLevel(name)}
+            className={cn(
+              "cursor-pointer rounded-full border px-3 py-1 text-xs transition-colors duration-300",
+              name === level
+                ? "border-accent/40 bg-accent/15 text-foreground"
+                : "text-muted-foreground hover:text-secondary-foreground border-white/10",
+            )}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// The same 16:9 black frame as the lesson player, so all three steps line up.
+function Stage({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("aspect-video w-full overflow-hidden rounded-[16px] bg-black", className)}>{children}</div>;
 }
 
 const STEPS = [
   {
     title: "Tell us what you want to learn",
     description: "Enter any topic, concept, or question in your own words.",
-    visual: <TopicInput />,
+    visual: (
+      <Stage className="grid place-items-center bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[24px_24px] px-5">
+        <TopicInput />
+      </Stage>
+    ),
   },
   {
     title: "We plan and generate your lesson",
     description: "Our AI creates a structured plan and generates accurate animations using mathematical notation.",
     visual: (
-      <img src={planToAnimation} alt="" width={600} height={236} loading="lazy" decoding="async" className="w-full" />
+      <Stage>
+        <PlanDiagram />
+      </Stage>
     ),
   },
   {
     title: "Watch, learn, and explore",
     description: "Get a high-quality animated lesson with clear explanations, and explore further at your own pace.",
-    visual: <LessonPlayer lesson={DEMO_LESSON} />,
+    visual: <LessonPlayer lesson={DEMO_LESSONS[0]} />,
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="page-width pb-24 md:pb-32">
-      <SectionHeading
-        tag="How it works"
-        title={
-          <>
-            From your question to a <GradientText>visual lesson</GradientText>
-          </>
-        }
-      >
-        Tell us what you want to learn, and Lerno.ai turns it into a complete, animated lesson tailored to you.
+    <section id="how-it-works" className="page-width pb-16 md:pb-20">
+      <SectionHeading tag="How it works" title="From your question to a visual lesson">
+        Tell us what you want to learn, and Lerno turns it into a complete, animated lesson tailored to you.
       </SectionHeading>
 
       <ol className="mt-16 grid gap-16 lg:grid-cols-3 lg:gap-x-16 lg:gap-y-0">
@@ -61,7 +92,7 @@ export default function HowItWorks() {
             </span>
             <h3 className="mt-5 text-xl font-semibold tracking-tight">{title}</h3>
             <p className="text-secondary-foreground mt-2 text-sm leading-relaxed">{description}</p>
-            <div className="mt-8 grid place-items-center lg:h-72">{visual}</div>
+            <div className="mt-8">{visual}</div>
           </li>
         ))}
       </ol>

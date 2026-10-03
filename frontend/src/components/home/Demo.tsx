@@ -1,7 +1,64 @@
+import { m, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+
 import LessonVideo from "@/components/LessonVideo";
-import { DEMO_LESSON } from "@/lib/demo-lesson";
+import { DEMO_LESSONS, type Lesson } from "@/lib/demo-lessons";
+import { afterPageLoad, cn } from "@/lib/utils";
+
+const SLIDE = { type: "spring", stiffness: 420, damping: 34, mass: 0.9 } as const;
+
+const FADE = { duration: 0.7, ease: [0.22, 1, 0.36, 1] } as const;
+
+const HIDDEN = { opacity: 0, scale: 1.02, filter: "blur(8px)" };
+
+const SHOWN = { opacity: 1, scale: 1, filter: "blur(0px)" };
+
+const HINT_MS = 2500;
 
 export default function Demo() {
+  const [lesson, setLesson] = useState(DEMO_LESSONS[0]);
+  const [outgoing, setOutgoing] = useState<Lesson | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [scene, setScene] = useState(0);
+  const [hinting, setHinting] = useState(false);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+  const instant = { duration: 0 };
+
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    let timer = 0;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio < 0.6) return;
+        observer.disconnect();
+        setHinting(true);
+        timer = window.setTimeout(() => setHinting(false), HINT_MS);
+      },
+      { threshold: 0.6 },
+    );
+    const cancelWait = afterPageLoad(() => observer.observe(dock));
+    return () => {
+      cancelWait();
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // The old lesson keeps playing underneath until the new one is actually playing, then the new one fades in over it.
+  const choose = (next: Lesson) => {
+    if (next.id === lesson.id) return;
+    setLesson(next);
+    setScene(0);
+    setHinting(false);
+    if (reduceMotion) return setOutgoing(null);
+    if (!loading) setOutgoing(lesson);
+    setLoading(next.id !== outgoing?.id);
+  };
+
+  const followScene = (time: number) => setScene(lesson.scenes.findLastIndex(({ at }) => at <= time));
+
   return (
     <section id="demo" className="relative mx-auto -mt-20 max-w-5xl px-4 md:-mt-28 2xl:max-w-6xl">
       <p className="text-center text-lg font-medium sm:text-xl">
@@ -23,12 +80,102 @@ export default function Demo() {
                   <span className="size-2.5 rounded-full bg-white/15" />
                 </span>
                 <span className="text-muted-foreground truncate">
-                  Lerno · <span className="text-foreground">{DEMO_LESSON.title}</span>
+                  Lerno · <span className="text-foreground">{lesson.title}</span>
                 </span>
               </div>
-              <span className="text-muted-foreground shrink-0">3 scenes</span>
+              <span className="text-muted-foreground shrink-0 tabular-nums">
+                Scene {scene + 1} of {lesson.scenes.length}
+              </span>
             </div>
-            <LessonVideo lesson={DEMO_LESSON} />
+
+            <div className="relative">
+              <div className="relative aspect-video">
+                {DEMO_LESSONS.filter(({ id }) => id === lesson.id || id === outgoing?.id).map((item) => {
+                  const incoming = item.id === lesson.id;
+                  return (
+                    <m.div
+                      key={item.id}
+                      initial={false}
+                      animate={incoming && loading ? HIDDEN : SHOWN}
+                      transition={reduceMotion ? instant : FADE}
+                      onAnimationComplete={() => incoming && !loading && setOutgoing(null)}
+                      className={cn("absolute inset-0", incoming && "z-10")}
+                    >
+                      <LessonVideo
+                        lesson={item}
+                        onPlaying={incoming ? () => setLoading(false) : undefined}
+                        onTimeUpdate={incoming ? (event) => followScene(event.currentTarget.currentTime) : undefined}
+                      />
+                    </m.div>
+                  );
+                })}
+              </div>
+
+              <div
+                ref={dockRef}
+                role="group"
+                aria-label="Example lessons"
+                className="group/dock sm:border-foreground/10 sm:bg-foreground/5 flex items-start justify-center gap-4 px-3 pt-4 pb-1 sm:absolute sm:top-1/2 sm:right-4 sm:z-20 sm:-translate-y-1/2 sm:flex-col sm:gap-2 sm:rounded-[20px] sm:border sm:p-2 sm:backdrop-blur-lg"
+              >
+                {DEMO_LESSONS.map((option) => {
+                  const selected = option.id === lesson.id;
+                  return (
+                    <div key={option.id} className="flex flex-col items-center gap-1.5">
+                      <button
+                        type="button"
+                        aria-label={option.topic}
+                        aria-pressed={selected}
+                        onClick={() => choose(option)}
+                        className={cn(
+                          "group/tab relative grid size-11 cursor-pointer place-items-center rounded-[10px] border border-white/10 bg-linear-to-b from-[#222225] to-[#141518] transition-colors duration-300",
+                          selected ? "text-white" : "text-[#9c9c9d]",
+                        )}
+                      >
+                        {selected && (
+                          <m.span
+                            layoutId="active-lesson"
+                            transition={reduceMotion ? instant : SLIDE}
+                            style={{ borderRadius: 10 }}
+                            className="absolute -inset-px border border-[#9b7cff]/40 bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
+                          />
+                        )}
+                        <option.icon className="relative size-[18px]" />
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#141416] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
+                            (selected || hinting) && "opacity-100 group-hover/dock:opacity-0",
+                          )}
+                        >
+                          {option.topic}
+                        </span>
+                      </button>
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "text-[11px] transition-colors duration-300 sm:hidden",
+                          selected ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {option.topic}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 px-5 py-4 sm:px-8">
+              <m.p
+                key={`${lesson.id}-${scene}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={reduceMotion ? instant : { duration: 0.5, ease: FADE.ease }}
+                className="text-secondary-foreground mx-auto min-h-[5lh] max-w-2xl text-center text-sm leading-relaxed sm:min-h-[3lh] sm:text-[15px]"
+              >
+                {lesson.scenes[scene].narration}
+              </m.p>
+            </div>
           </div>
         </div>
       </div>
