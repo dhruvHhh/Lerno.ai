@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import LessonVideo from "@/components/LessonVideo";
 import { DEMO_LESSONS, type Lesson } from "@/lib/demo-lessons";
+import { KEY } from "@/lib/styles";
 import { afterPageLoad, cn } from "@/lib/utils";
 
 const SLIDE = { type: "spring", stiffness: 420, damping: 34, mass: 0.9 } as const;
@@ -127,8 +128,9 @@ export default function Demo() {
                         aria-pressed={selected}
                         onClick={() => choose(option)}
                         className={cn(
-                          "group/tab relative grid size-11 cursor-pointer place-items-center rounded-[10px] border border-white/10 bg-linear-to-b from-[#222225] to-[#141518] transition-colors duration-300",
-                          selected ? "text-white" : "text-[#9c9c9d]",
+                          "group/tab relative grid size-11 cursor-pointer place-items-center rounded-[10px] transition-colors duration-300",
+                          KEY,
+                          selected ? "text-white" : "text-secondary-foreground hover:text-foreground",
                         )}
                       >
                         {selected && (
@@ -143,7 +145,7 @@ export default function Demo() {
                         <span
                           aria-hidden="true"
                           className={cn(
-                            "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#141416] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
+                            "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#101219] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
                             (selected || hinting) && "opacity-100 group-hover/dock:opacity-0",
                           )}
                         >

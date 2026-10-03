@@ -1,7 +1,10 @@
-import { BookmarkSimpleIcon } from "@phosphor-icons/react";
+import { BookmarkSimpleIcon, CheckIcon } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion, type Variants } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { LogoIcon } from "@/components/Logo";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { RAISED_KEY } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 export interface VisualProps {
@@ -9,8 +12,6 @@ export interface VisualProps {
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-
-const TRACE_SECONDS = 2.6;
 
 const LEVEL_MS = 2400;
 
@@ -29,25 +30,46 @@ const sweep: Variants = {
   shown: (delay = 0) => ({ scaleX: 1, transition: { duration: 0.8, delay, ease: EASE } }),
 };
 
+const fadeOut: Variants = {
+  hidden: { opacity: 1 },
+  shown: (delay = 0) => ({ opacity: 0, transition: { duration: 0.3, delay } }),
+};
+
 const lightUp: Variants = {
   hidden: { color: "#737789" },
   shown: (delay = 0) => ({ color: "#f5f5f7", transition: { duration: 0.5, delay } }),
 };
 
-// One and a half waves of sin(x) across the animations frame, at progress p from 0 to 1.
+// One and a half waves of sin(x) across the animations frame, at progress p from 0 to 1 (x from 0 to 3π).
 const waveX = (p: number) => 40 + p * 340;
 
 const waveY = (p: number) => 120 - 70 * Math.sin(p * Math.PI * 3);
+
+// Angle of the curve at p, so the tangent line can be turned to match.
+const slopeAngle = (p: number) => (Math.atan2(-70 * 3 * Math.PI * Math.cos(p * Math.PI * 3), 340) * 180) / Math.PI;
 
 const WAVE = Array.from({ length: 61 }, (_, i) => `${i ? "L" : "M"}${waveX(i / 60)} ${waveY(i / 60).toFixed(1)}`).join(
   " ",
 );
 
-const SCENES = [
-  { title: "Draw the axes", at: 0.1 },
-  { title: "Plot sin(x)", at: 0.4 },
-  { title: "Trace the curve", at: 0.4 + TRACE_SECONDS },
+const X_TICKS = [
+  { p: 1 / 3, label: "π" },
+  { p: 2 / 3, label: "2π" },
+  { p: 1, label: "3π" },
 ];
+
+const SCENES = [
+  { title: "Draw the axes", time: "0:00", at: 0.1, end: 0.6 },
+  { title: "Plot sin(x)", time: "0:04", at: 0.6, end: 3.2 },
+  { title: "Find the slope", time: "0:11", at: 3.6, end: 6.4 },
+];
+
+const [, PLOT, SLOPE] = SCENES;
+
+// Where the tangent comes to rest, short of the frame's edge.
+const SLOPE_RANGE = [0.04, 0.94];
+
+const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
 
 // y = x² from 0 to 2 inside a 72×56 thumbnail.
 const thumbX = (u: number) => 6 + u * 30;
@@ -73,6 +95,8 @@ const LEVELS = [
   { name: "College", explanation: "∫₀² x² dx = 8⁄3" },
 ];
 
+const LEVEL_NAMES = LEVELS.map(({ name }) => name);
+
 const ANSWER = "They hug the curve, so the gaps shrink and the sum gets closer to the true area.".split(" ");
 
 const TOPIC_ROWS = [
@@ -97,39 +121,74 @@ function Stage({ run, className, children }: VisualProps & { className?: string;
   );
 }
 
-// A dot that rides along the wave while it draws.
-function Tracer({ run }: VisualProps) {
-  const ref = useRef<SVGCircleElement>(null);
+// The sine wave drawing itself with a dot at its tip, then the dot sweeping back along it with its tangent line.
+// Wave, dot and tangent all run off one clock so they stay in step.
+function SineDrawing({ run }: VisualProps) {
+  const waveRef = useRef<SVGPathElement>(null);
+  const ref = useRef<SVGGElement>(null);
+  const lineRef = useRef<SVGLineElement>(null);
   const still = useReducedMotion();
 
   useEffect(() => {
     if (still || !run) return;
-    const start = performance.now() + SCENES[1].at * 1000;
+    const start = performance.now();
     let frame = 0;
     const step = (now: number) => {
-      const dot = ref.current;
-      const progress = Math.min(Math.max((now - start) / (TRACE_SECONDS * 1000), 0), 1);
-      if (!dot) return;
-      dot.setAttribute("cx", String(waveX(progress)));
-      dot.setAttribute("cy", String(waveY(progress)));
-      dot.style.opacity = now >= start ? "1" : "0";
-      if (progress < 1) frame = requestAnimationFrame(step);
+      const wave = waveRef.current;
+      const rider = ref.current;
+      const line = lineRef.current;
+      if (!wave || !rider || !line) return;
+      const time = (now - start) / 1000;
+      const plotted = clamp01((time - PLOT.at) / (PLOT.end - PLOT.at));
+      const sloping = time >= SLOPE.at;
+      const progress = sloping
+        ? SLOPE_RANGE[0] + clamp01((time - SLOPE.at) / (SLOPE.end - SLOPE.at)) * (SLOPE_RANGE[1] - SLOPE_RANGE[0])
+        : plotted;
+      wave.style.strokeDashoffset = String(1 - plotted);
+      rider.setAttribute(
+        "transform",
+        `translate(${waveX(progress)} ${waveY(progress)}) rotate(${slopeAngle(progress)})`,
+      );
+      rider.style.opacity = time >= PLOT.at ? "1" : "0";
+      line.style.opacity = sloping ? "1" : "0";
+      if (time < SLOPE.end) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [run, still]);
 
+  const rest = SLOPE_RANGE[1];
   return (
-    <circle
-      ref={ref}
-      cx={waveX(1)}
-      cy={waveY(1)}
-      r={5}
-      fill="#efeaff"
-      stroke="#9b7cff"
-      strokeWidth={3}
-      style={{ opacity: still ? 1 : 0 }}
-    />
+    <>
+      <path
+        ref={waveRef}
+        d={WAVE}
+        pathLength={1}
+        strokeDasharray="1 1"
+        stroke="#b7a4ff"
+        strokeWidth={3}
+        strokeLinecap="round"
+        style={{ strokeDashoffset: still ? 0 : 1 }}
+      />
+      <g
+        ref={ref}
+        transform={`translate(${waveX(rest)} ${waveY(rest)}) rotate(${slopeAngle(rest)})`}
+        style={{ opacity: still ? 1 : 0 }}
+      >
+        <line
+          ref={lineRef}
+          x1={-44}
+          x2={44}
+          stroke="#efeaff"
+          strokeOpacity={0.75}
+          strokeWidth={2}
+          strokeLinecap="round"
+          className="transition-opacity duration-300"
+          style={{ opacity: still ? 1 : 0 }}
+        />
+        <circle r={5} fill="#efeaff" stroke="#9b7cff" strokeWidth={3} />
+      </g>
+    </>
   );
 }
 
@@ -137,25 +196,38 @@ export function AnimationsVisual({ run }: VisualProps) {
   return (
     <Stage run={run} className="h-full min-h-48 overflow-hidden rounded-xl border border-white/10 bg-[#101219]">
       <svg viewBox="0 0 400 260" fill="none" className="h-full w-full">
-        <m.path variants={appear} custom={SCENES[0].at} d="M24 120H384M40 30V210" stroke="white" strokeOpacity={0.15} />
-        <m.path
-          d={WAVE}
-          stroke="#b7a4ff"
-          strokeWidth={3}
-          strokeLinecap="round"
-          variants={{
-            hidden: { pathLength: 0 },
-            shown: { pathLength: 1, transition: { duration: TRACE_SECONDS, delay: SCENES[1].at, ease: "linear" } },
-          }}
-        />
-        <Tracer run={run} />
+        <m.g variants={appear} custom={SCENES[0].at} stroke="white" strokeOpacity={0.18}>
+          <path d="M24 120H392M40 34V206" />
+          {X_TICKS.map(({ p }) => (
+            <path key={p} d={`M${waveX(p)} 115V125`} />
+          ))}
+          <path d="M35 50H45M35 190H45" />
+        </m.g>
+        <m.g variants={appear} custom={SCENES[0].end} fill="white" fillOpacity={0.45} fontSize={13} textAnchor="middle">
+          {X_TICKS.map(({ p, label }) => (
+            <text key={label} x={waveX(p)} y={144}>
+              {label}
+            </text>
+          ))}
+        </m.g>
+        <m.text
+          variants={appear}
+          custom={PLOT.end}
+          x={waveX(1 / 6) + 18}
+          y={waveY(1 / 6) - 4}
+          fill="#b7a4ff"
+          fontSize={14}
+        >
+          sin x
+        </m.text>
+        <SineDrawing run={run} />
       </svg>
       <div className="absolute inset-x-4 bottom-4 h-1 overflow-hidden rounded-full bg-white/10">
         <m.div
           className="bg-accent h-full origin-left"
           variants={{
             hidden: { scaleX: 0 },
-            shown: { scaleX: 1, transition: { duration: TRACE_SECONDS + 0.4, ease: "linear" } },
+            shown: { scaleX: 1, transition: { duration: SLOPE.end, ease: "linear" } },
           }}
         />
       </div>
@@ -163,18 +235,25 @@ export function AnimationsVisual({ run }: VisualProps) {
   );
 }
 
-// The lesson's scene list, shown beside the player in the wide card and lit in step with the drawing.
+// The lesson's scene list with its timestamps, beside the player in the wide card: each step lights up as its
+// scene starts and gets a check when it ends.
 export function AnimationScenes({ run }: VisualProps) {
   return (
     <Stage run={run} className="h-auto">
       <ol className="flex flex-col gap-3 text-sm">
-        {SCENES.map(({ title, at }, index) => (
+        {SCENES.map(({ title, time, at, end }, index) => (
           <m.li key={title} variants={lightUp} custom={at} className="flex items-center gap-3">
-            <span className="relative grid size-6 shrink-0 place-items-center rounded-full border border-white/15 text-xs">
-              <m.span variants={appear} custom={at} className="bg-accent absolute inset-0 rounded-full" />
-              <span className="relative">{index + 1}</span>
+            <span className="relative grid size-6 shrink-0 place-items-center rounded-full text-xs ring-1 ring-white/15">
+              <m.span variants={appear} custom={at} className={cn("absolute inset-0 rounded-full", RAISED_KEY)} />
+              <m.span variants={fadeOut} custom={end} className="relative">
+                {index + 1}
+              </m.span>
+              <m.span variants={appear} custom={end} className="text-accent-soft absolute">
+                <CheckIcon weight="bold" className="size-3" />
+              </m.span>
             </span>
-            {title}
+            <span className="flex-1">{title}</span>
+            <span className="text-muted-foreground text-xs tabular-nums">{time}</span>
           </m.li>
         ))}
       </ol>
@@ -230,25 +309,7 @@ function LevelSwitcher({ playing }: { playing: boolean }) {
 
   return (
     <div className="flex h-full flex-col justify-end gap-3">
-      <div className="relative grid grid-cols-3 rounded-full border border-white/10 bg-white/3 p-1 text-center text-xs">
-        <m.span
-          className="bg-accent/20 border-accent/40 absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full border"
-          initial={false}
-          animate={{ x: `${active * 100}%` }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-        {LEVELS.map(({ name }, index) => (
-          <span
-            key={name}
-            className={cn(
-              "relative py-1.5 transition-colors duration-300",
-              index === active ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {name}
-          </span>
-        ))}
-      </div>
+      <SegmentedControl options={LEVEL_NAMES} selected={active} className="w-full auto-cols-fr" />
 
       <div className="flex h-24 items-center gap-4 overflow-hidden rounded-xl border border-white/10 bg-[#101219] px-4">
         <AnimatePresence mode="wait" initial={false}>
@@ -294,26 +355,21 @@ export function TutorVisual({ run }: VisualProps) {
       >
         Why do thinner strips help?
       </m.p>
-      <div className="flex items-end gap-2.5">
-        <m.span
-          variants={fadeUp}
-          custom={0.7}
-          className="border-accent/40 bg-accent/15 grid size-7 shrink-0 place-items-center rounded-full border"
-        >
-          <span className="bg-accent-soft size-2 rounded-full" />
-        </m.span>
-        <m.p
-          variants={fadeUp}
-          custom={0.7}
-          className="border-accent/30 bg-accent/8 text-secondary-foreground rounded-2xl rounded-bl-md border px-3.5 py-2 leading-relaxed"
-        >
-          {ANSWER.map((word, index) => (
-            <m.span key={index} variants={appear} custom={1.1 + index * 0.08}>
-              {word}{" "}
-            </m.span>
-          ))}
-        </m.p>
-      </div>
+      <m.div variants={fadeUp} custom={0.7} className="flex items-start gap-2.5">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/5 ring-1 ring-white/10">
+          <LogoIcon className="size-4" />
+        </span>
+        <div>
+          <p className="text-muted-foreground mb-1 text-xs">Lerno tutor</p>
+          <p className="text-secondary-foreground rounded-2xl rounded-tl-md border border-white/10 bg-white/4 px-3.5 py-2 leading-relaxed">
+            {ANSWER.map((word, index) => (
+              <m.span key={index} variants={appear} custom={1.1 + index * 0.08}>
+                {word}{" "}
+              </m.span>
+            ))}
+          </p>
+        </div>
+      </m.div>
     </Stage>
   );
 }
@@ -336,7 +392,7 @@ export function TopicsVisual() {
               className={cn(
                 "mr-2.5 rounded-full border px-3.5 py-1.5 text-sm whitespace-nowrap",
                 position % row.length === index * 2
-                  ? "border-accent/40 bg-accent/12 text-accent-soft"
+                  ? cn("text-foreground border-transparent", RAISED_KEY)
                   : "text-secondary-foreground border-white/10 bg-white/3",
               )}
             >
@@ -353,7 +409,6 @@ export function NotesVisual({ run }: VisualProps) {
   return (
     <Stage run={run} className="grid place-items-center">
       <div className="relative w-full max-w-xs">
-        <div className="absolute inset-x-4 -top-2.5 bottom-2 rounded-xl border border-white/6 bg-[#0d0f15]" />
         <m.div
           variants={fadeUp}
           className="relative isolate rounded-xl border border-white/10 bg-[#101219] p-4 text-sm"

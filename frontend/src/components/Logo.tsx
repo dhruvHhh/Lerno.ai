@@ -28,12 +28,18 @@ function LogoMark() {
   );
 }
 
+export function LogoIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" className={className} aria-hidden="true">
+      <LogoMark />
+    </svg>
+  );
+}
+
 export default function Logo() {
   return (
     <span className="flex items-center gap-2.5">
-      <svg viewBox="0 0 256 256" className="block size-10" aria-hidden="true">
-        <LogoMark />
-      </svg>
+      <LogoIcon className="block size-10" />
       <span className="text-xl font-semibold tracking-tight">Lerno</span>
     </span>
   );

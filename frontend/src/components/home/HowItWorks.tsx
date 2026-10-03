@@ -6,6 +6,8 @@ import SectionHeading from "@/components/home/SectionHeading";
 import LessonPlayer from "@/components/LessonPlayer";
 import { DEMO_LESSONS } from "@/lib/demo-lessons";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { KEY } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 const EXAMPLE_TOPICS = [
@@ -19,29 +21,12 @@ const LEVELS = ["School", "High school", "College"];
 
 function TopicInput() {
   const navigate = useNavigate();
-  const [level, setLevel] = useState(LEVELS[1]);
+  const [level, setLevel] = useState(1);
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <PlaceholdersAndVanishInput placeholders={EXAMPLE_TOPICS} onSubmit={() => navigate("/signup")} />
-      <div role="group" aria-label="Level" className="flex gap-2">
-        {LEVELS.map((name) => (
-          <button
-            key={name}
-            type="button"
-            aria-pressed={name === level}
-            onClick={() => setLevel(name)}
-            className={cn(
-              "cursor-pointer rounded-full border px-3 py-1 text-xs transition-colors duration-300",
-              name === level
-                ? "border-accent/40 bg-accent/15 text-foreground"
-                : "text-muted-foreground hover:text-secondary-foreground border-white/10",
-            )}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl options={LEVELS} selected={level} onSelect={setLevel} label="Level" />
     </div>
   );
 }
@@ -50,6 +35,9 @@ function TopicInput() {
 function Stage({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("aspect-video w-full overflow-hidden rounded-[16px] bg-black", className)}>{children}</div>;
 }
+
+// Step 3 opens on the strips scene, so the result picks up where the step 2 plan leaves off.
+const STRIPS_LESSON = { ...DEMO_LESSONS[0], start: 10.5, poster: "/videos/area-under-curve-strips.webp" };
 
 const STEPS = [
   {
@@ -73,7 +61,7 @@ const STEPS = [
   {
     title: "Watch, learn, and explore",
     description: "Get a high-quality animated lesson with clear explanations, and explore further at your own pace.",
-    visual: <LessonPlayer lesson={DEMO_LESSONS[0]} />,
+    visual: <LessonPlayer lesson={STRIPS_LESSON} />,
   },
 ];
 
@@ -87,7 +75,7 @@ export default function HowItWorks() {
       <ol className="mt-16 grid gap-16 lg:grid-cols-3 lg:gap-x-16 lg:gap-y-0">
         {STEPS.map(({ title, description, visual }, index) => (
           <li key={title} className="flex flex-col lg:row-span-4 lg:grid lg:grid-rows-subgrid">
-            <span className="border-accent/40 bg-accent/10 grid size-9 place-items-center rounded-full border text-sm font-medium">
+            <span className={cn("grid size-9 place-items-center rounded-full text-sm font-medium", KEY)}>
               {index + 1}
             </span>
             <h3 className="mt-5 text-xl font-semibold tracking-tight">{title}</h3>

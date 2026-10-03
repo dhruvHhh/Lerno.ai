@@ -81,9 +81,9 @@ export default function LessonPlayer({ lesson }: { lesson: Lesson }) {
         aria-modal={expanded || undefined}
         aria-label={expanded ? lesson.title : undefined}
         className={cn(
-          "overflow-hidden border border-white/10 bg-black",
+          "overflow-hidden bg-black",
           expanded
-            ? "fixed top-1/2 left-1/2 z-70 mt-[calc(var(--popup-w)*-9/32)] ml-[calc(var(--popup-w)/-2)] w-(--popup-w) [--popup-w:min(92vw,calc((100svh_-_6rem)*16/9))] sm:[--popup-w:min(80vw,1100px,calc((100svh_-_6rem)*16/9))]"
+            ? "fixed top-1/2 left-1/2 z-70 mt-[calc(var(--popup-w)*-9/32)] ml-[calc(var(--popup-w)/-2)] w-(--popup-w) border border-white/10 [--popup-w:min(92vw,calc((100svh_-_6rem)*16/9))] sm:[--popup-w:min(80vw,1100px,calc((100svh_-_6rem)*16/9))]"
             : "absolute inset-0",
         )}
       >
