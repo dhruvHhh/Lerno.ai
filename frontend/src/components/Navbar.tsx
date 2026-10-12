@@ -1,7 +1,7 @@
 import { ListIcon, XIcon } from "@phosphor-icons/react";
 import { m, MotionConfig } from "motion/react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import CtaLink from "@/components/CtaLink";
 import Logo from "@/components/Logo";

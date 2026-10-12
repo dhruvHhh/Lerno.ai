@@ -3,7 +3,7 @@ import { AnimatePresence, m, useReducedMotion, type Variants } from "motion/reac
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { LogoIcon } from "@/components/Logo";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SegmentedDisplay } from "@/components/ui/segmented-control";
 import { RAISED_KEY } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
@@ -309,7 +309,7 @@ function LevelSwitcher({ playing }: { playing: boolean }) {
 
   return (
     <div className="flex h-full flex-col justify-end gap-3">
-      <SegmentedControl options={LEVEL_NAMES} selected={active} className="w-full auto-cols-fr" />
+      <SegmentedDisplay options={LEVEL_NAMES} selected={active} className="w-full auto-cols-fr" />
 
       <div className="flex h-24 items-center gap-4 overflow-hidden rounded-xl border border-white/10 bg-[#101219] px-4">
         <AnimatePresence mode="wait" initial={false}>

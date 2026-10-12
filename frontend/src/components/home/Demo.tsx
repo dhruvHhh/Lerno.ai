@@ -16,6 +16,8 @@ const SHOWN = { opacity: 1, scale: 1, filter: "blur(0px)" };
 
 const HINT_MS = 2500;
 
+const INSTANT = { duration: 0 };
+
 export default function Demo() {
   const [lesson, setLesson] = useState(DEMO_LESSONS[0]);
   const [outgoing, setOutgoing] = useState<Lesson | null>(null);
@@ -24,7 +26,6 @@ export default function Demo() {
   const [hinting, setHinting] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
-  const instant = { duration: 0 };
 
   useEffect(() => {
     const dock = dockRef.current;
@@ -98,7 +99,7 @@ export default function Demo() {
                       key={item.id}
                       initial={false}
                       animate={incoming && loading ? HIDDEN : SHOWN}
-                      transition={reduceMotion ? instant : FADE}
+                      transition={reduceMotion ? INSTANT : FADE}
                       onAnimationComplete={() => incoming && !loading && setOutgoing(null)}
                       className={cn("absolute inset-0", incoming && "z-10")}
                     >
@@ -136,7 +137,7 @@ export default function Demo() {
                         {selected && (
                           <m.span
                             layoutId="active-lesson"
-                            transition={reduceMotion ? instant : SLIDE}
+                            transition={reduceMotion ? INSTANT : SLIDE}
                             style={{ borderRadius: 10 }}
                             className="absolute -inset-px border border-[#9b7cff]/40 bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
                           />
@@ -172,7 +173,7 @@ export default function Demo() {
                 key={`${lesson.id}-${scene}`}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={reduceMotion ? instant : { duration: 0.5, ease: FADE.ease }}
+                transition={reduceMotion ? INSTANT : { duration: 0.5, ease: FADE.ease }}
                 className="text-secondary-foreground mx-auto min-h-[5lh] max-w-2xl text-center text-sm leading-relaxed sm:min-h-[3lh] sm:text-[15px]"
               >
                 {lesson.scenes[scene].narration}

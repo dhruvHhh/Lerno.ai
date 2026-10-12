@@ -41,7 +41,9 @@ const SUMS = ["Sum = 1.75", "Sum → 8/3"];
 export default function PlanDiagram() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.5 });
-  const started = useInView(ref, { amount: 0.5, once: true });
+  // Remembers the first time it was seen, so the drawing starts once and stays drawn while off screen.
+  const [started, setStarted] = useState(false);
+  if (inView && !started) setStarted(true);
   const still = !!useReducedMotion();
   const [scene, setScene] = useState(0);
   const animated = (from: number) => from === scene && !still;

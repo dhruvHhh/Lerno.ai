@@ -1,3 +1,4 @@
+import { SquaresFourIcon } from "@phosphor-icons/react";
 import { useInView } from "motion/react";
 import { useRef, useState, type ComponentType } from "react";
 
@@ -95,7 +96,7 @@ function FeatureCard({ title, description, Visual, Aside, className }: Feature) 
 export default function Features() {
   return (
     <section id="features" className="page-width py-20 md:py-28">
-      <SectionHeading tag="Features" title="Everything you need to learn visually">
+      <SectionHeading tag="Features" icon={SquaresFourIcon} title="Everything you need to learn visually">
         Every part of a lesson is built to help you see the idea, not just read about it.
       </SectionHeading>
 

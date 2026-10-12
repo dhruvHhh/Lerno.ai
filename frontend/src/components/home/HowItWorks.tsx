@@ -1,5 +1,6 @@
+import { PathIcon } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 import PlanDiagram from "@/components/home/PlanDiagram";
 import SectionHeading from "@/components/home/SectionHeading";
@@ -68,7 +69,7 @@ const STEPS = [
 export default function HowItWorks() {
   return (
     <section id="how-it-works" className="page-width pb-16 md:pb-20">
-      <SectionHeading tag="How it works" title="From your question to a visual lesson">
+      <SectionHeading tag="How it works" icon={PathIcon} title="From your question to a visual lesson">
         Tell us what you want to learn, and Lerno turns it into a complete, animated lesson tailored to you.
       </SectionHeading>
 

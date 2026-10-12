@@ -1,5 +1,5 @@
-import { useId, type PointerEvent } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useId, useRef, type PointerEvent } from "react";
+import { Link } from "react-router";
 
 import { LOGO_FACES } from "@/content/logo-shape";
 import { SECTION_LINKS } from "@/content/site-links";
@@ -69,10 +69,18 @@ function LogoOutline({ stroke, fill, weight }: { stroke: string; fill: string; w
 function GiantLogo() {
   const id = useId();
 
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  // At most one layout read and style write per animation frame, however fast the pointer moves.
   const moveSpotlight = (event: PointerEvent<HTMLDivElement>) => {
-    const { left, top } = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--spot-x", `${event.clientX - left}px`);
-    event.currentTarget.style.setProperty("--spot-y", `${event.clientY - top}px`);
+    const { currentTarget: spot, clientX, clientY } = event;
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      const { left, top } = spot.getBoundingClientRect();
+      spot.style.setProperty("--spot-x", `${clientX - left}px`);
+      spot.style.setProperty("--spot-y", `${clientY - top}px`);
+    });
   };
 
   return (

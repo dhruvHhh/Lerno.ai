@@ -1,6 +1,6 @@
 import { ReactLenis } from "lenis/react";
 import { LazyMotion } from "motion/react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router";
 
 import { prefersReducedMotion } from "@/lib/utils";
 import Home from "@/pages/Home";
