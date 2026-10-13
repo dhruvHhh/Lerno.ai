@@ -1,8 +1,8 @@
 import { ChatCircleDotsIcon, PlayIcon, StackIcon, TimerIcon } from "@phosphor-icons/react";
 
-import CtaLink from "@/components/CtaLink";
-import GradientText from "@/components/GradientText";
+import GradientText from "@/components/brand/GradientText";
 import { BeyondHorizon } from "@/components/ui/beyond-horizon";
+import CtaLink from "@/components/ui/cta-link";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 
 const VALUES = [

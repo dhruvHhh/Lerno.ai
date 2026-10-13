@@ -8,18 +8,13 @@ const SLIDE = { type: "spring", stiffness: 420, damping: 36 } as const;
 
 const OPTION = "relative px-2.5 py-1.5 text-center whitespace-nowrap transition-colors duration-300 sm:px-3";
 
-interface DisplayProps {
+interface SegmentedProps {
   options: string[];
   selected: number;
   className?: string;
 }
 
-interface ControlProps extends DisplayProps {
-  onSelect: (index: number) => void;
-  label: string;
-}
-
-// The sunken track both variants sit in.
+// The sunken track the options sit in.
 function Track({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div
@@ -47,33 +42,8 @@ function SlidingKey({ id }: { id: string }) {
   );
 }
 
-// Clickable: the reader picks an option.
-export function SegmentedControl({ options, selected, onSelect, label, className }: ControlProps) {
-  const keyId = useId();
-  return (
-    <Track role="group" aria-label={label} className={className}>
-      {options.map((option, index) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={index === selected}
-          onClick={() => onSelect(index)}
-          className={cn(
-            OPTION,
-            "cursor-pointer",
-            index === selected ? "text-foreground" : "text-muted-foreground hover:text-secondary-foreground",
-          )}
-        >
-          {index === selected && <SlidingKey id={keyId} />}
-          <span className="relative">{option}</span>
-        </button>
-      ))}
-    </Track>
-  );
-}
-
-// Display only: shows which option is selected, for illustrations that drive it themselves.
-export function SegmentedDisplay({ options, selected, className }: DisplayProps) {
+// Shows which option is selected, for illustrations that drive it themselves.
+export function SegmentedDisplay({ options, selected, className }: SegmentedProps) {
   const keyId = useId();
   return (
     <Track className={className}>

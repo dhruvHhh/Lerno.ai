@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type PointerEvent } from "react";
 import { Link } from "react-router";
 
-import { LOGO_FACES } from "@/content/logo-shape";
+import { LOGO_FACES } from "@/components/brand/logo-shape";
 import { SECTION_LINKS } from "@/content/site-links";
 
 const COLUMNS = [

@@ -3,8 +3,8 @@ import { m, MotionConfig } from "motion/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import CtaLink from "@/components/CtaLink";
-import Logo from "@/components/Logo";
+import Logo from "@/components/brand/Logo";
+import CtaLink from "@/components/ui/cta-link";
 import { SECTION_LINKS } from "@/content/site-links";
 import { cn } from "@/lib/utils";
 

@@ -3,16 +3,18 @@ import { useLenis } from "lenis/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type MouseEvent, type SyntheticEvent } from "react";
 
-import LessonVideo from "@/components/LessonVideo";
+import LessonVideo from "@/components/lesson/LessonVideo";
 import type { Lesson } from "@/content/demo-lessons";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 
 const ZOOM = { duration: 0.6, ease: [0.16, 1, 0.3, 1] } as const;
 
-const formatTime = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
+interface LessonPlayerProps {
+  lesson: Lesson;
+  onSecond?: (second: number) => void;
+}
 
-export default function LessonPlayer({ lesson }: { lesson: Lesson }) {
+export default function LessonPlayer({ lesson, onSecond }: LessonPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const seekBarRef = useRef<HTMLButtonElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -38,7 +40,9 @@ export default function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const updateProgress = (event: SyntheticEvent<HTMLVideoElement>) => {
     const video = event.currentTarget;
     seekBarRef.current?.style.setProperty("--progress", `${(video.currentTime / video.duration) * 100 || 0}%`);
-    setSeconds(Math.floor(video.currentTime));
+    const second = Math.floor(video.currentTime);
+    setSeconds(second);
+    onSecond?.(second);
   };
 
   const toggle = () => {
@@ -121,13 +125,7 @@ export default function LessonPlayer({ lesson }: { lesson: Lesson }) {
           <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className="-m-2 p-2">
             {playing ? <PauseIcon weight="fill" className="size-4" /> : <PlayIcon weight="fill" className="size-4" />}
           </button>
-          <button
-            ref={seekBarRef}
-            type="button"
-            onClick={seek}
-            aria-label="Seek"
-            className="relative h-6 flex-1 cursor-pointer"
-          >
+          <button ref={seekBarRef} type="button" onClick={seek} aria-label="Seek" className="relative h-6 flex-1">
             <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/15" />
             <span className="bg-accent absolute top-1/2 left-0 h-1 w-(--progress,0%) -translate-y-1/2 rounded-full" />
             <span className="bg-accent absolute top-1/2 left-(--progress,0%) size-2.5 -translate-1/2 rounded-full" />

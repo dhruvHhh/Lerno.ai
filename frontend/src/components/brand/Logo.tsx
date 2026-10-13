@@ -1,6 +1,6 @@
 import { useId } from "react";
 
-import { LOGO_FACES } from "@/content/logo-shape";
+import { LOGO_FACES } from "@/components/brand/logo-shape";
 
 const TONES = {
   front: ["#a996ff", "#e2b6ff"],

@@ -1,5 +1,5 @@
-import CtaLink from "@/components/CtaLink";
-import GradientText from "@/components/GradientText";
+import GradientText from "@/components/brand/GradientText";
+import CtaLink from "@/components/ui/cta-link";
 import { DotArcs } from "@/components/ui/dot-arcs";
 
 export default function ClosingCta() {

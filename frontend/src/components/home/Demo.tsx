@@ -1,7 +1,7 @@
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
-import LessonVideo from "@/components/LessonVideo";
+import LessonVideo from "@/components/lesson/LessonVideo";
 import { DEMO_LESSONS, type Lesson } from "@/content/demo-lessons";
 import { KEY } from "@/lib/styles";
 import { afterPageLoad, cn } from "@/lib/utils";
@@ -129,7 +129,7 @@ export default function Demo() {
                         aria-pressed={selected}
                         onClick={() => choose(option)}
                         className={cn(
-                          "group/tab relative grid size-11 cursor-pointer place-items-center rounded-[10px] transition-colors duration-300",
+                          "group/tab relative grid size-11 place-items-center rounded-[10px] transition-colors duration-300",
                           KEY,
                           selected ? "text-white" : "text-secondary-foreground hover:text-foreground",
                         )}

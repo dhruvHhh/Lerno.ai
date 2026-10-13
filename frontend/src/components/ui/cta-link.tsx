@@ -1,7 +1,9 @@
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
-import type { PointerEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { CtaReveal } from "@/components/ui/cta-reveal";
+import { trackPointer } from "@/lib/cta";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
@@ -15,13 +17,6 @@ interface CtaLinkProps {
   children: ReactNode;
 }
 
-const trackPointer = (event: PointerEvent<HTMLAnchorElement>) => {
-  const link = event.currentTarget;
-  const { left, top, width, height } = link.getBoundingClientRect();
-  link.style.setProperty("--reveal-x", `${((event.clientX - left) / width) * 100}%`);
-  link.style.setProperty("--reveal-y", `${((event.clientY - top) / height) * 100}%`);
-};
-
 export default function CtaLink({ to, size = "md", children }: CtaLinkProps) {
   return (
     <Link
@@ -33,10 +28,7 @@ export default function CtaLink({ to, size = "md", children }: CtaLinkProps) {
         SIZES[size],
       )}
     >
-      <span
-        aria-hidden="true"
-        className="bg-brand-gradient cta-hover:[--reveal-r:150%] absolute inset-0 -z-10 transition-[--reveal-r] duration-450 ease-in-out [clip-path:circle(var(--reveal-r)_at_var(--reveal-x,50%)_var(--reveal-y,50%))] motion-reduce:transition-none"
-      />
+      <CtaReveal />
       {children}
       <ArrowUpRightIcon
         weight="bold"
