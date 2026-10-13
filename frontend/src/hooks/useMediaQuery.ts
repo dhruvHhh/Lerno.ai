@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
+// Tailwind's lg breakpoint.
+export const DESKTOP = "(min-width: 64rem)";
+
 export default function useMediaQuery(query: string) {
   const list = useMemo(() => window.matchMedia(query), [query]);
   const subscribe = useCallback(

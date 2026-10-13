@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, type PointerEvent } from "react";
 import { Link } from "react-router";
 
 import { LOGO_FACES } from "@/components/brand/logo-shape";
-import { SECTION_LINKS } from "@/content/site-links";
+import { COPYRIGHT, LEGAL_LINKS, SECTION_LINKS } from "@/content/site-links";
 
 const COLUMNS = [
   { title: "Product", links: SECTION_LINKS },
@@ -15,14 +15,9 @@ const COLUMNS = [
   },
   {
     title: "Legal",
-    links: [
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
-    ],
+    links: LEGAL_LINKS,
   },
 ];
-
-const YEAR = new Date().getFullYear();
 
 const LINK_CLASS = "text-muted-foreground hover:text-foreground inline-block py-1 text-sm transition";
 
@@ -146,7 +141,7 @@ export default function Footer() {
         </div>
 
         <p className="text-muted-foreground mt-8 border-t border-white/7 pt-6 text-sm">
-          © {YEAR} Lerno.ai. All rights reserved.
+          {COPYRIGHT}. All rights reserved.
         </p>
       </div>
     </footer>

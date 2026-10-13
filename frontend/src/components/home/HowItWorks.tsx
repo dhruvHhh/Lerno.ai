@@ -16,7 +16,7 @@ import SectionHeading from "@/components/home/SectionHeading";
 import { AskPanel, ExplorePanel, PlanPanel, WatchPanel } from "@/components/home/StepPanels";
 import CtaLink from "@/components/ui/cta-link";
 import { Reveal } from "@/components/ui/reveal";
-import useMediaQuery from "@/hooks/useMediaQuery";
+import useMediaQuery, { DESKTOP } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -207,7 +207,7 @@ function StackedSteps() {
 }
 
 export default function HowItWorks() {
-  const wide = useMediaQuery("(min-width: 64rem)");
+  const wide = useMediaQuery(DESKTOP);
 
   return (
     <section id="how-it-works" className="pt-4 pb-16 md:pb-20">

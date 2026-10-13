@@ -54,7 +54,7 @@ export default function Navbar() {
           )}
         >
           <m.div layout="position">
-            <Link to="/" aria-label="Lerno.ai home">
+            <Link to="/" aria-label="Lerno home">
               <Logo />
             </Link>
           </m.div>

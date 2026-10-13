@@ -1,7 +1,9 @@
 import { ChartBarIcon, VectorTwoIcon, WaveSineIcon, type Icon } from "@phosphor-icons/react";
 
+type LessonId = "integrals" | "derivatives" | "vectors";
+
 export interface Lesson {
-  id: string;
+  id: LessonId;
   topic: string;
   title: string;
   src: string;
@@ -108,6 +110,8 @@ export const DEMO_LESSONS: Lesson[] = [
     ],
   },
 ];
+
+export const lessonById = (id: LessonId) => DEMO_LESSONS.find((lesson) => lesson.id === id) as Lesson;
 
 // Seconds into the area lesson where the demo note is saved.
 export const NOTE_AT = 19;

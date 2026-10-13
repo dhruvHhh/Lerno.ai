@@ -5,13 +5,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TutorChat } from "@/components/home/FeatureVisuals";
 import LessonPlayer from "@/components/lesson/LessonPlayer";
 import PlayerBar from "@/components/lesson/PlayerBar";
-import { SegmentedDisplay } from "@/components/ui/segmented-control";
-import { DEMO_LESSONS, NOTE_AT, shareOf } from "@/content/demo-lessons";
+import { SegmentedDisplay } from "@/components/ui/segmented-display";
+import { DEMO_LESSONS, lessonById, NOTE_AT, shareOf } from "@/content/demo-lessons";
 import { KEY } from "@/lib/styles";
 import { cn, formatTime } from "@/lib/utils";
 import { appear, fadeOut, fadeUp } from "@/lib/variants";
 
-const LESSON = DEMO_LESSONS[0];
+const LESSON = lessonById("integrals");
 
 const press: Variants = {
   hidden: { scale: 1 },
@@ -65,7 +65,7 @@ const typed: Variants = {
 const LEVELS = ["School", "High school", "College"];
 
 const RECENT = [
-  ...DEMO_LESSONS.slice(1),
+  ...DEMO_LESSONS.filter((lesson) => lesson !== LESSON),
   { id: "bayes", title: "Explain Bayes' theorem", topic: "Probability", icon: PercentIcon },
   { id: "eigen", title: "What is an eigenvector?", topic: "Linear algebra", icon: GridFourIcon },
 ];

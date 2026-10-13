@@ -4,17 +4,13 @@ import { Link } from "react-router";
 import GoogleButton from "@/components/auth/GoogleButton";
 import type { ShapeSet } from "@/components/auth/shapes";
 import Logo from "@/components/brand/Logo";
-import useMediaQuery from "@/hooks/useMediaQuery";
+import { COPYRIGHT, LEGAL_LINKS } from "@/content/site-links";
+import useMediaQuery, { DESKTOP } from "@/hooks/useMediaQuery";
 import { UNDERLINE } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 // three.js is large, so it loads separately.
 const MathSurface = lazy(() => import("@/components/auth/MathSurface"));
-
-const LEGAL = [
-  { label: "Terms", to: "/terms" },
-  { label: "Privacy", to: "/privacy" },
-];
 
 interface AuthLayoutProps {
   title: string;
@@ -25,7 +21,7 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ title, shapes, subtitle, onSubmit, children }: AuthLayoutProps) {
-  const wide = useMediaQuery("(min-width: 64rem)");
+  const wide = useMediaQuery(DESKTOP);
 
   return (
     <main className="grid min-h-svh lg:grid-cols-2">
@@ -52,10 +48,10 @@ export default function AuthLayout({ title, shapes, subtitle, onSubmit, children
         </div>
 
         <footer className="text-muted-foreground flex justify-between text-xs">
-          <span>© 2026 Lerno</span>
+          <span>{COPYRIGHT}</span>
           <nav className="flex gap-4">
-            {LEGAL.map(({ label, to }) => (
-              <Link key={to} to={to} className={cn("hover:text-secondary-foreground", UNDERLINE)}>
+            {LEGAL_LINKS.map(({ label, href }) => (
+              <Link key={href} to={href} className={cn("hover:text-secondary-foreground", UNDERLINE)}>
                 {label}
               </Link>
             ))}

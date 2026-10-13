@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 
 const Login = lazy(() => import("@/pages/Login"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const reduceMotion = prefersReducedMotion();
 
@@ -27,6 +28,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </LazyMotion>

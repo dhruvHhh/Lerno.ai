@@ -123,4 +123,12 @@
   ::selection {
     @apply bg-accent/35 text-foreground;
   }
+  /* Hairline drawings in Lerno's colours: violet lines on the page background. */
+  [data-hairline] {
+    --hairline-plate: var(--color-background);
+    --hairline-hi: var(--color-accent-soft);
+    --hairline-edge: #8a84b3;
+    --hairline-mid: #48446b;
+    --hairline-lo: #26263a;
+  }
 }

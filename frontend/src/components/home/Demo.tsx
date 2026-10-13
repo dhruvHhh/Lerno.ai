@@ -5,10 +5,11 @@ import LessonVideo from "@/components/lesson/LessonVideo";
 import { DEMO_LESSONS, type Lesson } from "@/content/demo-lessons";
 import { KEY } from "@/lib/styles";
 import { afterPageLoad, cn } from "@/lib/utils";
+import { EASE } from "@/lib/variants";
 
 const SLIDE = { type: "spring", stiffness: 420, damping: 34, mass: 0.9 } as const;
 
-const FADE = { duration: 0.7, ease: [0.22, 1, 0.36, 1] } as const;
+const FADE = { duration: 0.7, ease: EASE };
 
 const HIDDEN = { opacity: 0, scale: 1.02, filter: "blur(8px)" };
 

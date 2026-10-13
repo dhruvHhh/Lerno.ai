@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 
 import { LogoIcon } from "@/components/brand/Logo";
 import PlayerBar from "@/components/lesson/PlayerBar";
-import { SegmentedDisplay } from "@/components/ui/segmented-control";
-import { DEMO_LESSONS, NOTE_AT, shareOf } from "@/content/demo-lessons";
+import { SegmentedDisplay } from "@/components/ui/segmented-display";
+import { lessonById, NOTE_AT, shareOf } from "@/content/demo-lessons";
 import { RAISED_KEY } from "@/lib/styles";
 import { cn, formatTime } from "@/lib/utils";
 import { appear, fadeUp, sweep } from "@/lib/variants";
@@ -57,7 +57,7 @@ const REST_S = 1;
 
 const GLIDE_RANGE = [0.04, 0.96];
 
-const SINE_LESSON = DEMO_LESSONS[1];
+const SINE_LESSON = lessonById("derivatives");
 
 export function AnimationsVisual() {
   const ref = useRef<HTMLDivElement>(null);
@@ -389,7 +389,7 @@ export function TopicsVisual() {
   );
 }
 
-const AREA_LESSON = DEMO_LESSONS[0];
+const AREA_LESSON = lessonById("integrals");
 
 const NOTE_SHARE = shareOf(NOTE_AT, AREA_LESSON);
 

@@ -3,8 +3,9 @@ import { AnimatePresence, m } from "motion/react";
 import { useState, type ReactNode } from "react";
 
 import Field from "@/components/auth/Field";
-import { EASE, FIELD } from "@/lib/styles";
+import { FIELD, SNAPPY } from "@/lib/styles";
 import { cn } from "@/lib/utils";
+import { EASE_EXPO } from "@/lib/variants";
 
 interface PasswordFieldProps {
   error?: string;
@@ -41,7 +42,7 @@ export default function PasswordField({ error, action, hint, ...input }: Passwor
           aria-label={shown ? "Hide password" : "Show password"}
           className={cn(
             "text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 grid w-12 place-items-center transition-colors",
-            EASE,
+            SNAPPY,
           )}
         >
           <AnimatePresence mode="popLayout" initial={false}>
@@ -50,7 +51,7 @@ export default function PasswordField({ error, action, hint, ...input }: Passwor
               initial={{ opacity: 0, scale: 0.6, rotate: -30 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 0.6, rotate: 30 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.25, ease: EASE_EXPO }}
             >
               <Eye className="size-4.5" />
             </m.span>

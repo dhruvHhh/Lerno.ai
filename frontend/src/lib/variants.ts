@@ -1,7 +1,10 @@
 import type { Variants } from "motion/react";
 
-// `custom` is each element's delay in seconds.
 export const EASE = [0.22, 1, 0.36, 1] as const;
+export const EASE_EXPO = [0.16, 1, 0.3, 1] as const;
+export const EASE_IN_OUT = [0.4, 0, 0.2, 1] as const;
+
+// `custom` is each element's delay in seconds.
 
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 8 },
@@ -21,9 +24,4 @@ export const sweep: Variants = {
 export const fadeOut: Variants = {
   hidden: { opacity: 1 },
   shown: (delay = 0) => ({ opacity: 0, transition: { duration: 0.3, delay } }),
-};
-
-export const lightUp: Variants = {
-  hidden: { color: "#737789" },
-  shown: (delay = 0) => ({ color: "#f5f5f7", transition: { duration: 0.5, delay } }),
 };

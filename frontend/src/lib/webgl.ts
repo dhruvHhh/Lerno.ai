@@ -52,7 +52,7 @@ export function createFullscreenProgram(gl: WebGLRenderingContext, vertex: strin
 export function animateWhileVisible(
   element: Element,
   draw: (seconds: number) => void,
-  { fps, smoothSeconds = 0 }: { fps: number; smoothSeconds?: number },
+  { fps, smoothSeconds = 0 }: { fps?: number; smoothSeconds?: number } = {},
 ) {
   if (prefersReducedMotion()) return () => {};
 
@@ -65,7 +65,7 @@ export function animateWhileVisible(
     if (!start) start = now;
     const seconds = (now - start) / 1000;
     draw(seconds);
-    if (seconds < smoothSeconds) raf = requestAnimationFrame(tick);
+    if (!fps || seconds < smoothSeconds) raf = requestAnimationFrame(tick);
     else timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), 1000 / fps);
   };
   const play = () => {

@@ -6,8 +6,9 @@ import { useEffect, useRef, useState, type MouseEvent, type SyntheticEvent } fro
 import LessonVideo from "@/components/lesson/LessonVideo";
 import type { Lesson } from "@/content/demo-lessons";
 import { cn, formatTime } from "@/lib/utils";
+import { EASE_EXPO } from "@/lib/variants";
 
-const ZOOM = { duration: 0.6, ease: [0.16, 1, 0.3, 1] } as const;
+const ZOOM = { duration: 0.6, ease: EASE_EXPO };
 
 interface LessonPlayerProps {
   lesson: Lesson;

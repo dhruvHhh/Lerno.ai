@@ -1,5 +1,4 @@
-// Needs a button with `cta relative isolate overflow-hidden` that calls trackPointer
-// on pointer enter and leave, with this as its first child.
+// Goes first inside an element styled with CTA and CTA_POINTER (lib/cta).
 export function CtaReveal() {
   return (
     <span

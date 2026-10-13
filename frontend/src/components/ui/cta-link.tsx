@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 import { CtaReveal } from "@/components/ui/cta-reveal";
-import { trackPointer } from "@/lib/cta";
+import { CTA, CTA_POINTER } from "@/lib/cta";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
@@ -21,12 +21,8 @@ export default function CtaLink({ to, size = "md", children }: CtaLinkProps) {
   return (
     <Link
       to={to}
-      onPointerEnter={trackPointer}
-      onPointerLeave={trackPointer}
-      className={cn(
-        "cta bg-foreground text-background relative isolate inline-flex items-center gap-2 overflow-hidden rounded-full font-medium shadow-[0_0_32px_rgba(155,124,255,0.3)] outline-none",
-        SIZES[size],
-      )}
+      {...CTA_POINTER}
+      className={cn(CTA, "inline-flex items-center gap-2 rounded-full font-medium outline-none", SIZES[size])}
     >
       <CtaReveal />
       {children}

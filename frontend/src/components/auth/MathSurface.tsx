@@ -17,6 +17,7 @@ import {
 
 import type { ShapeSet } from "@/components/auth/shapes";
 import { cn, prefersReducedMotion } from "@/lib/utils";
+import { animateWhileVisible } from "@/lib/webgl";
 
 const HOLD_MS = 6000;
 
@@ -203,7 +204,7 @@ export default function MathSurface({ shapes, className }: { shapes: ShapeSet; c
       }
       render();
     };
-    const stopAnimation = reduce ? () => {} : animate(host, step);
+    const stopAnimation = animateWhileVisible(host, step);
 
     showNow.current = () => {
       uniforms.uFrom.value = uniforms.uTo.value = target.current;
@@ -284,23 +285,4 @@ export default function MathSurface({ shapes, className }: { shapes: ShapeSet; c
       </div>
     </div>
   );
-}
-
-// Runs `step` each frame, only while on screen and the tab is visible.
-function animate(element: Element, step: (seconds: number) => void) {
-  let frame = 0;
-  const start = performance.now();
-  const tick = (now: number) => {
-    step((now - start) / 1000);
-    frame = requestAnimationFrame(tick);
-  };
-  const observer = new IntersectionObserver(([entry]) => {
-    cancelAnimationFrame(frame);
-    if (entry.isIntersecting) frame = requestAnimationFrame(tick);
-  });
-  observer.observe(element);
-  return () => {
-    cancelAnimationFrame(frame);
-    observer.disconnect();
-  };
 }

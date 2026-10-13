@@ -6,7 +6,7 @@ export const KEY =
 export const RAISED_KEY =
   "bg-linear-to-b from-[#1d2030] to-[#141723] shadow-[0_1px_3px_rgba(0,0,0,0.5),0_0_14px_rgba(155,124,255,0.12),inset_0_1px_0_rgba(183,164,255,0.22)] ring-1 ring-white/7";
 
-export const EASE = "duration-300 ease-snappy";
+export const SNAPPY = "duration-300 ease-snappy";
 
 // The long background transition keeps autofilled fields dark.
 export const FIELD = cn(
@@ -22,7 +22,7 @@ export const FIELD = cn(
 export const UNDERLINE = cn(
   "bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-[position:0_100%] bg-no-repeat pb-px",
   "transition-[background-size] hover:bg-[length:100%_1px]",
-  EASE,
+  SNAPPY,
 );
 
-export const PRESS = cn("active:scale-[0.985]", EASE);
+export const PRESS = cn("active:scale-[0.985]", SNAPPY);

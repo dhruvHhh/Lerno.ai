@@ -2,6 +2,7 @@ import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { EASE_IN_OUT } from "@/lib/variants";
 
 interface FieldProps {
   id: string;
@@ -33,7 +34,7 @@ export default function Field({ id, label, error, action, note, children }: Fiel
             initial={{ opacity: 0, height: 0, y: -5 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
             exit={{ opacity: 0, height: 0, y: -5 }}
-            transition={{ duration: reduce ? 0 : 0.25, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: reduce ? 0 : 0.25, ease: EASE_IN_OUT }}
           >
             <p
               id={error ? `${id}-error` : undefined}

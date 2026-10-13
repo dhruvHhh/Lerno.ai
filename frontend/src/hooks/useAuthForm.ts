@@ -5,7 +5,9 @@ import { validate, type Errors } from "@/lib/auth";
 export default function useAuthForm() {
   const [errors, setErrors] = useState<Errors>({});
 
-  const clearError = (field: keyof Errors) => errors[field] && setErrors({ ...errors, [field]: undefined });
+  const clearError = (field: keyof Errors) => {
+    if (errors[field]) setErrors({ ...errors, [field]: undefined });
+  };
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
