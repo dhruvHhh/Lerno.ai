@@ -2,7 +2,7 @@ import { useEffect, type RefObject } from "react";
 
 import { afterPageLoad, prefersReducedMotion } from "@/lib/utils";
 
-// Waits for the page load so the video never competes with the hero's font and scripts.
+// Wait for page load, so videos don't slow the first paint.
 export default function useAutoPlay(videoRef: RefObject<HTMLVideoElement | null>) {
   useEffect(() => {
     const video = videoRef.current;

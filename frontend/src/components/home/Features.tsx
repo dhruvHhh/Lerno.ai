@@ -32,8 +32,6 @@ const FEATURES: Feature[] = [
   { name: "Notes", detail: "pinned to the moment in the lesson.", Visual: NotesVisual },
 ];
 
-// One cell of the grid: a one-line caption, then a visual anchored to the cell's bottom edge, so visuals line up
-// across a row. It plays once when it scrolls into view.
 function FeatureCell({ name, detail, Visual, className }: Feature) {
   return (
     <li className={cn("bg-background flex flex-col p-6 sm:p-8", className)}>
@@ -54,7 +52,7 @@ export default function Features() {
         Animated lessons at your level, with a tutor and notes, in one place.
       </SectionHeading>
 
-      {/* The 1px gaps show the background behind the cells, drawing hairlines between them. */}
+      {/* The 1px gaps let the background show through as hairlines. */}
       <ul className="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-white/8 bg-white/8 md:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((feature) => (
           <FeatureCell key={feature.name} {...feature} />

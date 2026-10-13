@@ -48,7 +48,7 @@ export default function Demo() {
     };
   }, []);
 
-  // The old lesson keeps playing underneath until the new one is actually playing, then the new one fades in over it.
+  // Keep the old clip until the new one plays, so there's no blank frame.
   const choose = (next: Lesson) => {
     if (next.id === lesson.id) return;
     setLesson(next);

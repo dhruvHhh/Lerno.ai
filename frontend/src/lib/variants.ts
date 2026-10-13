@@ -1,6 +1,6 @@
 import type { Variants } from "motion/react";
 
-// Shared reveal presets; `custom` is each element's delay in seconds.
+// `custom` is each element's delay in seconds.
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
 export const fadeUp: Variants = {

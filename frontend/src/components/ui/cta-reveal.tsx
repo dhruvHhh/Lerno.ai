@@ -1,6 +1,5 @@
-// The site's main-button hover: the brand gradient grows out of the point where the cursor enters, then shrinks back
-// toward where it leaves. The button needs the `cta` class plus `relative isolate overflow-hidden`, calls
-// `trackPointer` (from @/lib/cta) on pointer enter and leave, and renders `CtaReveal` as its first child.
+// Needs a button with `cta relative isolate overflow-hidden` that calls trackPointer
+// on pointer enter and leave, with this as its first child.
 export function CtaReveal() {
   return (
     <span

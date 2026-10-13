@@ -18,7 +18,7 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
   return shader;
 }
 
-// Builds a program that draws one triangle covering the canvas; the vertex shader must use `attribute vec2 aPos`.
+// Full-canvas triangle; the vertex shader must use `attribute vec2 aPos`.
 export function createFullscreenProgram(gl: WebGLRenderingContext, vertex: string, fragment: string) {
   const vs = compile(gl, gl.VERTEX_SHADER, vertex);
   const fs = compile(gl, gl.FRAGMENT_SHADER, fragment);

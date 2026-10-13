@@ -11,7 +11,6 @@ import { KEY } from "@/lib/styles";
 import { cn, formatTime } from "@/lib/utils";
 import { appear, fadeOut, fadeUp } from "@/lib/variants";
 
-// Every panel follows the same lesson, from the question to what comes after it.
 const LESSON = DEMO_LESSONS[0];
 
 const press: Variants = {
@@ -25,7 +24,6 @@ interface WindowProps {
   children: ReactNode;
 }
 
-// A Lerno app window anchored to the bottom of the panel and cropped by it, like a product screenshot.
 function Window({ title, className, children }: WindowProps) {
   return (
     <m.div
@@ -56,10 +54,9 @@ const TYPE_START = 0.5;
 
 const TYPE_GAP = 0.03;
 
-// Seconds until the question has finished typing itself.
 const TYPED = TYPE_START + QUESTION.length * TYPE_GAP;
 
-// Each letter is taken out of the layout until it is typed, so the caret follows the text.
+// Untyped letters are out of the layout, so the caret follows the text.
 const typed: Variants = {
   hidden: { display: "none" },
   shown: (delay = 0) => ({ display: "inline", transition: { delay } }),
@@ -67,7 +64,6 @@ const typed: Variants = {
 
 const LEVELS = ["School", "High school", "College"];
 
-// The other demo lessons, then two more, so the list runs past the panel's bottom edge.
 const RECENT = [
   ...DEMO_LESSONS.slice(1),
   { id: "bayes", title: "Explain Bayes' theorem", topic: "Probability", icon: PercentIcon },
@@ -80,7 +76,6 @@ export function AskPanel() {
   const still = useReducedMotion();
   const [level, setLevel] = useState(still ? 1 : 0);
 
-  // Once the question is typed, the level slides from School to High school.
   useEffect(() => {
     if (!inView || still) return;
     const timer = setTimeout(() => setLevel(1), (TYPED + 0.3) * 1000);
@@ -116,7 +111,6 @@ export function AskPanel() {
           </m.span>
         </div>
 
-        {/* Hidden on phones, where the stacked steps would otherwise run long. */}
         <div className="hidden sm:block">
           <p className="text-muted-foreground mb-2 text-xs">Recent</p>
           <ul className="flex flex-col">
@@ -136,24 +130,21 @@ export function AskPanel() {
   );
 }
 
-// A real frame from each scene of the lesson, cropped to its graph.
 const FRAMES = [
   "/videos/area-under-curve-shade.webp",
   "/videos/area-under-curve-slice.webp",
   "/videos/area-under-curve-thin.webp",
 ];
 
-// Each scene runs until the next begins. Rounding the boundaries, not the lengths, keeps the total equal to the lesson's.
+// Round the boundaries, not the lengths, so the total still matches.
 const BOUNDARIES = [...LESSON.scenes.map(({ at }) => at), LESSON.duration].map(Math.round);
 
 const TOTAL = BOUNDARIES[BOUNDARIES.length - 1];
 
-// The playhead sweeps the whole timeline once, at a steady pace, so each scene is built in proportion to its length.
 const SWEEP_START = 0.6;
 
 const SWEEP_S = 7;
 
-// Seconds into the animation when the playhead reaches a moment of the lesson.
 const sweepAt = (second: number) => SWEEP_START + (second / TOTAL) * SWEEP_S;
 
 const SCENES = LESSON.scenes.map(({ title, narration }, index) => ({
@@ -161,7 +152,7 @@ const SCENES = LESSON.scenes.map(({ title, narration }, index) => ({
   narration,
   src: FRAMES[index],
   seconds: BOUNDARIES[index + 1] - BOUNDARIES[index],
-  // When the playhead enters and leaves this scene; the last one stays highlighted, as its narration stays shown.
+  // The last scene stays lit, like its narration.
   phase: {
     starts: sweepAt(BOUNDARIES[index]),
     ends: sweepAt(BOUNDARIES[index + 1]),
@@ -175,14 +166,13 @@ interface Phase {
   last: boolean;
 }
 
-// Moves one style through a scene's three states: before the playhead reaches it, while it is being built, and after.
 const phases = (
   key: "opacity" | "color",
   before: string | number,
   active: string | number,
   after: string | number,
 ): Variants => {
-  // TypeScript widens a computed key to any string, so the one-key style object is typed by hand.
+  // TypeScript widens computed keys to string, so type it by hand.
   const style = (value: string | number | (string | number)[]) => ({ [key]: value }) as Target;
   return {
     hidden: style(before),
@@ -197,14 +187,12 @@ const phases = (
   };
 };
 
-// The scene being built gets a violet ring; scenes already built are dimmed; titles follow the same three states.
 const ring = phases("opacity", 0, 1, 0);
 
 const dim = phases("opacity", 0, 0, 1);
 
 const titleColor = phases("color", "#737789", "#f5f5f7", "#a7aab8");
 
-// The playhead fades away once it reaches the end, so it doesn't rest on the frame's edge.
 const playhead: Variants = {
   hidden: { left: "0%", opacity: 1 },
   shown: {
@@ -217,7 +205,6 @@ const playhead: Variants = {
   },
 };
 
-// A scene's frame is uncovered from the left as the playhead passes over it.
 const build: Variants = {
   hidden: { clipPath: "inset(0 100% 0 0)" },
   shown: ({ starts, ends }: Phase) => ({
@@ -226,8 +213,6 @@ const build: Variants = {
   }),
 };
 
-// One track like a video editor's: each scene's width is its length, and a single playhead builds the lesson left to
-// right, its timecode counting up to the lesson's length. The narration below follows the scene being built.
 export function PlanPanel() {
   const still = useReducedMotion();
   const timecodeRef = useRef<HTMLSpanElement>(null);
@@ -251,7 +236,7 @@ export function PlanPanel() {
 
         <div>
           <div className="relative">
-            {/* Behind each frame is the lesson's own background, so it fits whole without visible bars. */}
+            {/* The lesson's background behind each frame hides letterbox bars. */}
             <ol className="flex h-24 gap-px overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10 sm:h-32">
               {SCENES.map(({ title, src, seconds, phase }) => (
                 <li key={title} className="group relative bg-[#050609]" style={{ flex: `${seconds} 1 0` }}>
@@ -292,8 +277,7 @@ export function PlanPanel() {
           </ol>
         </div>
 
-        {/* Each scene's narration shows while it is built; they share one spot, sized to the longest, and each fades out
-            just before the next fades in, so two never overlap. */}
+        {/* Narrations share one spot; each fades out before the next fades in. */}
         <div className="border-accent/50 grid border-l-2 pl-4 *:col-start-1 *:row-start-1">
           {SCENES.map(({ title, narration, phase }, index) => (
             <m.div key={title} variants={appear} custom={phase.starts}>
@@ -343,19 +327,17 @@ const ANSWER =
     " ",
   );
 
-// The reader paused at the note's moment to ask; the share places it on the timeline.
 const PAUSED_SHARE = shareOf(NOTE_AT, LESSON);
 
 const TUTOR_AT = 0.3;
 
-// Seconds until the note appears: once the tutor's answer has finished.
 const NOTE_REVEAL = TUTOR_AT + 1.1 + ANSWER.length * 0.08 + 0.4;
 
 export function ExplorePanel() {
   return (
     <Window title={LESSON.title}>
       <div aria-hidden="true" className="flex flex-col gap-4 p-5">
-        {/* Slightly wider than 16:9 so the tutor's answer fits above the panel's bottom fade. */}
+        {/* Wider than 16:9 so the answer clears the bottom fade. */}
         <div className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/10 sm:aspect-2/1">
           <img src="/videos/area-under-curve-strips.webp" alt="" className="size-full object-cover object-[50%_30%]" />
           <PlayerBar
@@ -365,7 +347,6 @@ export function ExplorePanel() {
             duration={LESSON.duration}
             className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black to-transparent px-3 pt-8 pb-2.5"
           />
-          {/* The note the reader saved, pinned above the moment they paused. */}
           <m.div
             variants={fadeUp}
             custom={NOTE_REVEAL}

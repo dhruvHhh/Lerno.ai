@@ -14,7 +14,6 @@ interface SegmentedProps {
   className?: string;
 }
 
-// The sunken track the options sit in.
 function Track({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div
@@ -29,7 +28,7 @@ function Track({ className, children, ...props }: ComponentProps<"div">) {
   );
 }
 
-// The raised key under the selected option; it slides between options because each track shares one layoutId.
+// The shared layoutId makes the key slide between options.
 function SlidingKey({ id }: { id: string }) {
   const reduceMotion = useReducedMotion();
   return (
@@ -42,7 +41,6 @@ function SlidingKey({ id }: { id: string }) {
   );
 }
 
-// Shows which option is selected, for illustrations that drive it themselves.
 export function SegmentedDisplay({ options, selected, className }: SegmentedProps) {
   const keyId = useId();
   return (

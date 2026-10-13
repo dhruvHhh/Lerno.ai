@@ -1,11 +1,16 @@
-export type Errors = Partial<Record<"email" | "password", string>>;
+export type Errors = Partial<Record<"name" | "email" | "password", string>>;
 
-// Checks the sign-in fields in the browser; signing in itself is not wired up yet.
+const EMPTY = { name: "Enter your name.", email: "Enter your email address.", password: "Enter your password." };
+
+// Checks every input in the form; creating accounts and signing in aren't wired up yet.
 export function validate(form: HTMLFormElement): Errors {
-  const { email, password } = form.elements as unknown as Record<"email" | "password", HTMLInputElement>;
   const errors: Errors = {};
-  if (!email.value) errors.email = "Enter your email address.";
-  else if (!email.validity.valid) errors.email = "Enter a valid email address, like name@example.com.";
-  if (!password.value) errors.password = "Enter your password.";
+  for (const input of form.querySelectorAll("input")) {
+    const name = input.name as keyof Errors;
+    if (!input.value.trim()) errors[name] = EMPTY[name];
+    else if (input.type === "email" && !input.validity.valid)
+      errors[name] = "Enter a valid email address, like name@example.com.";
+    else if (input.value.length < input.minLength) errors[name] = `Use at least ${input.minLength} characters.`;
+  }
   return errors;
 }

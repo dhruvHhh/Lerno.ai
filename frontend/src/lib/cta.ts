@@ -1,6 +1,6 @@
 import type { PointerEvent } from "react";
 
-// Records where the cursor entered or left a main button, so its hover gradient grows from that point.
+// Saves where the cursor crossed the edge, so the hover grows from there.
 export const trackPointer = (event: PointerEvent<HTMLElement>) => {
   const target = event.currentTarget;
   const { left, top, width, height } = target.getBoundingClientRect();

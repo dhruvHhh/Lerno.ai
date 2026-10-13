@@ -10,14 +10,13 @@ import { RAISED_KEY } from "@/lib/styles";
 import { cn, formatTime } from "@/lib/utils";
 import { appear, fadeUp, sweep } from "@/lib/variants";
 
-// Whether a slow background loop should run: only while its cell is on screen, and never with reduced motion.
+// True while on screen, unless motion is reduced.
 function useAmbient(ref: RefObject<Element | null>) {
   const inView = useInView(ref, { amount: 0.3 });
   const still = useReducedMotion();
   return inView && !still;
 }
 
-// A slow ease in and out, so the drawing settles instead of snapping.
 const CALM = [0.45, 0, 0.55, 1] as const;
 
 const DRAW_DELAY = 0.4;
@@ -29,12 +28,11 @@ const draw: Variants = {
   shown: { pathLength: 1, transition: { duration: DRAW_TIME, delay: DRAW_DELAY, ease: CALM } },
 };
 
-// One and a half waves of sin(x) across a wide canvas, at progress p from 0 to 1 (x from 0 to 3π).
+// sin(x) for x from 0 to 3π, at progress p from 0 to 1.
 const waveX = (p: number) => 40 + p * 570;
 
 const waveY = (p: number) => 100 - 62 * Math.sin(p * Math.PI * 3);
 
-// The curve's angle at p, so the tangent line can be turned to match.
 const slopeAngle = (p: number) => (Math.atan2(-62 * 3 * Math.PI * Math.cos(p * Math.PI * 3), 570) * 180) / Math.PI;
 
 const WAVE = Array.from({ length: 61 }, (_, i) => `${i ? "L" : "M"}${waveX(i / 60)} ${waveY(i / 60).toFixed(1)}`).join(
@@ -47,14 +45,12 @@ const X_TICKS = [
   { p: 1, label: "3π" },
 ];
 
-// Faint grid lines every half π across, and at the curve's peak and trough.
 const GRID = [
   ...Array.from({ length: 7 }, (_, i) => `M${waveX(i / 6)} 26V174`),
   `M24 ${waveY(1 / 6)}H624`,
   `M24 ${waveY(1 / 2)}H624`,
 ].join("");
 
-// The glider takes 10 s to travel the curve, then rests a second, faded out, before starting again.
 const GLIDE_S = 10;
 
 const REST_S = 1;
@@ -63,17 +59,15 @@ const GLIDE_RANGE = [0.04, 0.96];
 
 const SINE_LESSON = DEMO_LESSONS[1];
 
-// A Lerno lesson frame: sin(x) draws itself once, then a dot and its tangent line glide slowly along it,
-// with the player bar moving in step.
 export function AnimationsVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const gliderRef = useRef<SVGGElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const playing = useAmbient(ref);
-  // The glide waits for the curve's own draw animation to finish, so the dot never rides an undrawn curve.
+  // Wait for the curve to finish drawing before the dot sets off.
   const [drawn, setDrawn] = useState(false);
   const [second, setSecond] = useState(0);
-  // Glide time already played, so scrolling away and back resumes where it left off.
+  // Kept across pauses, so scrolling back resumes.
   const elapsed = useRef(0);
 
   useEffect(() => {
@@ -85,13 +79,12 @@ export function AnimationsVisual() {
       const bar = barRef.current;
       if (!glider || !bar) return;
       elapsed.current = (now - start) / 1000;
-      // Cosine easing makes each trip start and end softly; the glider fades out for the rest between trips.
       const time = elapsed.current % (GLIDE_S + REST_S);
       const eased = (1 - Math.cos(Math.min(time / GLIDE_S, 1) * Math.PI)) / 2;
       const p = GLIDE_RANGE[0] + eased * (GLIDE_RANGE[1] - GLIDE_RANGE[0]);
       glider.setAttribute("transform", `translate(${waveX(p)} ${waveY(p)}) rotate(${slopeAngle(p)})`);
       glider.style.opacity = String(Math.min(time / 0.6, 1, Math.max((GLIDE_S + REST_S * 0.6 - time) / 0.6, 0)));
-      // The bar moves every frame through a CSS variable; state changes once a second, for the clock.
+      // A CSS variable moves the bar each frame; state updates once a second.
       bar.style.setProperty("--progress", `${p * 100}%`);
       setSecond(Math.floor(p * SINE_LESSON.duration));
       frame = requestAnimationFrame(step);
@@ -167,7 +160,6 @@ export function AnimationsVisual() {
   );
 }
 
-// y = x² from 0 to 2 inside a 72×56 thumbnail.
 const thumbX = (u: number) => 6 + u * 30;
 
 const thumbY = (u: number) => 50 - 11 * u * u;
@@ -185,7 +177,6 @@ const SQUARES = Array.from({ length: 6 }, (_, col) =>
 
 const STRIPS = [0, 0.5, 1, 1.5].map((u) => ({ x: thumbX(u), height: 50 - thumbY(u) }));
 
-// The same idea, the area under y = x², explained at each level.
 const LEVELS = [
   { name: "School", explanation: "Count the squares that fit under the curve." },
   { name: "High school", explanation: "Add up thin rectangles under y = x²." },
@@ -232,7 +223,6 @@ function LevelThumb({ level }: { level: number }) {
   );
 }
 
-// Moves to the next level every few seconds while on screen, with a soft cross-fade.
 export function LevelsVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const playing = useAmbient(ref);
@@ -273,7 +263,6 @@ export function LevelsVisual() {
   );
 }
 
-// A question to the tutor and its answer appearing word by word, starting `at` seconds in.
 export function TutorChat({ question, answer, at = 0 }: { question: string; answer: string[]; at?: number }) {
   return (
     <>
@@ -320,11 +309,10 @@ const CHATS = [
 
 const CHAT_MS = 8000;
 
-// One exchange at a time, cross-fading to the next every few seconds while on screen.
 export function TutorVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const playing = useAmbient(ref);
-  // Counts every change, so only the very first exchange plays with the cell and every later one plays on its own.
+  // Only the first exchange waits for the cell's entrance.
   const [round, setRound] = useState(0);
   const chat = round % CHATS.length;
 
@@ -351,7 +339,6 @@ export function TutorVisual() {
   );
 }
 
-// Each row loops at its own pace, alternating direction, so the wall never moves in lockstep.
 const TOPIC_ROWS = [
   { seconds: 60, topics: ["Derivatives", "Eigenvectors", "Bayes' theorem", "Fourier series", "Limits", "Vectors"] },
   { seconds: 70, topics: ["Integrals", "Probability", "Matrices", "Taylor series", "Complex numbers", "Trigonometry"] },
@@ -361,10 +348,8 @@ const TOPIC_ROWS = [
   },
 ];
 
-// One lifted chip per row, travelling with it.
 const PICKS = ["Eigenvectors", "Probability", "Differential equations"];
 
-// Rows of topics scrolling slowly in alternating directions, fading in and out at both sides.
 export function TopicsVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const playing = useAmbient(ref);
@@ -376,7 +361,7 @@ export function TopicsVisual() {
       className="flex flex-col gap-2.5 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_15%,#000_85%,transparent)]"
     >
       {TOPIC_ROWS.map(({ seconds, topics }, index) => (
-        // The list is doubled and slides by half its width, so the loop joins seamlessly.
+        // The list is doubled and slides half its width, so the loop is seamless.
         <div
           key={topics[0]}
           className={cn(
@@ -406,10 +391,9 @@ export function TopicsVisual() {
 
 const AREA_LESSON = DEMO_LESSONS[0];
 
-// Where the note sits on the lesson's timeline.
 const NOTE_SHARE = shareOf(NOTE_AT, AREA_LESSON);
 
-// One pass of the playhead. The glow's keyframes peak at 50%, so it is shifted to peak as the playhead reaches the note.
+// The glow peaks at 50%, so shift it to peak as the playhead hits the note.
 const NOTE_LOOP_S = 12;
 
 const NOTE_LOOP = { animationDuration: `${NOTE_LOOP_S}s` };
@@ -422,7 +406,6 @@ export function NotesVisual() {
 
   return (
     <div ref={ref} className="flex max-w-xs flex-col gap-4 pb-5">
-      {/* The card glows softly each time the playhead below passes its moment; both loops share one duration. */}
       <m.div
         variants={fadeUp}
         style={GLOW}
@@ -463,7 +446,6 @@ export function NotesVisual() {
           className="bg-accent-soft absolute top-1/2 size-2 -translate-1/2 rounded-full ring-2 ring-[#050609]"
           style={{ left: NOTE_SHARE }}
         />
-        {/* The lesson's start, the note's moment and the end, under the line. */}
         <span className="text-muted-foreground absolute top-3 left-0 text-[11px] tabular-nums">0:00</span>
         <span
           className="text-accent-soft absolute top-3 -translate-x-1/2 text-[11px] font-medium tabular-nums"

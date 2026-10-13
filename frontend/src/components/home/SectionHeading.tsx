@@ -8,7 +8,6 @@ interface SectionHeadingProps {
   children: ReactNode;
 }
 
-// The tag is a small chip: an icon on a tile in the logo's violet, then the section's name.
 export default function SectionHeading({ tag, icon: TagIcon, title, children }: SectionHeadingProps) {
   return (
     <div className="flex flex-col items-center text-center">

@@ -64,15 +64,14 @@ function LogoOutline({ stroke, fill, weight }: { stroke: string; fill: string; w
   );
 }
 
-// Base layer: outline (its inside covered by a background fill so overlapping glyph parts don't show) plus a faint fill.
-// Hover layer: the same outline in the brand gradient, revealed only in a soft circle around the pointer.
+// The gradient outline only shows in a circle around the pointer.
 function GiantLogo() {
   const id = useId();
 
   const frame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
-  // At most one layout read and style write per animation frame, however fast the pointer moves.
+  // At most one layout read per frame, however fast the pointer moves.
   const moveSpotlight = (event: PointerEvent<HTMLDivElement>) => {
     const { currentTarget: spot, clientX, clientY } = event;
     cancelAnimationFrame(frame.current);

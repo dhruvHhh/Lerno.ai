@@ -15,25 +15,17 @@ import {
   WebGLRenderer,
 } from "three";
 
+import type { ShapeSet } from "@/components/auth/shapes";
 import { cn, prefersReducedMotion } from "@/lib/utils";
-
-// The surfaces it morphs between; the vertex shader below draws the same three, picked by index.
-const SURFACES = [
-  { name: "Ripple", equation: "z = sin √(x² + y²)" },
-  { name: "Waves", equation: "z = sin x · cos y" },
-  { name: "Egg crate", equation: "z = cos x + cos y" },
-];
 
 const HOLD_MS = 6000;
 
 const MORPH_S = 1.6;
 
-// The surfaces are drawn exactly for x and y from −RANGE to RANGE (−2π to 2π), then shrunk by SCALE to fit the scene.
+// The grid spans -2π to 2π, then SCALE shrinks it to fit.
 const RANGE = 2 * Math.PI;
 
 const SCALE = 0.6;
-
-// Grid lines across each axis, each split into DETAIL short pieces per cell so it can bend.
 
 const LINES = 28;
 
@@ -41,7 +33,7 @@ const DETAIL = 6;
 
 const IDLE_SPIN = 0.06;
 
-// Each grid line is many short segments, so it can bend with the surface.
+// Lines are split into short segments so they can bend.
 function gridGeometry() {
   const points: number[] = [];
   const step = (2 * RANGE) / LINES;
@@ -59,7 +51,7 @@ function gridGeometry() {
   return geometry;
 }
 
-const VERTEX = `
+const vertex = ({ glsl, flat }: ShapeSet) => `
 uniform float uFrom;
 uniform float uTo;
 uniform float uMorph;
@@ -68,47 +60,40 @@ uniform float uLift;
 varying float vHeight;
 varying float vEdge;
 
-float surface(float index, vec2 p) {
-  if (index < 0.5) return sin(length(p));
-  if (index < 1.5) return sin(p.x) * cos(p.y);
-  return cos(p.x) + cos(p.y);
-}
+${glsl}
 
 void main() {
   vec2 p = position.xy;
   float eased = uMorph * uMorph * (3.0 - 2.0 * uMorph);
-  float z = mix(surface(uFrom, p), surface(uTo, p), eased);
-  // A soft bump that follows the cursor.
-  z += uLift * 0.9 * exp(-dot(p - uHover, p - uHover) * 0.35);
-  vHeight = z;
-  vEdge = length(p) / ${(RANGE * Math.SQRT2).toFixed(3)};
+  vec3 q = mix(shape(uFrom, p), shape(uTo, p), eased);
+  q.z += uLift * 0.9 * exp(-dot(p - uHover, p - uHover) * 0.35);
+  vHeight = q.z;
+  vEdge = ${flat ? `length(p) / ${(RANGE * Math.SQRT2).toFixed(3)}` : "0.0"};
   // Maths has z up; three.js has y up.
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(vec3(p.x, z, p.y) * ${SCALE.toFixed(2)}, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(q.xzy * ${SCALE.toFixed(2)}, 1.0);
 }
 `;
 
-const FRAGMENT = `
+const fragment = ({ depth }: ShapeSet) => `
 varying float vHeight;
 varying float vEdge;
 
 void main() {
   vec3 low = vec3(0.24, 0.17, 0.55);
   vec3 high = vec3(0.87, 0.82, 1.0);
-  vec3 color = mix(low, high, smoothstep(-1.2, 1.2, vHeight));
-  // Lines fade toward the corners, so the grid has no hard edge.
+  vec3 color = mix(low, high, smoothstep(${(-depth).toFixed(1)}, ${depth.toFixed(1)}, vHeight));
+  // Fade lines near the corners so the grid has no hard edge.
   gl_FragColor = vec4(color, (1.0 - smoothstep(0.55, 1.0, vEdge)) * 0.85);
 }
 `;
 
-// A 3D maths surface drawn as a glowing grid: it turns slowly, can be dragged, rises toward the cursor and morphs into
-// the next surface every few seconds. With reduced motion it stays still and only changes when a dot is chosen.
-export default function MathSurface({ className }: { className?: string }) {
+export default function MathSurface({ shapes, className }: { shapes: ShapeSet; className?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const still = useReducedMotion();
   const [current, setCurrent] = useState(0);
-  // Read by the render loop, which lives outside React's renders.
+  // Refs, because the render loop runs outside React.
   const target = useRef(0);
-  // Set by the scene once it exists: shows the target surface at once, for reduced motion.
+  // Jumps straight to the chosen surface (reduced motion).
   const showNow = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -122,7 +107,7 @@ export default function MathSurface({ className }: { className?: string }) {
 
     const scene = new Scene();
     const camera = new PerspectiveCamera(35, 1, 0.1, 100);
-    camera.position.set(0, 9, 17);
+    camera.position.set(0, 10.5, 20);
     camera.lookAt(0, -0.8, 0);
 
     const uniforms = {
@@ -134,8 +119,8 @@ export default function MathSurface({ className }: { className?: string }) {
     };
     const geometry = gridGeometry();
     const material = new ShaderMaterial({
-      vertexShader: VERTEX,
-      fragmentShader: FRAGMENT,
+      vertexShader: vertex(shapes),
+      fragmentShader: fragment(shapes),
       uniforms,
       transparent: true,
       depthWrite: false,
@@ -160,7 +145,6 @@ export default function MathSurface({ className }: { className?: string }) {
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(host);
 
-    // Dragging turns the surface; plain hovering lifts it under the cursor.
     const raycaster = new Raycaster();
     const ground = new Plane(new Vector3(0, 1, 0), 0);
     const hit = new Vector3();
@@ -185,7 +169,7 @@ export default function MathSurface({ className }: { className?: string }) {
       const { left, top, width, height } = host.getBoundingClientRect();
       pointer.set(((event.clientX - left) / width) * 2 - 1, -((event.clientY - top) / height) * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      hovering = !!raycaster.ray.intersectPlane(ground, hit);
+      hovering = shapes.flat && !!raycaster.ray.intersectPlane(ground, hit);
       if (hovering) {
         spin.worldToLocal(hit);
         uniforms.uHover.value.set(hit.x / SCALE, hit.z / SCALE);
@@ -206,7 +190,6 @@ export default function MathSurface({ className }: { className?: string }) {
     const step = (seconds: number) => {
       const delta = Math.min(seconds - last, 0.1);
       last = seconds;
-      // Starts a morph whenever a new surface is picked.
       if (target.current !== uniforms.uTo.value) {
         uniforms.uFrom.value = uniforms.uTo.value;
         uniforms.uTo.value = target.current;
@@ -240,21 +223,20 @@ export default function MathSurface({ className }: { className?: string }) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, []);
+  }, [shapes]);
 
-  // Moves to the next surface every few seconds, unless motion is reduced; picking a dot restarts the wait.
   useEffect(() => {
     if (still) return;
-    const timer = setInterval(() => setCurrent((index) => (index + 1) % SURFACES.length), HOLD_MS);
+    const timer = setInterval(() => setCurrent((index) => (index + 1) % shapes.items.length), HOLD_MS);
     return () => clearInterval(timer);
-  }, [still, current]);
+  }, [still, current, shapes]);
 
   useEffect(() => {
     target.current = current;
     if (still) showNow.current();
   }, [current, still]);
 
-  const { name, equation } = SURFACES[current];
+  const { name, equation } = shapes.items[current];
 
   return (
     <div className={cn("relative", className)}>
@@ -280,13 +262,13 @@ export default function MathSurface({ className }: { className?: string }) {
           </m.div>
         </AnimatePresence>
 
-        <div role="group" aria-label="Surface" className="pointer-events-auto flex gap-1.5">
-          {SURFACES.map((surface, index) => (
+        <div role="group" aria-label="Shape" className="pointer-events-auto flex gap-1.5">
+          {shapes.items.map((item, index) => (
             <button
-              key={surface.name}
+              key={item.name}
               type="button"
               onClick={() => setCurrent(index)}
-              aria-label={surface.name}
+              aria-label={item.name}
               aria-pressed={index === current}
               className="-my-2 py-2"
             >
@@ -304,7 +286,7 @@ export default function MathSurface({ className }: { className?: string }) {
   );
 }
 
-// Runs `step` every frame while the element is on screen and the tab is visible.
+// Runs `step` each frame, only while on screen and the tab is visible.
 function animate(element: Element, step: (seconds: number) => void) {
   let frame = 0;
   const start = performance.now();

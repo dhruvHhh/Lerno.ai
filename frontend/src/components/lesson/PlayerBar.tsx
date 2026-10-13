@@ -12,8 +12,7 @@ interface PlayerBarProps {
   className?: string;
 }
 
-// The lesson player's control bar as a still picture, for mock-ups of the product. `progress` runs from 0 to 1;
-// a caller animating it every frame can set the `--progress` property on `ref` instead of re-rendering.
+// To animate, set `--progress` on `ref` instead of re-rendering.
 export default function PlayerBar({ playing, progress, time, duration, ref, className }: PlayerBarProps) {
   const StateIcon = playing ? PauseIcon : PlayIcon;
   return (

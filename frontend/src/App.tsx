@@ -6,8 +6,8 @@ import { Route, Routes } from "react-router";
 import { prefersReducedMotion } from "@/lib/utils";
 import Home from "@/pages/Home";
 
-// Loaded only when visited, so the home page does not download it.
 const Login = lazy(() => import("@/pages/Login"));
+const SignUp = lazy(() => import("@/pages/SignUp"));
 
 const reduceMotion = prefersReducedMotion();
 
@@ -26,6 +26,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
           </Routes>
         </Suspense>
       </LazyMotion>

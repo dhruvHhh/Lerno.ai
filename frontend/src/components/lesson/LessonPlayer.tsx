@@ -36,7 +36,7 @@ export default function LessonPlayer({ lesson, onSecond }: LessonPlayerProps) {
     };
   }, [expanded, lenis]);
 
-  // The bar moves through a CSS variable; state only changes once a second, for the clock.
+  // A CSS variable moves the bar; state updates once a second.
   const updateProgress = (event: SyntheticEvent<HTMLVideoElement>) => {
     const video = event.currentTarget;
     seekBarRef.current?.style.setProperty("--progress", `${(video.currentTime / video.duration) * 100 || 0}%`);

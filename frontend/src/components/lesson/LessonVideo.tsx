@@ -9,7 +9,6 @@ interface LessonVideoProps extends Omit<ComponentProps<"video">, "ref"> {
   ref?: RefObject<HTMLVideoElement | null>;
 }
 
-// A muted lesson clip that loops and plays only while it is on screen.
 export default function LessonVideo({ lesson, ref, className, ...props }: LessonVideoProps) {
   const ownRef = useRef<HTMLVideoElement>(null);
   const videoRef = ref ?? ownRef;

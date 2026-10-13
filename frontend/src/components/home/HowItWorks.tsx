@@ -28,7 +28,6 @@ const STEPS = [
 
 const stepNumber = (index: number) => String(index + 1).padStart(2, "0");
 
-// A deep violet surface lit from the top-left, with a faint diamond lattice and fine grain so it reads as a material, not a flat fill.
 const LATTICE = "rgba(255,255,255,0.035) 0 1px, transparent 1px 96px";
 
 const GRAIN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E")`;
@@ -63,7 +62,6 @@ interface StepItemProps {
   onSelect: () => void;
 }
 
-// One step in the pinned list: its bar fills while you scroll through it, and its description opens while it is active.
 function StepItem({ index, title, description, active, progress, onSelect }: StepItemProps) {
   const fill = useTransform(progress, [index / STEPS.length, (index + 1) / STEPS.length], [0, 1]);
 
@@ -114,10 +112,9 @@ function StepItem({ index, title, description, active, progress, onSelect }: Ste
   );
 }
 
-// How far you scroll through each step while the section is pinned, as a share of the screen height.
+// Scroll per step while pinned, in % of screen height.
 const STEP_SCROLL_SVH = 45;
 
-// Desktop: the section pins while you scroll, and each stretch of scrolling makes the next step active.
 function PinnedSteps() {
   const trackRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -131,7 +128,6 @@ function PinnedSteps() {
     setActive(Math.min(STEPS.length - 1, Math.floor(progress * STEPS.length))),
   );
 
-  // Scrolls to the middle of a step's stretch, so clicking a step shows it.
   const jumpTo = (index: number) => {
     const track = trackRef.current;
     if (!track) return;
@@ -145,11 +141,11 @@ function PinnedSteps() {
 
   return (
     <div ref={trackRef} style={{ height: `${STEPS.length * STEP_SCROLL_SVH + 100}svh` }} className="relative mt-8">
-      {/* Sticky makes its own stacking layer, so it rises above the navbar while a lesson is expanded inside it. */}
+      {/* Sticky makes its own layer, so an expanded lesson can sit above the navbar. */}
       <div className="sticky top-0 flex h-svh items-center pt-16 has-[[role=dialog]]:z-60">
         <div className="page-width grid grid-cols-[2fr_3fr] items-center gap-16">
           <div>
-            {/* A fixed height, so the list stays put as descriptions of different lengths open and close; the gaps split the line into one segment per step. */}
+            {/* Fixed height, so the list doesn't jump as descriptions open. */}
             <ol className="flex h-86 flex-col gap-3">
               {STEPS.map(({ title, description }, index) => (
                 <StepItem
@@ -168,14 +164,13 @@ function PinnedSteps() {
             </div>
           </div>
           <VioletPanel ref={panelRef} className="relative h-[min(36rem,calc(100svh-9rem))]">
-            {/* The old step's window fades out while the new one rises in over it, anchored to the bottom edge. */}
             <AnimatePresence initial={false}>
               <m.div
                 key={active}
                 initial={still ? false : "hidden"}
                 animate={seen ? "shown" : "hidden"}
                 exit={{ opacity: 0, transition: { duration: 0.3 } }}
-                // The bottom fade is dropped while a lesson is expanded: a mask clips everything inside it, the fixed popup included.
+                // A mask would clip the expanded lesson, so drop it then.
                 className="absolute inset-0 [mask-image:linear-gradient(to_bottom,#000_88%,transparent)] px-10 pt-12 has-[[role=dialog]]:[mask-image:none]"
               >
                 <div className="mx-auto h-full max-w-xl">
@@ -190,7 +185,6 @@ function PinnedSteps() {
   );
 }
 
-// Phones and tablets: the steps simply stack, each with its panel playing as it scrolls into view.
 function StackedSteps() {
   return (
     <ol className="page-width mt-14 flex flex-col gap-16">

@@ -164,7 +164,7 @@ void main() {
   float aa = 1.4 * pxUnit;
   float above = smoothstep(-aa, aa, discD);
 
-  // The haze is invisible below the horizon and far from the core, so skip its expensive raymarch there.
+  // Skip the costly raymarch where the haze can't be seen.
   float hazeWeight = uHaze * 9.0 * exp(-d * 19.0) * smoothstep(0.40, 0.28, d);
   if (above > 0.0 && hazeWeight * revealed > MIN_HAZE) col += marchHaze(P) * hazeWeight;
 

@@ -19,7 +19,7 @@ attribute vec2 aPos;
 void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 `;
 
-// Nested arcs drawn as a grid of square dots; every size below is in CSS pixels or a fraction of the canvas height.
+// Sizes are CSS pixels or fractions of the canvas height.
 const FRAG = `
 precision highp float;
 
