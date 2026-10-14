@@ -393,6 +393,8 @@ const AREA_LESSON = lessonById("integrals");
 
 const NOTE_SHARE = shareOf(NOTE_AT, AREA_LESSON);
 
+const NOTE_SCENE = AREA_LESSON.scenes.findLastIndex(({ at }) => at <= NOTE_AT) + 1;
+
 // The glow peaks at 50%, so shift it to peak as the playhead hits the note.
 const NOTE_LOOP_S = 12;
 
@@ -416,11 +418,11 @@ export function NotesVisual() {
       >
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground text-xs tabular-nums">
-            Note · Scene 2 · <span className="text-accent-soft">{formatTime(NOTE_AT)}</span>
+            Note · Scene {NOTE_SCENE} · <span className="text-accent-soft">{formatTime(NOTE_AT)}</span>
           </span>
           <BookmarkSimpleIcon weight="fill" className="text-accent size-4" />
         </div>
-        <p className="mt-2 font-medium">Area under a curve</p>
+        <p className="mt-2 font-medium">{AREA_LESSON.title}</p>
         <p className="text-secondary-foreground mt-1 leading-relaxed">
           Left-edge rectangles{" "}
           <span className="text-foreground relative">
@@ -443,7 +445,7 @@ export function NotesVisual() {
           )}
         />
         <span
-          className="bg-accent-soft absolute top-1/2 size-2 -translate-1/2 rounded-full ring-2 ring-[#050609]"
+          className="bg-accent-soft ring-background absolute top-1/2 size-2 -translate-1/2 rounded-full ring-2"
           style={{ left: NOTE_SHARE }}
         />
         <span className="text-muted-foreground absolute top-3 left-0 text-[11px] tabular-nums">0:00</span>

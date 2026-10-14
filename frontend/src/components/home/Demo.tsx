@@ -140,7 +140,7 @@ export default function Demo() {
                             layoutId="active-lesson"
                             transition={reduceMotion ? INSTANT : SLIDE}
                             style={{ borderRadius: 10 }}
-                            className="absolute -inset-px border border-[#9b7cff]/40 bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
+                            className="border-accent/40 absolute -inset-px border bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
                           />
                         )}
                         <option.icon className="relative size-[18px]" />

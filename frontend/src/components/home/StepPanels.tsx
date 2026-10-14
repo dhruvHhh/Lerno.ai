@@ -239,7 +239,7 @@ export function PlanPanel() {
             {/* The lesson's background behind each frame hides letterbox bars. */}
             <ol className="flex h-24 gap-px overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10 sm:h-32">
               {SCENES.map(({ title, src, seconds, phase }) => (
-                <li key={title} className="group relative bg-[#050609]" style={{ flex: `${seconds} 1 0` }}>
+                <li key={title} className="group bg-background relative" style={{ flex: `${seconds} 1 0` }}>
                   <m.img
                     variants={build}
                     custom={phase}
@@ -247,7 +247,7 @@ export function PlanPanel() {
                     alt=""
                     className="absolute inset-0 size-full object-contain"
                   />
-                  <m.span variants={dim} custom={phase} className="absolute inset-0 bg-[#050609]/45" />
+                  <m.span variants={dim} custom={phase} className="bg-background/45 absolute inset-0" />
                   <m.span
                     variants={ring}
                     custom={phase}

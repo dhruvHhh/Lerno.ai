@@ -5,6 +5,7 @@ import { Link } from "react-router";
 
 import Logo from "@/components/brand/Logo";
 import CtaLink from "@/components/ui/cta-link";
+import useAuth from "@/hooks/useAuth";
 import { SECTION_LINKS } from "@/content/site-links";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function NavActions() {
+  const { user } = useAuth();
+  if (user) return <CtaLink to="/new">Open app</CtaLink>;
   return (
     <>
       <Link to="/login" className={LINK_CLASS}>

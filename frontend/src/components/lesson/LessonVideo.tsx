@@ -24,10 +24,13 @@ export default function LessonVideo({ lesson, ref, className, ...props }: Lesson
       height={720}
       preload="none"
       muted
-      loop
       playsInline
       className={cn("aspect-video w-full", className)}
       {...props}
+      onEnded={(event) => {
+        event.currentTarget.currentTime = lesson.start;
+        event.currentTarget.play().catch(() => {});
+      }}
     />
   );
 }

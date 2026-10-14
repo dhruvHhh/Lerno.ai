@@ -1,7 +1,6 @@
-import { lazy, Suspense, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Link } from "react-router";
 
-import GoogleButton from "@/components/auth/GoogleButton";
 import type { ShapeSet } from "@/components/auth/shapes";
 import Logo from "@/components/brand/Logo";
 import { COPYRIGHT, LEGAL_LINKS } from "@/content/site-links";
@@ -12,15 +11,7 @@ import { cn } from "@/lib/utils";
 // three.js is large, so it loads separately.
 const MathSurface = lazy(() => import("@/components/auth/MathSurface"));
 
-interface AuthLayoutProps {
-  title: string;
-  shapes: ShapeSet;
-  subtitle: string;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  children: ReactNode;
-}
-
-export default function AuthLayout({ title, shapes, subtitle, onSubmit, children }: AuthLayoutProps) {
+export default function AuthLayout({ shapes, children }: { shapes: ShapeSet; children: ReactNode }) {
   const wide = useMediaQuery(DESKTOP);
 
   return (
@@ -30,22 +21,7 @@ export default function AuthLayout({ title, shapes, subtitle, onSubmit, children
           <Logo />
         </Link>
 
-        <div className="flex flex-1 flex-col justify-center py-4">
-          <form noValidate onSubmit={onSubmit} className="mx-auto flex w-full max-w-sm flex-col">
-            <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-            <p className="text-secondary-foreground mt-2 mb-8">{subtitle}</p>
-
-            <GoogleButton />
-
-            <div className="text-muted-foreground my-6 flex items-center gap-3 text-xs">
-              <span className="h-px flex-1 bg-white/8" />
-              or
-              <span className="h-px flex-1 bg-white/8" />
-            </div>
-
-            {children}
-          </form>
-        </div>
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-4">{children}</div>
 
         <footer className="text-muted-foreground flex justify-between text-xs">
           <span>{COPYRIGHT}</span>

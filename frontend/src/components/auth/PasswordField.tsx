@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { EASE_EXPO } from "@/lib/variants";
 
 interface PasswordFieldProps {
+  label?: string;
   error?: string;
   action?: ReactNode;
   hint?: string;
@@ -17,13 +18,13 @@ interface PasswordFieldProps {
   onChange: () => void;
 }
 
-export default function PasswordField({ error, action, hint, ...input }: PasswordFieldProps) {
+export default function PasswordField({ label = "Password", error, action, hint, ...input }: PasswordFieldProps) {
   const [shown, setShown] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
   const Eye = shown ? EyeSlashIcon : EyeIcon;
 
   return (
-    <Field id="password" label="Password" error={error} action={action} note={capsLock ? "Caps Lock is on." : hint}>
+    <Field id="password" label={label} error={error} action={action} note={capsLock ? "Caps Lock is on." : hint}>
       <div className="relative">
         <input
           id="password"

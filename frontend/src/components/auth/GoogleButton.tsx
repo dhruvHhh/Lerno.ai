@@ -1,11 +1,17 @@
 import googleIcon from "@/assets/google.svg";
 import { PRESS } from "@/lib/styles";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+
+// Google sends people back to the app, already signed in.
+const signIn = () =>
+  supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/new` } });
 
 export default function GoogleButton() {
   return (
     <button
       type="button"
+      onClick={signIn}
       className={cn(
         "rounded-control flex h-12 items-center justify-center gap-2.5 border border-white/10 bg-white/4 text-sm font-medium",
         "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_0_0_0_rgba(155,124,255,0),0_0_0_0_rgba(155,124,255,0),inset_0_0_0_0_rgba(155,124,255,0)]",
