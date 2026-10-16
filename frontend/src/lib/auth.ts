@@ -1,4 +1,8 @@
-import type { AuthError } from "@supabase/supabase-js";
+import type { AuthError, User } from "@supabase/supabase-js";
+
+// Sign-up and Google both store the name as full_name; the email is the fallback.
+export const userName = (user: User) =>
+  (user.user_metadata.full_name as string | undefined) || user.email!.split("@")[0];
 
 export type Errors = Partial<Record<"name" | "email" | "password", string>>;
 

@@ -13,6 +13,7 @@ const Login = lazy(() => import("@/pages/Login"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const AppShell = lazy(() => import("@/components/app/AppShell"));
 const NewLesson = lazy(() => import("@/pages/NewLesson"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -40,7 +41,9 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
               </Route>
               <Route element={<RouteGate signedIn />}>
-                <Route path="/new" element={<NewLesson />} />
+                <Route element={<AppShell />}>
+                  <Route path="/new" element={<NewLesson />} />
+                </Route>
               </Route>
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="*" element={<NotFound />} />

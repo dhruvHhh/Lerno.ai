@@ -41,6 +41,43 @@ function SlidingKey({ id }: { id: string }) {
   );
 }
 
+interface SegmentedControlProps<T extends string> {
+  label: string;
+  options: Record<T, string>;
+  value: T;
+  onChange: (value: T) => void;
+  className?: string;
+}
+
+export function SegmentedControl<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  className,
+}: SegmentedControlProps<T>) {
+  const keyId = useId();
+  return (
+    <Track role="group" aria-label={label} className={className}>
+      {(Object.keys(options) as T[]).map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={option === value}
+          onClick={() => onChange(option)}
+          className={cn(
+            OPTION,
+            option === value ? "text-foreground" : "text-muted-foreground hover:text-secondary-foreground",
+          )}
+        >
+          {option === value && <SlidingKey id={keyId} />}
+          <span className="relative">{options[option]}</span>
+        </button>
+      ))}
+    </Track>
+  );
+}
+
 export function SegmentedDisplay({ options, selected, className }: SegmentedProps) {
   const keyId = useId();
   return (

@@ -11,6 +11,8 @@
     "format": "prettier --write src"
   },
   "dependencies": {
+    "@dicebear/core": "^10.6.0",
+    "@dicebear/styles": "^10.6.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/supabase-js": "^2.117.3",
