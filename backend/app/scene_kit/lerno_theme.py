@@ -75,6 +75,40 @@ class NumberPlane(manim.NumberPlane):
         super().__init__(*args, background_line_style=lines, axis_config=axes, **kwargs)
 
 
+class Scene(manim.Scene):
+    # Cut-off text is the most common layout bug; failing here sends the exact problem to the fix step.
+    def play(self, *args, **kwargs):
+        super().play(*args, **kwargs)
+        self._check_text_fits()
+
+    def wait(self, *args, **kwargs):
+        super().wait(*args, **kwargs)
+        self._check_text_fits()
+
+    def _check_text_fits(self):
+        half_width, half_height = config.frame_width / 2, config.frame_height / 2
+        for text in _texts(self.mobjects):
+            left, bottom, _ = text.get_corner(DL)
+            right, top, _ = text.get_corner(UR)
+            if left < -half_width or right > half_width or bottom < -half_height or top > half_height:
+                words = getattr(text, "original_text", None) or getattr(text, "tex_string", "")
+                raise ValueError(
+                    f"Text {words!r} goes off the screen. Keep all text inside x from -6 to 6 and y from -3.4 to 2.7: "
+                    "shorten it, split it over two lines, or move it below the diagram."
+                )
+
+
+def _texts(mobjects):
+    for mobject in mobjects:
+        # Axis numbers on a full-screen plane sit at the edge by design.
+        if isinstance(mobject, (manim.CoordinateSystem, manim.NumberLine)):
+            continue
+        if isinstance(mobject, (Text, MarkupText, MathTex)):
+            yield mobject
+        else:
+            yield from _texts(mobject.submobjects)
+
+
 def scene_label(text: str) -> VGroup:
     title = Text(text, font_size=30, weight=SEMIBOLD, color=INK)
     bar = RoundedRectangle(width=0.07, height=title.height + 0.12, corner_radius=0.035, stroke_width=0)

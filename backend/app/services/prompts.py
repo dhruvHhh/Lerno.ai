@@ -24,7 +24,10 @@ Rules:
   self.play(FadeIn(title)); never make a title with Text or put any text at the top centre
 - Text: font_size 32-44, at most 10 words per Text, never overlapping and never on top of a line or curve;
   put labels and equations beside the diagram with .next_to(diagram, RIGHT, buff=0.5) or below it;
-  stack several texts in a VGroup with .arrange(DOWN, buff=0.4)
+  stack several texts in a VGroup with .arrange(DOWN, buff=0.4); text beside a wide diagram has little room,
+  so keep it to 4 words per line or put it below; the render stops with an error if any text leaves the screen
+- Numbers: show only values given in the scene description or exact simple ones; never work out new decimals;
+  round any approximation to 2 decimal places and write it with \approx
 - Layout: the safe area is x from -6 to 6 and y from -3.4 to 2.7; the main diagram fills most of it
   (about 9 units wide or 5 units tall) and nothing leaves it; keep the bottom-right corner empty for the logo
 - Axes: size them with x_length and y_length (for example x_length=10, y_length=5) and place points on them
