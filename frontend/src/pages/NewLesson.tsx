@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router";
+import { useLocation, useNavigate, useOutletContext } from "react-router";
 
 import AskBox, { MAX_QUESTION } from "@/components/app/AskBox";
 import ContinueWatching from "@/components/app/ContinueWatching";
 import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
-import { api, LEVELS, type Lesson, type Usage } from "@/lib/api";
+import { api, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
 import { saveHasLessons, saveLevel, savedHasLessons, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +26,10 @@ const COUNTER_FROM = 180;
 export default function NewLesson() {
   const { lessons, usage, reload } = useOutletContext<AppData>();
   const navigate = useNavigate();
-  const [question, setQuestion] = useState("");
-  const [level, setLevel] = useState(savedLevel);
+  // "Try again" on a failed lesson brings its topic and level here, in the box but not sent.
+  const retry = useLocation().state as { topic: string; level: Level } | null;
+  const [question, setQuestion] = useState(retry?.topic ?? "");
+  const [level, setLevel] = useState(retry?.level ?? savedLevel());
   const [sending, setSending] = useState(false);
   const [madeId, setMadeId] = useState<string | null>(null);
   const [error, setError] = useState("");

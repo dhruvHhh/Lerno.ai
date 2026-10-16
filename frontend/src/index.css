@@ -30,6 +30,28 @@
   --animate-marquee: marquee 60s linear infinite;
   --animate-playhead: playhead 12s linear infinite;
   --animate-note-glow: note-glow 12s linear infinite;
+  --animate-breathe: breathe 2.4s ease-in-out infinite;
+  --animate-rim: rim 2.4s ease-in-out infinite;
+  --animate-march: march 1s linear infinite;
+
+  /* The making screen's loader: the lit slab's glow and rim pulse, and its connector line marches. */
+  @keyframes breathe {
+    50% {
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes rim {
+    50% {
+      stroke: #fff;
+    }
+  }
+
+  @keyframes march {
+    to {
+      stroke-dashoffset: -14;
+    }
+  }
 
   @keyframes marquee {
     to {

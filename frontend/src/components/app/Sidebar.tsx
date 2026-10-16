@@ -125,7 +125,7 @@ function LessonList({ data, onClose, className }: { data: AppData; onClose: () =
             className={cn(
               "flex h-9 items-center gap-2.5 rounded-[9px] px-2 whitespace-nowrap transition-colors duration-200",
               pathname === `/lesson/${lesson.id}`
-                ? "text-foreground bg-white/6"
+                ? "text-foreground bg-accent/8 shadow-[inset_0_0_0_1px_rgba(155,124,255,0.18)]"
                 : "text-secondary-foreground hover:text-foreground hover:bg-white/4",
             )}
           >

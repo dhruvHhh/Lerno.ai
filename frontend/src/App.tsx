@@ -15,6 +15,7 @@ const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const AppShell = lazy(() => import("@/components/app/AppShell"));
 const NewLesson = lazy(() => import("@/pages/NewLesson"));
+const Lesson = lazy(() => import("@/pages/Lesson"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const reduceMotion = prefersReducedMotion();
@@ -43,6 +44,7 @@ export default function App() {
               <Route element={<RouteGate signedIn />}>
                 <Route element={<AppShell />}>
                   <Route path="/new" element={<NewLesson />} />
+                  <Route path="/lesson/:id" element={<Lesson />} />
                 </Route>
               </Route>
               <Route path="/reset-password" element={<ResetPassword />} />

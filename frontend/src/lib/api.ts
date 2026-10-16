@@ -35,7 +35,18 @@ export interface Usage {
 
 export const LEVELS: Record<Level, string> = { school: "School", high_school: "High school", college: "College" };
 
+export type LessonWithScenes = Lesson & { scenes: Scene[] };
+
 export const isMaking = (lesson: Lesson) => lesson.status === "queued" || lesson.status === "generating";
+
+// status is 0 when the server could not be reached at all.
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 // Errors carry the server's own message, which is already written for people.
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -47,12 +58,12 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token}` },
     });
   } catch {
-    throw new Error("Couldn't reach Lerno. Check your connection and try again.");
+    throw new ApiError("Couldn't reach Lerno. Check your connection and try again.", 0);
   }
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const message = typeof body?.detail === "string" ? body.detail : "Something went wrong. Please try again.";
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
   return response.status === 204 ? (undefined as T) : response.json();
 }
