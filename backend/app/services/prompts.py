@@ -1,3 +1,4 @@
+from app.config import SCENES_PER_LESSON
 from app.schemas import ScenePlan
 
 AUDIENCES = {
@@ -53,8 +54,10 @@ class LessonScene(Scene):
 def plan_prompt(topic: str, audience: str) -> str:
     return f"""Plan a short animated lesson in the style of 3Blue1Brown that explains "{topic}" to {AUDIENCES[audience]}.
 
-Create exactly 3 scenes that build on each other. Each scene is one simple visual idea that can be
+Create exactly {SCENES_PER_LESSON} scenes that build on each other. Each scene is one simple visual idea that can be
 animated in 10-20 seconds, for example drawing two vectors from the origin, then adding them tip to tail.
+
+Give the whole lesson a title: a short name of at most 5 words in plain text, for example "Area under y = x²".
 
 For each scene give:
 - title: at most 5 words
@@ -72,11 +75,15 @@ def fix_prompt(code: str, error: str) -> str:
     return f"{MANIM_RULES}\nThis code failed to render:\n\n{code}\n\nError:\n{error}\n\nReturn the corrected full code."
 
 
-def tutor_prompt(topic: str, audience: str, narrations: list[str]) -> str:
-    lesson = "\n".join(f"- {line}" for line in narrations)
+def tutor_prompt(topic: str, audience: str, scenes: list[dict], scene_position: int, time_seconds: float) -> str:
+    lesson = "\n".join(f"Scene {i}, {scene['title']}: {scene['narration']}" for i, scene in enumerate(scenes, 1))
+    minutes, seconds = divmod(int(time_seconds), 60)
+    title = scenes[scene_position - 1]["title"]
     return f"""You are a friendly tutor helping {AUDIENCES[audience]} with a lesson on "{topic}".
-The lesson says:
+The lesson has these scenes:
 {lesson}
+
+The student paused at {minutes}:{seconds:02d} in scene {scene_position}, "{title}". When they say "this" or "here", they mean that moment. Do not mention the time in your answer.
 
 Answer in 2-4 short sentences of simple language and stay on this topic. Use an example or analogy when it helps.
 Reply in the same language and script as the student's question: English gets English, Hinglish (Hindi in English letters) gets Hinglish, Hindi in Devanagari gets Devanagari.

@@ -1,7 +1,4 @@
-"""Lerno's look for Manim: scenes import this instead of manim and get our fonts, colours and line style.
-
-It runs only inside the render sandbox, where it sits next to the generated scene file.
-"""
+# Runs only in the render sandbox; scenes import this instead of manim.
 
 import manim
 from manim import *  # noqa: F403
@@ -48,7 +45,6 @@ MarkupText.set_default(font="Geist", weight=MEDIUM, color=INK)
 MathTex.set_default(tex_template=MATH_TEMPLATE, color=INK)
 Tex.set_default(tex_template=MATH_TEMPLATE, color=INK)
 
-# Softer line work: round ends and joins, slimmer arrows with a kite-shaped tip, rounded highlight boxes.
 VMobject.set_default(joint_type=LineJointType.ROUND, cap_style=CapStyleType.ROUND)
 Arrow.set_default(stroke_width=4, tip_shape=StealthTip, max_tip_length_to_length_ratio=0.2)
 SurroundingRectangle.set_default(corner_radius=0.12, buff=0.18)
@@ -80,7 +76,6 @@ class NumberPlane(manim.NumberPlane):
 
 
 def scene_label(text: str) -> VGroup:
-    """The scene title as a small label in the top-left corner, marked with a short violet bar."""
     title = Text(text, font_size=30, weight=SEMIBOLD, color=INK)
     bar = RoundedRectangle(width=0.07, height=title.height + 0.12, corner_radius=0.035, stroke_width=0)
     bar.set_fill(VIOLET, 1).next_to(title, LEFT, buff=0.18)

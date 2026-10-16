@@ -19,12 +19,27 @@ def owned_lesson(lesson_id: UUID, user_id: str, fields: tuple[str, ...] = ("*",)
     return rows[0]
 
 
+def lesson_scenes(lesson_id: str, fields: tuple[str, ...]) -> list[dict]:
+    return db.table("scenes").select(*fields).eq("lesson_id", lesson_id).order("position").execute().data
+
+
+def now_iso(ago: timedelta = timedelta()) -> str:
+    return (datetime.now(timezone.utc) - ago).isoformat()
+
+
 def window_start() -> str:
-    return (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    return now_iso(timedelta(hours=24))
+
+
+def _last_24h(table: str, user_id: str | None = None):
+    query = db.table(table).select("id", count="exact", head=True).gte("created_at", window_start())
+    return query.eq("user_id", user_id) if user_id else query
 
 
 def count_last_24h(table: str, user_id: str | None = None) -> int:
-    query = db.table(table).select("id", count="exact", head=True).gte("created_at", window_start())
-    if user_id:
-        query = query.eq("user_id", user_id)
-    return query.execute().count
+    return _last_24h(table, user_id).execute().count
+
+
+def lessons_used(user_id: str) -> int:
+    # Failed lessons are free: they don't count against the user's daily limit.
+    return _last_24h("lessons", user_id).neq("status", "failed").execute().count

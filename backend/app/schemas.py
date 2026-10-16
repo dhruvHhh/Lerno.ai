@@ -1,6 +1,8 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.config import SCENES_PER_LESSON
 
 Audience = Literal["school", "high_school", "college"]
 Role = Literal["user", "assistant"]
@@ -15,14 +17,21 @@ class LessonCreate(RequestBody):
     audience: Audience
 
 
-class NoteCreate(RequestBody):
-    title: str = Field(min_length=1, max_length=120)
-    content: str = Field(max_length=5000)
+class PlaybackPosition(RequestBody):
+    scene_position: int = Field(ge=1, le=SCENES_PER_LESSON)
+    # The cap and allow_inf_nan block values the database column can't hold.
+    time_seconds: float = Field(ge=0, le=600, allow_inf_nan=False)
+
+
+NoteText = Annotated[str, Field(min_length=1, max_length=5000)]
 
 
 class NoteUpdate(RequestBody):
-    title: str | None = Field(default=None, min_length=1, max_length=120)
-    content: str | None = Field(default=None, max_length=5000)
+    content: NoteText
+
+
+class NoteCreate(PlaybackPosition):
+    content: NoteText
 
 
 class ChatMessage(RequestBody):
@@ -36,7 +45,8 @@ class ChatMessage(RequestBody):
         return self
 
 
-class MessageCreate(RequestBody):
+# The position tells the tutor what "this" means in the learner's question.
+class MessageCreate(PlaybackPosition):
     messages: list[ChatMessage] = Field(min_length=1, max_length=10)
 
     @field_validator("messages")
@@ -53,13 +63,21 @@ class ScenePlan(BaseModel):
     narration: str
     animation_description: str
     mcq_question: str
-    mcq_choices: list[str]
+    mcq_choices: list[str] = Field(min_length=4, max_length=4)
     mcq_correct_index: int
     fr_question: str
     fr_answer: str
 
+    @model_validator(mode="after")
+    def answer_is_a_choice(self) -> "ScenePlan":
+        # A bad index would break the quiz in the app, so the lesson fails (for free) instead.
+        if not 0 <= self.mcq_correct_index < len(self.mcq_choices):
+            raise ValueError("mcq_correct_index must point at one of mcq_choices")
+        return self
+
 
 class LessonPlan(BaseModel):
+    title: str
     scenes: list[ScenePlan]
 
 

@@ -3,13 +3,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.auth import current_user
-from app.config import DAILY_LESSON_LIMIT, GLOBAL_DAILY_LESSON_LIMIT, VIDEO_BUCKET, VIDEO_URL_TTL_SECONDS
-from app.db import count_last_24h, db, owned_lesson
+from app.config import DAILY_ATTEMPT_LIMIT, DAILY_LESSON_LIMIT, GLOBAL_DAILY_LESSON_LIMIT, VIDEO_BUCKET, VIDEO_URL_TTL_SECONDS
+from app.db import count_last_24h, db, lesson_scenes, lessons_used, owned_lesson
 from app.schemas import LessonCreate
 
 router = APIRouter(prefix="/lessons")
 
-LESSON_FIELDS = ("id", "topic", "audience", "status", "step", "error", "created_at")
+LESSON_FIELDS = ("id", "topic", "title", "audience", "status", "step", "error", "created_at")
 SCENE_FIELDS = (
     "position", "title", "narration", "video_path",
     "mcq_question", "mcq_choices", "mcq_correct_index", "fr_question", "fr_answer",
@@ -17,8 +17,10 @@ SCENE_FIELDS = (
 
 
 def _limit_error(user_id: str) -> str | None:
-    if count_last_24h("lessons", user_id) > DAILY_LESSON_LIMIT:
+    if lessons_used(user_id) > DAILY_LESSON_LIMIT:
         return f"You can create {DAILY_LESSON_LIMIT} lessons every 24 hours. Please try again later."
+    if count_last_24h("lessons", user_id) > DAILY_ATTEMPT_LIMIT:
+        return "Too many lessons failed in the last 24 hours. Please try again later."
     if count_last_24h("lessons") > GLOBAL_DAILY_LESSON_LIMIT:
         return "Lerno is at capacity right now. Please try again later."
     return None
@@ -53,7 +55,7 @@ def list_lessons(user_id: str = Depends(current_user)):
 @router.get("/{lesson_id}")
 def read_lesson(lesson_id: UUID, user_id: str = Depends(current_user)):
     lesson = owned_lesson(lesson_id, user_id, LESSON_FIELDS)
-    scenes = db.table("scenes").select(*SCENE_FIELDS).eq("lesson_id", lesson["id"]).order("position").execute().data
+    scenes = lesson_scenes(lesson["id"], SCENE_FIELDS)
     urls = _video_urls([scene["video_path"] for scene in scenes if scene["video_path"]])
     for scene in scenes:
         scene["video_url"] = urls.get(scene.pop("video_path"))

@@ -1,19 +1,25 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from functools import partial
 
-from app.config import STALE_AFTER_MINUTES, VIDEO_BUCKET
-from app.db import db, window_start
+from app.config import SCENES_PER_LESSON, STALE_AFTER_MINUTES, VIDEO_BUCKET
+from app.db import db, now_iso, window_start
 from app.schemas import ScenePlan
 from app.services import llm, renderer
 
 MAX_FIXES = 2
+ACTIVE = ["queued", "generating"]
 log = logging.getLogger(__name__)
 
 
 def _update(lesson_id: str, **fields) -> None:
-    db.table("lessons").update(fields).eq("id", lesson_id).execute()
+    # Once a lesson is ready or failed, a late job must not change it back.
+    db.table("lessons").update(fields).eq("id", lesson_id).in_("status", ACTIVE).execute()
+
+
+def _finish(lesson_id: str, **fields) -> None:
+    _update(lesson_id, finished_at=now_iso(), **fields)
 
 
 def _animate(lesson: dict, position: int, code: str) -> tuple[str | None, str]:
@@ -49,29 +55,35 @@ def _scene_row(lesson: dict, position: int, scene: ScenePlan) -> dict:
 
 def run(lesson_id: str) -> None:
     lesson = db.table("lessons").select("*").eq("id", lesson_id).single().execute().data
+    # Already expired before the job started, so the work would be thrown away.
+    if lesson["status"] not in ACTIVE:
+        return
     try:
         _update(lesson_id, status="generating", step=1)
-        scenes = llm.plan_lesson(lesson["topic"], lesson["audience"]).scenes[:3]
-        _update(lesson_id, step=2)
+        plan = llm.plan_lesson(lesson["topic"], lesson["audience"])
+        scenes = plan.scenes[:SCENES_PER_LESSON]
+        # Empty, not blank, so the app falls back to the topic.
+        _update(lesson_id, step=2, title=plan.title.strip() or None)
         with ThreadPoolExecutor() as pool:
             rows = list(pool.map(partial(_scene_row, lesson), range(1, len(scenes) + 1), scenes))
-        db.table("scenes").insert(rows).execute()
+        # An empty plan can't be inserted; it ends below as "couldn't animate".
+        if rows:
+            db.table("scenes").insert(rows).execute()
         if any(row["video_path"] for row in rows):
-            _update(lesson_id, status="ready")
+            _finish(lesson_id, status="ready")
         else:
-            _update(lesson_id, status="failed", error="We couldn't animate this topic. Try rephrasing it.")
+            _finish(lesson_id, status="failed", error="We couldn't animate this topic. Try rephrasing it.")
     except Exception:
         log.exception("Lesson %s failed", lesson_id)
-        _update(lesson_id, status="failed", error="Something went wrong while creating this lesson. Please try again.")
+        _finish(lesson_id, status="failed", error="Something went wrong while creating this lesson. Please try again.")
 
 
 def expire_stale_lessons() -> None:
-    stale_before = datetime.now(timezone.utc) - timedelta(minutes=STALE_AFTER_MINUTES)
     (
         db.table("lessons")
-        .update({"status": "failed", "error": "This lesson took too long. Please try again."})
-        .in_("status", ["queued", "generating"])
-        .lt("created_at", stale_before.isoformat())
+        .update({"status": "failed", "error": "This lesson took too long. Please try again.", "finished_at": now_iso()})
+        .in_("status", ACTIVE)
+        .lt("created_at", now_iso(timedelta(minutes=STALE_AFTER_MINUTES)))
         .execute()
     )
 

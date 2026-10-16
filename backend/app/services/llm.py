@@ -1,11 +1,11 @@
 from anthropic import Anthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.schemas import LessonPlan, ManimCode, ScenePlan
 from app.services import prompts
 
 PLANNER = "claude-sonnet-5-5"
-TUTOR = "claude-haiku-4-5"
+TUTOR = "claude-haiku-5-5"
 
 client = Anthropic()
 
@@ -23,7 +23,12 @@ def _ask[T: BaseModel](prompt: str, schema: type[T]) -> T:
 
 
 def plan_lesson(topic: str, audience: str) -> LessonPlan:
-    return _ask(prompts.plan_prompt(topic, audience), LessonPlan)
+    prompt = prompts.plan_prompt(topic, audience)
+    try:
+        return _ask(prompt, LessonPlan)
+    except ValidationError:
+        # A plan that breaks a quiz rule is rare, so one more try usually gives a full lesson.
+        return _ask(prompt, LessonPlan)
 
 
 def write_manim(scene: ScenePlan) -> str:
@@ -35,6 +40,9 @@ def fix_manim(code: str, error: str) -> str:
 
 
 def tutor_reply(system: str, messages: list[dict]) -> str:
-    response = client.with_options(timeout=30).messages.create(model=TUTOR, max_tokens=400, system=system, messages=messages)
+    # Haiku 5.5 thinks before it answers, and thinking counts toward max_tokens; low effort keeps replies quick.
+    response = client.with_options(timeout=30).messages.create(
+        model=TUTOR, max_tokens=2000, output_config={"effort": "low"}, system=system, messages=messages
+    )
     text = "".join(block.text for block in response.content if block.type == "text")
     return text or "Sorry, I can't help with that. Try asking about the lesson."

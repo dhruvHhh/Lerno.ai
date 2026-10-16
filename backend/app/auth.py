@@ -15,6 +15,9 @@ def current_user(creds: HTTPAuthorizationCredentials = Depends(bearer)) -> str:
         claims = jwt.decode(
             token, key, algorithms=["ES256", "RS256"], audience="authenticated", options={"require": ["exp", "sub"]}
         )
+    except jwt.PyJWKClientConnectionError:
+        # Supabase's keys couldn't be fetched; the token may be fine, so the app must not sign the user out.
+        raise HTTPException(503, "Sign-in check is down. Please try again.")
     except jwt.PyJWTError:
         raise HTTPException(401, "Invalid or expired token")
     return claims["sub"]
