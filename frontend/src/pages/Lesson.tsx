@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router";
 
 import MakingScreen from "@/components/making/MakingScreen";
+import LessonPage from "@/components/watch/LessonPage";
 import useLesson from "@/hooks/useLesson";
 import { UNDERLINE } from "@/lib/styles";
 
@@ -12,7 +13,7 @@ export default function Lesson() {
 }
 
 function LessonScreen({ id }: { id: string }) {
-  const { lesson, firstStatus, missing, offline } = useLesson(id);
+  const { lesson, firstStatus, missing, offline, refresh } = useLesson(id);
   // A lesson that was made while the user watched opens after the loader's last slab lights.
   const [opened, setOpened] = useState(false);
   const open = useCallback(() => setOpened(true), []);
@@ -32,10 +33,5 @@ function LessonScreen({ id }: { id: string }) {
   if (lesson.status !== "ready" || (firstStatus !== "ready" && !opened))
     return <MakingScreen lesson={lesson} offline={offline} onReady={open} />;
 
-  // The lesson page is the next screen to build.
-  return (
-    <section className="grid flex-1 place-items-center text-center">
-      <h1 className="text-xl font-semibold">{lesson.title ?? lesson.topic}</h1>
-    </section>
-  );
+  return <LessonPage lesson={lesson} refresh={refresh} />;
 }

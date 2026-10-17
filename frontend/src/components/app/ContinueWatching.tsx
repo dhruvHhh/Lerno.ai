@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
+import StillFrame from "@/components/app/StillFrame";
 import { api, LEVELS, type Lesson, type Scene } from "@/lib/api";
 import { savedProgress } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
 const CARDS = 3;
-const STILL_AT = 0.6;
 
 export default function ContinueWatching({ lessons }: { lessons: Lesson[] }) {
   const recent = lessons.filter((lesson) => lesson.status === "ready").slice(0, CARDS);
@@ -52,18 +52,11 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
       )}
     >
       <div className="relative row-span-2 aspect-video overflow-hidden rounded-[9px] bg-[#0a0b10]">
-        {/* The still frame comes from the video itself, 60% in, where the drawing is mostly done. */}
         {video && (
-          <video
+          <StillFrame
             src={video}
-            preload="metadata"
-            muted
-            playsInline
-            onLoadedMetadata={(event) => {
-              setDuration(event.currentTarget.duration);
-              event.currentTarget.currentTime = event.currentTarget.duration * STILL_AT;
-            }}
-            className="block size-full object-cover opacity-85 transition-opacity duration-300 group-hover:opacity-100"
+            onDuration={setDuration}
+            className="opacity-85 transition-opacity duration-300 group-hover:opacity-100"
           />
         )}
         <span className="ease-snappy absolute inset-0 m-auto grid size-10 scale-90 place-items-center rounded-full bg-[#f5f5f7]/92 opacity-0 transition-[opacity,scale] duration-[400ms] group-hover:scale-100 group-hover:opacity-100">

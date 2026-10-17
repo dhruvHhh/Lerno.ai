@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { api, ApiError, isMaking, type LessonWithScenes, type Status } from "@/lib/api";
 
@@ -12,8 +12,13 @@ export interface LessonState {
   offline: boolean;
 }
 
+export interface LessonData extends LessonState {
+  // Asks once more, for fresh video links when the old ones expire. Rejects if the server can't be reached.
+  refresh: () => Promise<void>;
+}
+
 // Asks for the lesson every 3 seconds while it is being made. A hidden tab stops asking and asks again when it is seen.
-export default function useLesson(id: string): LessonState {
+export default function useLesson(id: string): LessonData {
   const [state, setState] = useState<LessonState>({ lesson: null, firstStatus: null, missing: false, offline: false });
 
   useEffect(() => {
@@ -52,5 +57,10 @@ export default function useLesson(id: string): LessonState {
     };
   }, [id]);
 
-  return state;
+  const refresh = useCallback(
+    () => api<LessonWithScenes>(`/lessons/${id}`).then((lesson) => setState((s) => ({ ...s, lesson }))),
+    [id],
+  );
+
+  return { ...state, refresh };
 }

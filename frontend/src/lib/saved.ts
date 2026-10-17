@@ -28,9 +28,16 @@ export const saveHasLessons = (hasLessons: boolean) => write("lerno:has-lessons"
 export const savedRail = () => read("lerno:sidebar-rail", false);
 export const saveRail = (rail: boolean) => write("lerno:sidebar-rail", rail);
 
+// Watch progress stays in this browser for v1: where the user stopped, which scenes they finished, and their quiz answers.
 export interface Progress {
   scene: number;
   time: number;
+  watched: number[];
+  answers: Record<number, number>;
 }
 
 export const savedProgress = (lessonId: string) => read<Progress | null>(`lerno:progress:${lessonId}`, null);
+export const saveProgress = (lessonId: string, progress: Progress) => write(`lerno:progress:${lessonId}`, progress);
+
+export const savedScenesRail = () => read("lerno:scenes-rail", false);
+export const saveScenesRail = (rail: boolean) => write("lerno:scenes-rail", rail);
