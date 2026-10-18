@@ -45,6 +45,21 @@
     }
   }
 
+  /* A note picked from its marker on the bar lights up once in the Notes card. */
+  --animate-note-flash: note-flash 1.6s ease-out forwards;
+
+  @keyframes note-flash {
+    0%,
+    25% {
+      background-color: rgb(155 124 255 / 0.14);
+      box-shadow: inset 0 0 0 1px rgb(183 164 255 / 0.6);
+    }
+    100% {
+      background-color: rgb(155 124 255 / 0);
+      box-shadow: inset 0 0 0 1px rgb(183 164 255 / 0);
+    }
+  }
+
   /* Loaded content settling in where its placeholder was. */
   @keyframes enter {
     from {

@@ -10,7 +10,7 @@ import { CompleteOverlay, QuizOverlay } from "@/components/watch/Overlays";
 import QuizCard from "@/components/watch/QuizCard";
 import ScenesPanel from "@/components/watch/ScenesPanel";
 import Scrub from "@/components/watch/Scrub";
-import { SOLID, scoreOf } from "@/components/watch/shared";
+import { DOCK_KEYS, SOLID, scoreOf } from "@/components/watch/shared";
 import TutorCard from "@/components/watch/TutorCard";
 import useNotes, { type Note } from "@/hooks/useNotes";
 import useTutor from "@/hooks/useTutor";
@@ -55,7 +55,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const [playing, setPlaying] = useState(false);
   const [overlay, setOverlay] = useState<"quiz" | "complete" | null>(null);
   const [card, setCard] = useState<CardName | null>(null);
-  const [dockOpen, setDockOpen] = useState(false);
+  const [notesFocus, setNotesFocus] = useState<{ ids: string[]; at: number } | null>(null);
   const [notepadAt, setNotepadAt] = useState<number | null>(null);
   const [videoFailed, setVideoFailed] = useState(false);
   const [railRight, setRailRight] = useState(savedScenesRail);
@@ -135,14 +135,18 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const openCard = useCallback((name: CardName) => {
     video.current?.pause();
     setNotepadAt(null);
-    setDockOpen(true);
     setCard(name);
   }, []);
+  // A tool's button opens its card, or closes it when it is the open one.
+  const pickCard = useCallback((name: CardName) => (card === name ? setCard(null) : openCard(name)), [card, openCard]);
   const closeAll = useCallback(() => {
     setCard(null);
-    setDockOpen(false);
     setNotepadAt(null);
   }, []);
+  const openNotes = (ids: string[]) => {
+    setNotesFocus({ ids, at: Date.now() });
+    openCard("notes");
+  };
 
   const openNotepad = () => {
     video.current?.pause();
@@ -175,7 +179,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     return () => document.removeEventListener("pointerdown", outside);
   }, [card]);
 
-  // Keys: Space plays, the arrows skip 5 seconds, Esc closes what is open. Nothing fires while the user types.
+  // Keys: Space plays, the arrows skip 5 seconds, T, N and Q open the tools, Esc closes what is open. Nothing fires
+  // while the user types.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -193,10 +198,15 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
       } else if (event.key === "ArrowRight" && v) v.currentTime = Math.min(v.duration, v.currentTime + SKIP_SECONDS);
       else if (event.key === "ArrowLeft" && v) v.currentTime = Math.max(0, v.currentTime - SKIP_SECONDS);
       else if (event.key === "Escape") closeAll();
+      else if (DOCK_KEYS[event.key.toLowerCase()] && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        // The card focuses its input at once; without this the key's letter would land in it.
+        event.preventDefault();
+        pickCard(DOCK_KEYS[event.key.toLowerCase()]);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [toggle, closeAll]);
+  }, [toggle, closeAll, pickCard]);
 
   const seek = (fraction: number) => {
     const v = video.current;
@@ -331,8 +341,9 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                     video={videoEl}
                     playing={playing}
                     duration={duration}
-                    noteTimes={sceneNotes.map((note) => note.time_seconds)}
+                    notes={sceneNotes}
                     onSeek={seek}
+                    onOpenNotes={openNotes}
                   />
                   <button
                     type="button"
@@ -407,13 +418,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         onToggleRail={toggleRail}
       />
 
-      <Dock
-        open={dockOpen}
-        card={card}
-        onToggle={() => (dockOpen ? closeAll() : setDockOpen(true))}
-        onOpenCard={openCard}
-        className={cn("ease-snappy transition-[right] duration-[450ms]", right)}
-      />
+      <Dock card={card} onPick={pickCard} className={cn("ease-snappy transition-[right] duration-[450ms]", right)} />
       <TutorCard
         open={card === "tutor"}
         onClose={() => setCard(null)}
@@ -433,6 +438,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         }}
         onEdit={notes.edit}
         onDelete={notes.remove}
+        focus={notesFocus}
         className={right}
       />
       <QuizCard
@@ -490,5 +496,5 @@ function Narration({ video, text }: { video: HTMLVideoElement | null; text: stri
 
 function Moment({ video, scene }: { video: HTMLVideoElement | null; scene: number }) {
   const seconds = useVideoTime(video, (v) => Math.floor(stampOf(v)), 0);
-  return `Scene ${scene} at ${formatTime(seconds)}`;
+  return `Scene ${scene} · ${formatTime(seconds)}`;
 }

@@ -2,7 +2,7 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 
 import Card from "@/components/watch/Card";
-import { STAMP } from "@/components/watch/shared";
+import Stamp from "@/components/watch/Stamp";
 import type useTutor from "@/hooks/useTutor";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ export default function TutorCard({ open, onClose, tutor, moment, onAsk, classNa
       title="Tutor"
       open={open}
       onClose={onClose}
-      chip={<span className={STAMP}>{moment}</span>}
+      chip={<Stamp>{moment}</Stamp>}
       className={className}
       footer={
         <div className="mx-3.5 mb-3.5 grid flex-none gap-1.5">

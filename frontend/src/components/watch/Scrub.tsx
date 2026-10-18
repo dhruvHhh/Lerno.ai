@@ -1,7 +1,9 @@
 import { useLayoutEffect, useRef, type PointerEvent } from "react";
 
+import Stamp from "@/components/watch/Stamp";
 import useVideoTime from "@/hooks/useVideoTime";
-import { formatTime } from "@/lib/utils";
+import type { Note } from "@/hooks/useNotes";
+import { cn, formatTime } from "@/lib/utils";
 
 // Markers closer than this share of the bar would overlap, so they merge into one with a count.
 const TOUCH = 0.025;
@@ -10,22 +12,23 @@ interface ScrubProps {
   video: HTMLVideoElement | null;
   playing: boolean;
   duration: number;
-  noteTimes: number[];
+  notes: Note[];
   onSeek: (fraction: number) => void;
+  onOpenNotes: (ids: string[]) => void;
 }
 
-function mergeMarkers(times: number[], duration: number) {
-  const groups: { at: number; times: number[] }[] = [];
-  for (const t of [...times].sort((a, b) => a - b)) {
-    const at = t / duration;
+function mergeMarkers(notes: Note[], duration: number) {
+  const groups: { at: number; notes: Note[] }[] = [];
+  for (const note of [...notes].sort((a, b) => a.time_seconds - b.time_seconds)) {
+    const at = note.time_seconds / duration;
     const last = groups[groups.length - 1];
-    if (last && at - last.at < TOUCH) last.times.push(t);
-    else groups.push({ at, times: [t] });
+    if (last && at - last.at < TOUCH) last.notes.push(note);
+    else groups.push({ at, notes: [note] });
   }
   return groups;
 }
 
-export default function Scrub({ video, playing, duration, noteTimes, onSeek }: ScrubProps) {
+export default function Scrub({ video, playing, duration, notes, onSeek, onOpenNotes }: ScrubProps) {
   const bar = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
   const knob = useRef<HTMLSpanElement>(null);
@@ -93,17 +96,36 @@ export default function Scrub({ video, playing, duration, noteTimes, onSeek }: S
         className="bg-foreground absolute inset-x-0 top-[7px] h-1 origin-left rounded will-change-transform"
       />
       {duration > 0 &&
-        mergeMarkers(noteTimes, duration).map(({ at, times }) => (
-          <span
-            key={times.join()}
-            className="group absolute top-0.5 h-3.5 w-3 -translate-x-1/2"
+        mergeMarkers(notes, duration).map(({ at, notes: group }) => (
+          // A marker opens its notes; it must not also seek the bar under it.
+          <button
+            key={group.map((note) => note.id).join()}
+            type="button"
+            aria-label={`Open ${group.length > 1 ? `${group.length} notes` : "note"} at ${formatTime(group[0].time_seconds)}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onOpenNotes(group.map((note) => note.id))}
+            className="group absolute -top-0.5 grid size-[22px] -translate-x-1/2 place-items-center"
             style={{ left: `${at * 100}%` }}
           >
-            <i className="bg-accent-soft absolute inset-x-px inset-y-0.5 rotate-45 rounded-[3px] shadow-[0_0_0_2px_#000,0_0_12px_rgba(183,164,255,0.6)]" />
-            <span className="text-foreground pointer-events-none absolute bottom-5 left-1/2 hidden -translate-x-1/2 rounded-md bg-[#1a1b26] px-1.5 py-0.5 whitespace-nowrap group-hover:block">
-              {times.length > 1 ? `${times.length} notes at ${formatTime(times[0])}` : formatTime(times[0])}
+            <i className="bg-accent-soft ease-snappy size-[9px] rotate-45 rounded-[2px] shadow-[0_0_0_2px_#000,0_0_12px_rgba(183,164,255,0.6)] transition-[scale] duration-200 group-hover:scale-125" />
+            {/* A preview of the note itself, the way a video site previews a chapter. Kept inside the film's edges. */}
+            <span
+              className={cn(
+                "pointer-events-none absolute bottom-7 w-max max-w-[240px] rounded-[10px] bg-[rgba(16,15,26,0.96)] px-3 py-2 text-left opacity-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_12px_30px_rgba(0,0,0,0.5)] transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100",
+                at < 0.2 ? "left-0" : at > 0.8 ? "right-0" : "left-1/2 -translate-x-1/2",
+              )}
+            >
+              <Stamp note>
+                {formatTime(group[0].time_seconds)}
+                {group.length > 1 && (
+                  <span className="text-muted-foreground font-normal">+{group.length - 1} more</span>
+                )}
+              </Stamp>
+              <span className="text-foreground mt-1 line-clamp-2 block text-[13px] leading-snug">
+                {group[0].content}
+              </span>
             </span>
-          </span>
+          </button>
         ))}
       {/* A full-width track that moves, so its percentage is a share of the bar, not of the knob. */}
       <span ref={knob} className="pointer-events-none absolute inset-x-0 top-[3px] will-change-transform">

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Card from "@/components/watch/Card";
-import { BUTTON, NOTE_MAX, SOLID, STAMP } from "@/components/watch/shared";
+import { BUTTON, NOTE_MAX, SOLID } from "@/components/watch/shared";
+import Stamp from "@/components/watch/Stamp";
 import type { Note } from "@/hooks/useNotes";
 import type { Scene } from "@/lib/api";
 import { formatTime } from "@/lib/utils";
@@ -14,6 +15,8 @@ interface NotesCardProps {
   onOpenNote: (note: Note) => void;
   onEdit: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  // Notes picked from a marker on the bar: the card shows them and lights them once. `at` replays the light.
+  focus: { ids: string[]; at: number } | null;
   className?: string;
 }
 
@@ -25,6 +28,7 @@ export default function NotesCard({
   onOpenNote,
   onEdit,
   onDelete,
+  focus,
   className,
 }: NotesCardProps) {
   return (
@@ -49,7 +53,15 @@ export default function NotesCard({
               Scene {scene.position}: {scene.title}
             </h3>
             {mine.map((note) => (
-              <NoteRow key={note.id} note={note} onOpen={() => onOpenNote(note)} onEdit={onEdit} onDelete={onDelete} />
+              <NoteRow
+                key={note.id}
+                note={note}
+                flash={focus?.ids.includes(note.id) ? focus.at : null}
+                first={focus?.ids[0] === note.id}
+                onOpen={() => onOpenNote(note)}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))}
           </div>
         );
@@ -62,15 +74,22 @@ const TOOL = "text-muted-foreground hover:text-foreground rounded-md px-1.5 py-0
 
 interface NoteRowProps {
   note: Note;
+  flash: number | null;
+  first: boolean;
   onOpen: () => void;
   onEdit: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
-function NoteRow({ note, onOpen, onEdit, onDelete }: NoteRowProps) {
+function NoteRow({ note, flash, first, onOpen, onEdit, onDelete }: NoteRowProps) {
+  const row = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(note.content);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (flash && first) row.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [flash, first]);
 
   const run = async (action: () => Promise<void>, failure: string) => {
     setError("");
@@ -111,14 +130,26 @@ function NoteRow({ note, onOpen, onEdit, onDelete }: NoteRowProps) {
     );
 
   return (
-    <div className="group hover:bg-accent/6 relative grid gap-1 rounded-xl bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-colors duration-250">
+    <div
+      ref={row}
+      className="group relative grid gap-1 rounded-xl bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-colors duration-250 hover:bg-white/5"
+    >
+      {flash && (
+        <span
+          key={flash}
+          aria-hidden="true"
+          className="animate-note-flash pointer-events-none absolute inset-0 rounded-xl"
+        />
+      )}
       <button
         type="button"
         onClick={onOpen}
         className="grid gap-1 text-left"
         aria-label={`Play from ${formatTime(note.time_seconds)}`}
       >
-        <span className={`${STAMP} justify-self-start`}>{formatTime(note.time_seconds)}</span>
+        <Stamp note className="justify-self-start">
+          {formatTime(note.time_seconds)}
+        </Stamp>
         <p className="text-sm leading-normal whitespace-pre-line">{note.content}</p>
       </button>
       {error && <p className="text-danger text-xs">{error}</p>}

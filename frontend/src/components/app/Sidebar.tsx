@@ -1,4 +1,4 @@
-import { Plus, SidebarSimple, SignOut, WarningCircle } from "@phosphor-icons/react";
+import { CaretUpDown, Plus, SidebarSimple, SignOut, WarningCircle } from "@phosphor-icons/react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -233,33 +233,45 @@ function Account({ rail }: { rail: boolean }) {
 
   return (
     <div ref={menu} className="relative">
-      {open && (
-        <div className="absolute bottom-full left-0 mb-2 w-full min-w-44 rounded-xl bg-[#11131c] p-1 shadow-[0_20px_50px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
-          <button
-            type="button"
-            onClick={() => supabase.auth.signOut()}
-            className="text-secondary-foreground hover:text-foreground flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/5"
-          >
-            <SignOut size={16} />
-            Sign out
-          </button>
-        </div>
-      )}
+      {/* Same edges as the account row; 10px outside and 6px inside its 4px padding, so the corners nest. */}
+      <div
+        role="menu"
+        inert={!open}
+        className={cn(
+          "absolute bottom-[calc(100%+6px)] left-0 w-full rounded-[10px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
+          "transition-[opacity,translate] duration-150 ease-out",
+          rail && "lg:w-[220px]",
+          open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0",
+        )}
+      >
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => supabase.auth.signOut()}
+          className="text-secondary-foreground hover:text-foreground flex h-8 w-full items-center gap-2.5 rounded-[6px] px-2.5 text-left text-[13px] transition-colors duration-150 hover:bg-white/6"
+        >
+          <SignOut size={15} />
+          Sign out
+        </button>
+      </div>
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
+        aria-haspopup="menu"
         aria-label="Account"
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-[10px] px-1 py-1.5 text-left whitespace-nowrap hover:bg-white/4",
+          "flex w-full items-center gap-2.5 rounded-[10px] px-1 py-1.5 text-left whitespace-nowrap transition-colors duration-150 hover:bg-white/4",
+          open && "bg-white/4",
           rail && "lg:px-[5px]",
         )}
       >
         <Avatar name={name} />
-        <span className={cn("min-w-0", fades(rail))}>
+        <span className={cn("min-w-0 flex-1", fades(rail))}>
           <b className="block text-[13px] font-medium">{name}</b>
           <small className="text-muted-foreground block truncate text-[11px]">{user.email}</small>
         </span>
+        <CaretUpDown size={14} className={cn("text-muted-foreground mr-1 flex-none", fades(rail))} />
       </button>
     </div>
   );

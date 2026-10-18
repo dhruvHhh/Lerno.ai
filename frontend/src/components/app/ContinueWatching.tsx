@@ -1,3 +1,4 @@
+import { Play } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
@@ -7,7 +8,7 @@ import { LEVELS, type Lesson, type Scene } from "@/lib/api";
 import { fetchLesson, storedLesson } from "@/lib/lessonStore";
 import { savedCounts, savedProgress } from "@/lib/saved";
 import { SETTLE_MS } from "@/lib/styles";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 
 const CARDS = 3;
 const ROW = "grid gap-2.5 [grid-area:1/1] lg:grid-cols-3 lg:gap-4";
@@ -74,8 +75,9 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
       to={`/lesson/${lesson.id}`}
       className={cn(
         FRAME,
-        "group ease-snappy transition-[background-color,box-shadow,translate] duration-300",
-        "hover:bg-accent/5 hover:shadow-[inset_0_0_0_1px_rgba(155,124,255,0.3)] lg:hover:-translate-y-0.5",
+        // The card stays still on hover; only its light and its picture respond.
+        "group transition-[background-color,box-shadow] duration-300",
+        "hover:bg-white/[0.035] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]",
         enter && "motion-safe:animate-enter",
       )}
       style={{ animationDelay: `${SETTLE_MS + index * 70}ms` }}
@@ -85,11 +87,12 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
           <StillFrame
             src={video}
             onDuration={setDuration}
-            className="opacity-85 transition-opacity duration-300 group-hover:opacity-100"
+            className="opacity-85 transition-[opacity,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] group-hover:opacity-100"
           />
         )}
-        <span className="ease-snappy absolute inset-0 m-auto grid size-10 scale-90 place-items-center rounded-full bg-[#f5f5f7]/92 opacity-0 transition-[opacity,scale] duration-[400ms] group-hover:scale-100 group-hover:opacity-100">
-          <span className="border-l-background ml-[3px] border-y-[7px] border-l-[11px] border-y-transparent" />
+        <span className="text-foreground absolute bottom-2.5 left-2 flex items-center gap-1.5 rounded-md bg-black/80 px-2 py-1 text-[11px] font-medium tabular-nums opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+          <Play size={10} weight="fill" />
+          {progress ? `Resume · ${formatTime(progress.time)}` : "Play"}
         </span>
         {progress && (
           <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/15">

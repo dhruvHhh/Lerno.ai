@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { BUTTON, NOTE_MAX, SOLID, STAMP } from "@/components/watch/shared";
+import { BUTTON, NOTE_MAX, SOLID } from "@/components/watch/shared";
+import Stamp from "@/components/watch/Stamp";
 import { cn, formatTime } from "@/lib/utils";
 
 const COUNTER_FROM = 4800;
@@ -41,9 +42,9 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
       onSubmit={save}
       className="absolute bottom-[46px] left-4 z-10 grid w-[min(340px,calc(100%-32px))] gap-2.5 rounded-[14px] bg-[rgba(14,13,24,0.9)] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-[16px] sm:bottom-[60px]"
     >
-      <header className="text-secondary-foreground flex items-center gap-2 text-xs">
-        <span>New note</span>
-        <span className={STAMP}>{formatTime(time)}</span>
+      <header className="text-secondary-foreground flex items-center gap-2.5 text-xs">
+        <span className="text-foreground text-[13px] font-medium">New note</span>
+        <Stamp note>{formatTime(time)}</Stamp>
         {text.length >= COUNTER_FROM && (
           <span className={cn("ml-auto tabular-nums", text.length >= NOTE_MAX && "text-danger")}>
             {text.length} / {NOTE_MAX}
