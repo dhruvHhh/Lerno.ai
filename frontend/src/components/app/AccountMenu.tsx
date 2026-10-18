@@ -1,4 +1,4 @@
-import { CaretUpDown, Keyboard, SignOut } from "@phosphor-icons/react";
+import { CaretUpDown, CircleNotch, Keyboard, SignOut } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -6,7 +6,7 @@ import Avatar from "@/components/app/Avatar";
 import ShortcutsDialog from "@/components/app/ShortcutsDialog";
 import useAuth from "@/hooks/useAuth";
 import { userName } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import signOut from "@/lib/signOut";
 import { cn } from "@/lib/utils";
 
 const GAP = 8;
@@ -25,6 +25,7 @@ export default function AccountMenu({ rail, fade }: AccountMenuProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [place, setPlace] = useState<{ style: CSSProperties; side: "right" | "top" }>({ style: {}, side: "top" });
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -138,9 +139,18 @@ export default function AccountMenu({ rail, fade }: AccountMenuProps) {
             <Keyboard size={15} />
             Keyboard shortcuts
           </button>
-          <button type="button" role="menuitem" onClick={() => supabase.auth.signOut()} className={ITEM}>
-            <SignOut size={15} />
-            Sign out
+          <button
+            type="button"
+            role="menuitem"
+            disabled={leaving}
+            onClick={() => {
+              setLeaving(true);
+              void signOut();
+            }}
+            className={ITEM}
+          >
+            {leaving ? <CircleNotch size={15} className="motion-safe:animate-spin" /> : <SignOut size={15} />}
+            {leaving ? "Signing out…" : "Sign out"}
           </button>
         </div>,
         document.body,

@@ -1,8 +1,9 @@
-import { CornersOut, NotePencil, Pause, Play } from "@phosphor-icons/react";
+import { CornersOut, NotePencil, Pause } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
 import StillFrame from "@/components/app/StillFrame";
+import PlayIcon from "@/components/ui/play-icon";
 import Dock, { type CardName } from "@/components/watch/Dock";
 import Notepad from "@/components/watch/Notepad";
 import NotesCard from "@/components/watch/NotesCard";
@@ -330,11 +331,11 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                     (playing || overlay || notepadAt !== null) && "pointer-events-none scale-90 opacity-0",
                   )}
                 >
-                  <Play size={28} weight="fill" className="text-background ml-1" />
+                  <PlayIcon size={28} className="text-background" />
                 </button>
                 <div className="text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5">
                   <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className={CONTROL}>
-                    {playing ? <Pause size={18} weight="fill" /> : <Play size={18} weight="fill" />}
+                    {playing ? <Pause size={18} weight="fill" /> : <PlayIcon size={16} />}
                   </button>
                   <TimeLabel video={videoEl} duration={duration} />
                   <Scrub

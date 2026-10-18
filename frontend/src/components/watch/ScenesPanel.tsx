@@ -20,13 +20,63 @@ interface ScenesPanelProps {
   video: HTMLVideoElement | null;
 }
 
-function DoneTick({ className }: { className?: string }) {
+interface RingProps {
+  kept: number;
+  done: boolean;
+  // The scene playing follows its video; the others show the furthest point kept.
+  video: HTMLVideoElement | null;
+  className: string;
+}
+
+// How far into a scene the user got, as a ring. When the scene ends the ring closes, fills green, and a tick draws in.
+function SceneRing({ kept, done, video, className }: RingProps) {
+  const live = useVideoTime(video, (v) => (v.duration ? Math.round((v.currentTime / v.duration) * 100) / 100 : 0), 0);
+  const fraction = done ? 1 : Math.max(kept, live);
   return (
-    <span
-      aria-hidden="true"
-      className={cn("absolute grid size-4 place-items-center rounded-full bg-[#78dcaa] text-[#0b2a1c]", className)}
-    >
-      <Check size={10} weight="bold" />
+    <span aria-hidden="true" className={cn("absolute", className)}>
+      <svg viewBox="0 0 20 20" className="size-full -rotate-90">
+        <circle
+          cx="10"
+          cy="10"
+          r="10"
+          className={cn(
+            "transition-[fill] duration-200 motion-reduce:transition-none",
+            done ? "fill-[#78dcaa] delay-300" : "fill-[rgba(8,8,14,0.78)]",
+          )}
+        />
+        <circle cx="10" cy="10" r="6.5" fill="none" strokeWidth="2.2" className="stroke-white/15" />
+        <circle
+          cx="10"
+          cy="10"
+          r="6.5"
+          fill="none"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray="1 1"
+          strokeDashoffset={1 - fraction}
+          className={cn(
+            "stroke-accent-soft transition-[stroke-dashoffset,opacity] duration-300 ease-linear motion-reduce:transition-none",
+            done && "opacity-0 delay-300",
+          )}
+        />
+      </svg>
+      <svg viewBox="0 0 20 20" className="absolute inset-0 size-full">
+        <path
+          d="M6.2 10.4 8.8 13 13.8 7.4"
+          fill="none"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          pathLength={1}
+          strokeDasharray="1 1"
+          strokeDashoffset={done ? 0 : 1}
+          className={cn(
+            "stroke-[#0b2a1c] transition-[stroke-dashoffset] duration-[400ms] ease-out motion-reduce:transition-none",
+            done && "delay-[450ms]",
+          )}
+        />
+      </svg>
     </span>
   );
 }
@@ -76,12 +126,6 @@ export default function ScenesPanel(props: ScenesPanelProps) {
   );
 }
 
-// How far into a scene the user got. The scene playing follows its video; the others show what was kept.
-function Watched({ kept, video, className }: { kept: number; video: HTMLVideoElement | null; className: string }) {
-  const live = useVideoTime(video, (v) => (v.duration ? Math.round((v.currentTime / v.duration) * 100) / 100 : 0), 0);
-  return <i className={className} style={{ width: `${Math.max(kept, live) * 100}%` }} />;
-}
-
 function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
   return (
     <ul data-lenis-prevent className="grid gap-1.5 overflow-y-auto px-2.5 py-1 pb-2.5">
@@ -114,19 +158,19 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
                       onDuration={(d) => onDuration(scene.position, d)}
                       className={on ? "" : "opacity-75"}
                     />
-                    {done && !on && <DoneTick className="top-1 right-1 shadow-[0_0_0_2px_rgba(0,0,0,0.6)]" />}
+                    {(on || done || (progress[scene.position] ?? 0) > 0) && (
+                      <SceneRing
+                        kept={progress[scene.position] ?? 0}
+                        done={done}
+                        video={on ? video : null}
+                        className="top-1 right-1 size-[18px]"
+                      />
+                    )}
                     {length > 0 && (
                       <span className="text-foreground absolute right-1 bottom-1 rounded-[5px] bg-black/75 px-[5px] py-px text-[10px] tabular-nums">
                         {formatTime(length)}
                       </span>
                     )}
-                    <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/15">
-                      <Watched
-                        kept={progress[scene.position] ?? 0}
-                        video={on ? video : null}
-                        className="bg-accent-soft block h-full"
-                      />
-                    </span>
                   </>
                 ) : (
                   <WarningCircle size={20} />
@@ -209,14 +253,14 @@ function Filmstrip({ scenes, current, watched, progress, durations, onDuration, 
                       on ? "" : "opacity-60",
                     )}
                   />
-                  <span className="absolute inset-x-[3px] -bottom-[5px] h-0.5 rounded-sm bg-white/10">
-                    <Watched
+                  {(on || done || (progress[scene.position] ?? 0) > 0) && (
+                    <SceneRing
                       kept={progress[scene.position] ?? 0}
+                      done={done}
                       video={on ? video : null}
-                      className="bg-accent-soft block h-full rounded-sm"
+                      className="-top-[6px] -right-[6px] size-4 rounded-full shadow-[0_0_0_2px_var(--color-surface)]"
                     />
-                  </span>
-                  {done && <DoneTick className="-top-[5px] -right-[5px] shadow-[0_0_0_2px_var(--color-surface)]" />}
+                  )}
                 </>
               ) : (
                 <WarningCircle size={14} />

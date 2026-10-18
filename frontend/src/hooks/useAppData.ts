@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, isMaking, type Lesson, type Usage } from "@/lib/api";
 import { saveCounts } from "@/lib/saved";
@@ -17,12 +17,21 @@ export default function useAppData(): AppData {
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [failed, setFailed] = useState(false);
+  // An answer that comes back after sign-out must not save the last person's counts again.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   // Two requests, so a slow usage count never holds back the lesson list.
   const reload = useCallback(async () => {
     await Promise.all([
       api<Lesson[]>("/lessons").then(
         (next) => {
+          if (!alive.current) return;
           setLessons(next);
           setFailed(false);
           saveCounts({ lessons: next.length, ready: next.filter((lesson) => lesson.status === "ready").length });

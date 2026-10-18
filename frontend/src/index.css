@@ -159,6 +159,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Signing out: the app fades away, then the sign-in page fades in. */
+  #root {
+    transition: opacity 250ms ease-out;
+  }
+  html.leaving #root {
+    opacity: 0;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;

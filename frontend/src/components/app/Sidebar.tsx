@@ -59,19 +59,25 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
             !rail && "cursor-default",
           )}
         >
-          <LogoIcon className="size-[26px] flex-none" />
+          {/* In the rail the toggle takes the logo's place on hover: they swap, they never stack. */}
+          <LogoIcon
+            className={cn(
+              "size-[26px] flex-none transition-opacity duration-150",
+              rail && "lg:group-hover/head:opacity-0 lg:group-has-[[data-rail-toggle]:focus-visible]/head:opacity-0",
+            )}
+          />
           <span className={fades(rail)}>Lerno</span>
         </button>
         <button
           type="button"
           onClick={onToggleRail}
+          data-rail-toggle
           aria-label={rail ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
             ICON_BUTTON,
             "ml-auto hidden lg:grid",
-            // In the rail the button sits on the logo and shows on hover.
             rail &&
-              "bg-surface absolute top-[14px] left-[14px] m-0 opacity-0 group-hover/head:opacity-100 focus-visible:opacity-100",
+              "absolute top-[14px] left-[14px] m-0 opacity-0 transition-[opacity,color,background-color] duration-150 group-hover/head:opacity-100 focus-visible:opacity-100",
           )}
         >
           <SidebarSimple size={18} />
@@ -82,7 +88,7 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
         to="/new"
         onClick={onClose}
         className={cn(
-          "mx-3 mt-1 flex h-10 flex-none items-center gap-2.5 rounded-[10px] px-3 font-medium whitespace-nowrap",
+          "mx-3 mt-1 flex h-10 flex-none items-center gap-2.5 rounded-[10px] px-3 text-sm font-medium whitespace-nowrap",
           RAISED_KEY,
           PRESS,
           rail && "lg:mx-2.5 lg:w-10",
@@ -139,7 +145,7 @@ function LessonList({ data, onClose, className }: { data: AppData; onClose: () =
                 onFocus={prefetch}
                 title={lesson.status === "failed" ? "Couldn't make this lesson" : lesson.topic}
                 className={cn(
-                  "flex h-9 items-center gap-2.5 rounded-[9px] px-2 whitespace-nowrap transition-colors duration-200",
+                  "flex h-8 items-center gap-2.5 rounded-[8px] px-2 text-sm whitespace-nowrap transition-colors duration-200",
                   pathname === `/lesson/${lesson.id}`
                     ? "text-foreground bg-accent/8 shadow-[inset_0_0_0_1px_rgba(155,124,255,0.18)]"
                     : "text-secondary-foreground hover:text-foreground hover:bg-white/4",
@@ -156,7 +162,7 @@ function LessonList({ data, onClose, className }: { data: AppData; onClose: () =
       {expected > 0 && (
         <Placeholder loading={!data.lessons && !data.failed} className="absolute inset-x-2 top-0">
           {Array.from({ length: expected }, (_, index) => (
-            <span key={index} className="flex h-9 items-center gap-2.5 px-2">
+            <span key={index} className="flex h-8 items-center gap-2.5 px-2">
               <span className="grid size-4 flex-none place-items-center">
                 <i className="size-1.5 rotate-45 rounded-[2px] bg-white/8" />
               </span>

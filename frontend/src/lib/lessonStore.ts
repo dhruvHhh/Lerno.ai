@@ -27,6 +27,8 @@ export function fetchLesson(id: string) {
   return request;
 }
 
+export const forgetLessons = () => stored.clear();
+
 // Starts loading before the click: a pointer or focus on a link comes a few hundred ms before it.
 export const prefetchLesson = (id: string) => {
   if (!storedLesson(id)) fetchLesson(id).catch(() => {});

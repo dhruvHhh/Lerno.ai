@@ -64,6 +64,12 @@ function loadStill(src: string) {
   return request;
 }
 
+export function forgetStills() {
+  ready.forEach((still) => URL.revokeObjectURL(still.url));
+  ready.clear();
+  loading.clear();
+}
+
 export function useStill(src: string) {
   const key = keyOf(src);
   const [loaded, setLoaded] = useState<{ key: string; still: Still } | null>(null);

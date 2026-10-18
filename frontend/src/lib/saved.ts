@@ -44,5 +44,15 @@ export interface Progress {
 export const savedProgress = (lessonId: string) => read<Progress | null>(`lerno:progress:${lessonId}`, null);
 export const saveProgress = (lessonId: string, progress: Progress) => write(`lerno:progress:${lessonId}`, progress);
 
+// The next person on this browser must not see this person's placeholders. Watch progress stays: it is keyed by
+// lesson, which only its owner can open, and it is the only copy.
+export const forgetUser = () => {
+  try {
+    localStorage.removeItem("lerno:lesson-counts");
+  } catch {
+    // Nothing was kept.
+  }
+};
+
 export const savedScenesRail = () => read("lerno:scenes-rail", false);
 export const saveScenesRail = (rail: boolean) => write("lerno:scenes-rail", rail);

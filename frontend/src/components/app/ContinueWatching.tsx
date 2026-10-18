@@ -1,9 +1,9 @@
-import { Play } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import Placeholder from "@/components/app/Placeholder";
 import StillFrame from "@/components/app/StillFrame";
+import PlayIcon from "@/components/ui/play-icon";
 import { LEVELS, type Lesson, type Scene } from "@/lib/api";
 import { fetchLesson, storedLesson } from "@/lib/lessonStore";
 import { savedCounts, savedProgress } from "@/lib/saved";
@@ -91,7 +91,7 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
           />
         )}
         <span className="text-foreground absolute bottom-2.5 left-2 flex items-center gap-1.5 rounded-md bg-black/80 px-2 py-1 text-[11px] font-medium tabular-nums opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-          <Play size={10} weight="fill" />
+          <PlayIcon size={10} />
           {progress ? `Resume · ${formatTime(progress.time)}` : "Play"}
         </span>
         {progress && (
