@@ -1,18 +1,15 @@
-import { CaretUpDown, Plus, SidebarSimple, SignOut, WarningCircle } from "@phosphor-icons/react";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Plus, SidebarSimple, WarningCircle } from "@phosphor-icons/react";
+import { lazy, Suspense, useState } from "react";
 import { Link, useLocation } from "react-router";
 
-import Avatar from "@/components/app/Avatar";
+import AccountMenu from "@/components/app/AccountMenu";
 import Placeholder from "@/components/app/Placeholder";
 import { LogoIcon } from "@/components/brand/Logo";
-import useAuth from "@/hooks/useAuth";
 import type { AppData } from "@/hooks/useAppData";
 import { isMaking, type Lesson } from "@/lib/api";
-import { userName } from "@/lib/auth";
 import { prefetchLesson } from "@/lib/lessonStore";
 import { savedCounts } from "@/lib/saved";
 import { PRESS, RAISED_KEY, SETTLE_MS } from "@/lib/styles";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const EmptyLessons = lazy(() => import("@/components/app/EmptyLessons"));
@@ -102,7 +99,7 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
 
       <div className="grid flex-none gap-2.5 border-t border-white/5 p-3">
         {data.usage && <UsageMeter {...data.usage} className={fades(rail)} />}
-        <Account rail={rail} />
+        <AccountMenu rail={rail} fade={fades(rail)} />
       </div>
     </aside>
   );
@@ -207,72 +204,6 @@ function UsageMeter({ used, limit, className }: { used: number; limit: number; c
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-function Account({ rail }: { rail: boolean }) {
-  const { user } = useAuth();
-  const [open, setOpen] = useState(false);
-  const menu = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const closeOutside = (event: PointerEvent) => !menu.current?.contains(event.target as Node) && setOpen(false);
-    const closeOnEscape = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", closeOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [open]);
-
-  if (!user) return null;
-  const name = userName(user);
-
-  return (
-    <div ref={menu} className="relative">
-      {/* Same edges as the account row; 10px outside and 6px inside its 4px padding, so the corners nest. */}
-      <div
-        role="menu"
-        inert={!open}
-        className={cn(
-          "absolute bottom-[calc(100%+6px)] left-0 w-full rounded-[10px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
-          "transition-[opacity,translate] duration-150 ease-out",
-          rail && "lg:w-[220px]",
-          open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0",
-        )}
-      >
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => supabase.auth.signOut()}
-          className="text-secondary-foreground hover:text-foreground flex h-8 w-full items-center gap-2.5 rounded-[6px] px-2.5 text-left text-[13px] transition-colors duration-150 hover:bg-white/6"
-        >
-          <SignOut size={15} />
-          Sign out
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="Account"
-        className={cn(
-          "flex w-full items-center gap-2.5 rounded-[10px] px-1 py-1.5 text-left whitespace-nowrap transition-colors duration-150 hover:bg-white/4",
-          open && "bg-white/4",
-          rail && "lg:px-[5px]",
-        )}
-      >
-        <Avatar name={name} />
-        <span className={cn("min-w-0 flex-1", fades(rail))}>
-          <b className="block text-[13px] font-medium">{name}</b>
-          <small className="text-muted-foreground block truncate text-[11px]">{user.email}</small>
-        </span>
-        <CaretUpDown size={14} className={cn("text-muted-foreground mr-1 flex-none", fades(rail))} />
-      </button>
     </div>
   );
 }

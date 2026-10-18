@@ -45,6 +45,8 @@
     }
   }
 
+  --animate-pop-in: fade-in 150ms ease-out;
+
   /* A note picked from its marker on the bar lights up once in the Notes card. */
   --animate-note-flash: note-flash 1.6s ease-out forwards;
 
