@@ -3,6 +3,7 @@ import { Check, SidebarSimple, WarningCircle } from "@phosphor-icons/react";
 import { ICON_BUTTON } from "@/components/app/Sidebar";
 import StillFrame from "@/components/app/StillFrame";
 import useMediaQuery, { DESKTOP } from "@/hooks/useMediaQuery";
+import useVideoTime from "@/hooks/useVideoTime";
 import type { Scene } from "@/lib/api";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ interface ScenesPanelProps {
   onSelect: (position: number) => void;
   rail: boolean;
   onToggleRail: () => void;
+  video: HTMLVideoElement | null;
 }
 
 function DoneTick({ className }: { className?: string }) {
@@ -74,7 +76,13 @@ export default function ScenesPanel(props: ScenesPanelProps) {
   );
 }
 
-function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect }: ScenesPanelProps) {
+// How far into a scene the user got. The scene playing follows its video; the others show what was kept.
+function Watched({ kept, video, className }: { kept: number; video: HTMLVideoElement | null; className: string }) {
+  const live = useVideoTime(video, (v) => (v.duration ? Math.round((v.currentTime / v.duration) * 100) / 100 : 0), 0);
+  return <i className={className} style={{ width: `${Math.max(kept, live) * 100}%` }} />;
+}
+
+function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
   return (
     <ul data-lenis-prevent className="grid gap-1.5 overflow-y-auto px-2.5 py-1 pb-2.5">
       {scenes.map((scene) => {
@@ -113,9 +121,10 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
                       </span>
                     )}
                     <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/15">
-                      <i
+                      <Watched
+                        kept={progress[scene.position] ?? 0}
+                        video={on ? video : null}
                         className="bg-accent-soft block h-full"
-                        style={{ width: `${(progress[scene.position] ?? 0) * 100}%` }}
                       />
                     </span>
                   </>
@@ -161,7 +170,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
   );
 }
 
-function Filmstrip({ scenes, current, watched, progress, durations, onDuration, onSelect }: ScenesPanelProps) {
+function Filmstrip({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
   return (
     <ul className="flex flex-col items-center gap-3.5 py-1.5">
       {scenes.map((scene) => {
@@ -201,9 +210,10 @@ function Filmstrip({ scenes, current, watched, progress, durations, onDuration, 
                     )}
                   />
                   <span className="absolute inset-x-[3px] -bottom-[5px] h-0.5 rounded-sm bg-white/10">
-                    <i
+                    <Watched
+                      kept={progress[scene.position] ?? 0}
+                      video={on ? video : null}
                       className="bg-accent-soft block h-full rounded-sm"
-                      style={{ width: `${(progress[scene.position] ?? 0) * 100}%` }}
                     />
                   </span>
                   {done && <DoneTick className="-top-[5px] -right-[5px] shadow-[0_0_0_2px_var(--color-surface)]" />}

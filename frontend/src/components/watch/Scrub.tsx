@@ -1,12 +1,14 @@
-import { useRef, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, type PointerEvent } from "react";
 
+import useVideoTime from "@/hooks/useVideoTime";
 import { formatTime } from "@/lib/utils";
 
 // Markers closer than this share of the bar would overlap, so they merge into one with a count.
 const TOUCH = 0.025;
 
 interface ScrubProps {
-  progress: number;
+  video: HTMLVideoElement | null;
+  playing: boolean;
   duration: number;
   noteTimes: number[];
   onSeek: (fraction: number) => void;
@@ -23,11 +25,49 @@ function mergeMarkers(times: number[], duration: number) {
   return groups;
 }
 
-export default function Scrub({ progress, duration, noteTimes, onSeek }: ScrubProps) {
+export default function Scrub({ video, playing, duration, noteTimes, onSeek }: ScrubProps) {
   const bar = useRef<HTMLDivElement>(null);
+  const fill = useRef<HTMLSpanElement>(null);
+  const knob = useRef<HTMLSpanElement>(null);
+  const dragging = useRef(false);
+
+  // Painted straight onto the elements, as transforms so no frame needs a layout: a video reports its time
+  // only about 4 times a second.
+  const paint = (fraction: number) => {
+    fill.current!.style.transform = `scaleX(${fraction})`;
+    knob.current!.style.transform = `translateX(${fraction * 100}%)`;
+  };
+
+  const seconds = useVideoTime(video, (v) => Math.round(v.currentTime), 0);
+
+  // Reads the video's own time, which is exact: the last reported one can be a quarter second behind. While
+  // playing, the bar follows the playhead on every frame; paused, it moves when the video seeks.
+  useLayoutEffect(() => {
+    const repaint = () => {
+      if (video?.duration && !dragging.current) paint(video.currentTime / video.duration);
+      else if (!video?.duration) paint(0);
+    };
+    repaint();
+    const events = ["seeked", "loadedmetadata", "emptied"];
+    events.forEach((event) => video?.addEventListener(event, repaint));
+    let frame = 0;
+    const tick = () => {
+      repaint();
+      frame = requestAnimationFrame(tick);
+    };
+    if (playing) frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      events.forEach((event) => video?.removeEventListener(event, repaint));
+    };
+  }, [video, playing]);
+
+  // The knob stays under the pointer; the video catches up behind it.
   const seek = (event: PointerEvent) => {
     const box = bar.current!.getBoundingClientRect();
-    onSeek(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)));
+    const fraction = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
+    paint(fraction);
+    onSeek(fraction);
   };
 
   return (
@@ -37,16 +77,21 @@ export default function Scrub({ progress, duration, noteTimes, onSeek }: ScrubPr
       aria-label="Seek"
       aria-valuemin={0}
       aria-valuemax={Math.round(duration)}
-      aria-valuenow={Math.round(progress * duration)}
+      aria-valuenow={seconds}
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
+        dragging.current = true;
         seek(event);
       }}
       onPointerMove={(event) => event.currentTarget.hasPointerCapture(event.pointerId) && seek(event)}
+      onLostPointerCapture={() => (dragging.current = false)}
       className="relative ml-1.5 h-[18px] flex-1 cursor-pointer touch-none"
     >
       <span className="absolute inset-x-0 top-[7px] h-1 rounded bg-white/18" />
-      <span className="bg-foreground absolute top-[7px] left-0 h-1 rounded" style={{ width: `${progress * 100}%` }} />
+      <span
+        ref={fill}
+        className="bg-foreground absolute inset-x-0 top-[7px] h-1 origin-left rounded will-change-transform"
+      />
       {duration > 0 &&
         mergeMarkers(noteTimes, duration).map(({ at, times }) => (
           <span
@@ -60,10 +105,10 @@ export default function Scrub({ progress, duration, noteTimes, onSeek }: ScrubPr
             </span>
           </span>
         ))}
-      <span
-        className="bg-foreground absolute top-[3px] size-3 -translate-x-1/2 rounded-full shadow-[0_0_0_4px_rgba(155,124,255,0.25)]"
-        style={{ left: `${progress * 100}%` }}
-      />
+      {/* A full-width track that moves, so its percentage is a share of the bar, not of the knob. */}
+      <span ref={knob} className="pointer-events-none absolute inset-x-0 top-[3px] will-change-transform">
+        <span className="bg-foreground absolute left-0 size-3 -translate-x-1/2 rounded-full shadow-[0_0_0_4px_rgba(155,124,255,0.25)]" />
+      </span>
     </div>
   );
 }

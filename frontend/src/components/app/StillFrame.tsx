@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { useStill } from "@/lib/stills";
 import { cn } from "@/lib/utils";
-
-const STILL_AT = 0.6;
 
 interface StillFrameProps {
   src: string;
@@ -10,26 +9,25 @@ interface StillFrameProps {
   className?: string;
 }
 
-// A still from the video itself, 60% in, where the drawing is mostly done; the server makes no thumbnails.
+// A still from the video itself, shared as one image by every place that shows this scene.
 export default function StillFrame({ src, onDuration, className }: StillFrameProps) {
-  // Hidden until the seek lands, so the frame fades in instead of flashing the first frame.
-  const [shown, setShown] = useState(false);
+  const still = useStill(src);
+  // An image already made shows at once; a new one fades in.
+  const [warm] = useState(still !== null);
 
+  useEffect(() => {
+    if (still) onDuration?.(still.duration);
+  }, [still, onDuration]);
+
+  if (!still) return null;
   return (
-    <video
-      src={src}
-      preload="metadata"
-      muted
-      playsInline
+    <img
+      src={still.url}
+      alt=""
       aria-hidden="true"
-      onLoadedMetadata={(event) => {
-        const video = event.currentTarget;
-        onDuration?.(video.duration);
-        video.currentTime = video.duration * STILL_AT;
-      }}
-      onSeeked={() => setShown(true)}
-      style={shown ? undefined : { opacity: 0 }}
-      className={cn("block size-full object-cover transition-opacity duration-500", className)}
+      draggable={false}
+      decoding="async"
+      className={cn("block size-full object-cover", !warm && "motion-safe:animate-fade-in", className)}
     />
   );
 }

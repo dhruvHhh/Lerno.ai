@@ -1,5 +1,5 @@
 import { ArrowRight } from "@phosphor-icons/react";
-import { useEffect, useRef, type FormEvent } from "react";
+import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 
 import Card from "@/components/watch/Card";
 import { STAMP } from "@/components/watch/shared";
@@ -13,7 +13,7 @@ interface TutorCardProps {
   open: boolean;
   onClose: () => void;
   tutor: ReturnType<typeof useTutor>;
-  moment: string;
+  moment: ReactNode;
   onAsk: () => void;
   className?: string;
 }

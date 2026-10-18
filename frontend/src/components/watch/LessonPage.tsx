@@ -14,6 +14,7 @@ import { SOLID, scoreOf } from "@/components/watch/shared";
 import TutorCard from "@/components/watch/TutorCard";
 import useNotes, { type Note } from "@/hooks/useNotes";
 import useTutor from "@/hooks/useTutor";
+import useVideoTime from "@/hooks/useVideoTime";
 import { LEVELS, type LessonWithScenes } from "@/lib/api";
 import { saveProgress, saveScenesRail, savedProgress, savedScenesRail } from "@/lib/saved";
 import { cn, formatTime } from "@/lib/utils";
@@ -50,7 +51,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     Object.fromEntries((start?.watched ?? []).map((position) => [position, 1])),
   );
   const [durations, setDurations] = useState<Record<number, number>>({});
-  const [time, setTime] = useState(start?.time ?? 0);
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [overlay, setOverlay] = useState<"quiz" | "complete" | null>(null);
@@ -64,6 +64,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const notes = useNotes(lesson.id);
   const tutor = useTutor(lesson.id);
   const video = useRef<HTMLVideoElement>(null);
+  // The element itself, for the small parts that follow its time; the ref is for handlers.
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
+  const attachVideo = useCallback((element: HTMLVideoElement | null) => {
+    video.current = element;
+    setVideoEl(element);
+  }, []);
   const film = useRef<HTMLDivElement>(null);
   // What to do once the next video's details load: where to start, and whether to play.
   const pending = useRef({ at: start?.time ?? 0, play: false });
@@ -84,12 +90,20 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     return save;
   }, [save]);
 
+  // The furthest point reached in this scene, for its bar in the scenes list. Kept on pause and when leaving.
+  const keepProgress = useCallback(() => {
+    const v = video.current;
+    if (!v?.duration) return;
+    const fraction = v.currentTime / v.duration;
+    setProgress((p) => (fraction > (p[scene] ?? 0) ? { ...p, [scene]: fraction } : p));
+  }, [scene]);
+
   const go = useCallback(
     (position: number, at = 0, play = true) => {
+      keepProgress();
       pending.current = { at, play };
       retried.current = false;
       timeNow.current = at;
-      setTime(at);
       setVideoFailed(false);
       setOverlay(null);
       setNotepadAt(null);
@@ -99,7 +113,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         if (play) v.play().catch(() => {});
       } else setScene(position);
     },
-    [scene],
+    [scene, keepProgress],
   );
 
   const toggle = useCallback(() => {
@@ -133,7 +147,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const openNotepad = () => {
     video.current?.pause();
     setCard(null);
-    setNotepadAt(timeNow.current);
+    setNotepadAt(video.current?.currentTime ?? timeNow.current);
   };
 
   // A link that expired (they last an hour) is fetched once more, keeping the scene and the time.
@@ -196,12 +210,13 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     saveScenesRail(!railRight);
     setRailRight(!railRight);
   };
+  const keepDuration = useCallback(
+    (position: number, seconds: number) => setDurations((d) => (d[position] ? d : { ...d, [position]: seconds })),
+    [],
+  );
   const right = railRight ? "lg:right-[94px]" : "lg:right-[334px]";
   const hasVideo = !!current.video_url && !videoFailed;
   const notesFull = notes.notes.length >= NOTES_LIMIT;
-  const sentences = current.narration.match(/[^.?!]+[.?!]*/g) ?? [current.narration];
-  const lit = Math.min(sentences.length - 1, Math.floor((duration ? time / duration : 0) * sentences.length));
-  const stamp = Math.min(time, TIME_MAX);
 
   return (
     // The page fills the shell's main area edge to edge on desktop, with its own scroll and the scenes on the right.
@@ -230,7 +245,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
             {current.video_url && !videoFailed && (
               <video
                 key={scene}
-                ref={video}
+                ref={attachVideo}
                 src={current.video_url}
                 playsInline
                 preload="metadata"
@@ -242,15 +257,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   if (at > 0 && at < v.duration) v.currentTime = at;
                   if (play) v.play().catch(() => {});
                 }}
-                onTimeUpdate={(event) => {
-                  const v = event.currentTarget;
-                  const fraction = v.duration ? v.currentTime / v.duration : 0;
-                  timeNow.current = v.currentTime;
-                  setTime(v.currentTime);
-                  setProgress((p) => (fraction > (p[scene] ?? 0) + 0.01 ? { ...p, [scene]: fraction } : p));
-                }}
+                onTimeUpdate={(event) => (timeNow.current = event.currentTarget.currentTime)}
                 onPlay={() => setPlaying(true)}
-                onPause={() => {
+                onPause={(event) => {
+                  // The last time update can be a quarter second old; notes and saved progress use the exact moment.
+                  timeNow.current = event.currentTarget.currentTime;
+                  keepProgress();
                   setPlaying(false);
                   save();
                 }}
@@ -297,9 +309,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
             {hasVideo && (
               <>
                 {/* A scene's first frame is dark while its title fades in, so a still stands in until it plays. */}
-                {time === 0 && !playing && (
-                  <StillFrame src={current.video_url!} className="pointer-events-none absolute inset-0" />
-                )}
+                <Poster video={videoEl} src={current.video_url!} playing={playing} />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-linear-to-b from-transparent to-black/75" />
                 <button
                   type="button"
@@ -316,11 +326,10 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className={CONTROL}>
                     {playing ? <Pause size={18} weight="fill" /> : <Play size={18} weight="fill" />}
                   </button>
-                  <span className="hidden sm:inline">
-                    {formatTime(time)} / {formatTime(duration)}
-                  </span>
+                  <TimeLabel video={videoEl} duration={duration} />
                   <Scrub
-                    progress={duration ? time / duration : 0}
+                    video={videoEl}
+                    playing={playing}
                     duration={duration}
                     noteTimes={sceneNotes.map((note) => note.time_seconds)}
                     onSeek={seek}
@@ -381,13 +390,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
           </div>
 
           {/* The narration under the film, like subtitles; the sentence being spoken is lit. */}
-          <p className="text-foreground/50 mx-auto mt-3.5 max-w-[720px] text-center text-base leading-relaxed tracking-[-0.01em] sm:mt-5 sm:min-h-[60px] sm:text-[19px]">
-            {sentences.map((sentence, k) => (
-              <span key={k} className={cn("transition-colors duration-[400ms]", k === lit && "text-foreground")}>
-                {sentence.trim()}{" "}
-              </span>
-            ))}
-          </p>
+          <Narration video={videoEl} text={current.narration} />
         </div>
       </div>
 
@@ -397,8 +400,9 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         watched={watched}
         progress={progress}
         durations={durations}
-        onDuration={(position, seconds) => setDurations((d) => (d[position] ? d : { ...d, [position]: seconds }))}
-        onSelect={(position) => go(position)}
+        video={videoEl}
+        onDuration={keepDuration}
+        onSelect={go}
         rail={railRight}
         onToggleRail={toggleRail}
       />
@@ -414,8 +418,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         open={card === "tutor"}
         onClose={() => setCard(null)}
         tutor={tutor}
-        moment={`Scene ${scene} at ${formatTime(stamp)}`}
-        onAsk={() => tutor.ask(scene, stamp)}
+        moment={<Moment video={videoEl} scene={scene} />}
+        onAsk={() => tutor.ask(scene, stampOf(video.current))}
         className={right}
       />
       <NotesCard
@@ -444,3 +448,47 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 }
 
 const CONTROL = cn(ICON_BUTTON, "text-foreground size-[30px] rounded-[10px] hover:bg-white/10 sm:size-[34px]");
+
+const stampOf = (video: HTMLVideoElement | null) => Math.min(video?.currentTime ?? 0, TIME_MAX);
+
+// The parts below follow the video's time on their own, so the page does not re-render as it plays.
+
+function TimeLabel({ video, duration }: { video: HTMLVideoElement | null; duration: number }) {
+  const seconds = useVideoTime(video, (v) => Math.floor(v.currentTime), 0);
+  return (
+    <span className="hidden sm:inline">
+      {formatTime(seconds)} / {formatTime(duration)}
+    </span>
+  );
+}
+
+// A scene's first frame is dark while its title fades in, so a still stands in until it plays.
+function Poster({ video, src, playing }: { video: HTMLVideoElement | null; src: string; playing: boolean }) {
+  const atStart = useVideoTime(video, (v) => v.currentTime === 0, true);
+  return atStart && !playing ? <StillFrame src={src} className="pointer-events-none absolute inset-0" /> : null;
+}
+
+// The narration under the film, like subtitles; the sentence being spoken is lit.
+function Narration({ video, text }: { video: HTMLVideoElement | null; text: string }) {
+  const sentences = text.match(/[^.?!]+[.?!]*/g) ?? [text];
+  const lit = useVideoTime(
+    video,
+    (v) =>
+      v.duration ? Math.min(sentences.length - 1, Math.floor((v.currentTime / v.duration) * sentences.length)) : 0,
+    0,
+  );
+  return (
+    <p className="text-foreground/50 mx-auto mt-3.5 max-w-[720px] text-center text-base leading-relaxed tracking-[-0.01em] sm:mt-5 sm:min-h-[60px] sm:text-[19px]">
+      {sentences.map((sentence, k) => (
+        <span key={k} className={cn("transition-colors duration-[400ms]", k === lit && "text-foreground")}>
+          {sentence.trim()}{" "}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function Moment({ video, scene }: { video: HTMLVideoElement | null; scene: number }) {
+  const seconds = useVideoTime(video, (v) => Math.floor(stampOf(v)), 0);
+  return `Scene ${scene} at ${formatTime(seconds)}`;
+}
