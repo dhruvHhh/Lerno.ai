@@ -17,7 +17,8 @@ def generate_lesson(lesson_id: str) -> None:
     pipeline.run(lesson_id)
 
 
-@app.function()
+# Stays up 15 minutes after the last request, so a user who stops to watch a video never waits for a cold start.
+@app.function(scaledown_window=15 * 60)
 @modal.concurrent(max_inputs=50)
 @modal.asgi_app()
 def api():

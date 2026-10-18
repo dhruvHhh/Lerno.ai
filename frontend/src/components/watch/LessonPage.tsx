@@ -35,9 +35,10 @@ const subscribeOnline = (onChange: () => void) => {
 interface LessonPageProps {
   lesson: LessonWithScenes;
   refresh: () => Promise<void>;
+  className?: string;
 }
 
-export default function LessonPage({ lesson, refresh }: LessonPageProps) {
+export default function LessonPage({ lesson, refresh, className }: LessonPageProps) {
   const scenes = lesson.scenes;
   const [start] = useState(() => savedProgress(lesson.id));
   const [scene, setScene] = useState(() =>
@@ -204,7 +205,12 @@ export default function LessonPage({ lesson, refresh }: LessonPageProps) {
 
   return (
     // The page fills the shell's main area edge to edge on desktop, with its own scroll and the scenes on the right.
-    <div className="w-full lg:-mx-6 lg:-mb-12 lg:grid lg:h-svh lg:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,1fr)_auto]">
+    <div
+      className={cn(
+        "w-full lg:-mx-6 lg:-mb-12 lg:grid lg:h-svh lg:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,1fr)_auto]",
+        className,
+      )}
+    >
       <div
         data-lenis-prevent
         className="relative min-w-0 pb-2 lg:[scrollbar-width:thin] lg:overflow-y-auto lg:px-8 lg:pt-[22px] lg:pb-10"

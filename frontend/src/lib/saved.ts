@@ -21,9 +21,14 @@ function write(key: string, value: unknown) {
 export const savedLevel = () => read<Level>("lerno:level", "high_school");
 export const saveLevel = (level: Level) => write("lerno:level", level);
 
-// Known before the lesson list loads, so the example chips never pop in late.
-export const savedHasLessons = () => read("lerno:has-lessons", false);
-export const saveHasLessons = (hasLessons: boolean) => write("lerno:has-lessons", hasLessons);
+// Known before the lesson list loads: the example chips never pop in late, and placeholders match what will come.
+export interface LessonCounts {
+  lessons: number;
+  ready: number;
+}
+
+export const savedCounts = () => read<LessonCounts>("lerno:lesson-counts", { lessons: 0, ready: 0 });
+export const saveCounts = (counts: LessonCounts) => write("lerno:lesson-counts", counts);
 
 export const savedRail = () => read("lerno:sidebar-rail", false);
 export const saveRail = (rail: boolean) => write("lerno:sidebar-rail", rail);

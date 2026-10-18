@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { api, isMaking, type Lesson, type Usage } from "@/lib/api";
+import { saveCounts } from "@/lib/saved";
 
 const POLL_MS = 5000;
 
@@ -17,18 +18,20 @@ export default function useAppData(): AppData {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const reload = useCallback(
-    () =>
-      Promise.all([api<Lesson[]>("/lessons"), api<Usage>("/usage")]).then(
-        ([nextLessons, nextUsage]) => {
-          setLessons(nextLessons);
-          setUsage(nextUsage);
+  // Two requests, so a slow usage count never holds back the lesson list.
+  const reload = useCallback(async () => {
+    await Promise.all([
+      api<Lesson[]>("/lessons").then(
+        (next) => {
+          setLessons(next);
           setFailed(false);
+          saveCounts({ lessons: next.length, ready: next.filter((lesson) => lesson.status === "ready").length });
         },
         () => setFailed(true),
       ),
-    [],
-  );
+      api<Usage>("/usage").then(setUsage, () => {}),
+    ]);
+  }, []);
 
   useEffect(() => {
     void reload();

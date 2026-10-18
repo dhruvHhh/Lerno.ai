@@ -26,3 +26,6 @@ export const UNDERLINE = cn(
 );
 
 export const PRESS = cn("active:scale-[0.985]", SNAPPY);
+
+// Loaded content and its placeholder start their fades this late, so React's work on the new content ends first.
+export const SETTLE_MS = 60;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { api, ApiError, isMaking, type LessonWithScenes, type Status } from "@/lib/api";
+import { ApiError, isMaking, type LessonWithScenes, type Status } from "@/lib/api";
+import { fetchLesson, storedLesson } from "@/lib/lessonStore";
 
 const POLL_MS = 3000;
 
@@ -19,16 +20,24 @@ export interface LessonData extends LessonState {
 
 // Asks for the lesson every 3 seconds while it is being made. A hidden tab stops asking and asks again when it is seen.
 export default function useLesson(id: string): LessonData {
-  const [state, setState] = useState<LessonState>({ lesson: null, firstStatus: null, missing: false, offline: false });
+  const [stored] = useState(() => storedLesson(id));
+  const [state, setState] = useState<LessonState>({
+    lesson: stored,
+    firstStatus: stored?.status ?? null,
+    missing: false,
+    offline: false,
+  });
 
   useEffect(() => {
+    // A stored lesson is ready with fresh links; asking again would only swap the links and restart the video.
+    if (stored) return;
     let active = true;
     let done = false;
     let timer = 0;
 
     const load = () => {
       window.clearTimeout(timer);
-      api<LessonWithScenes>(`/lessons/${id}`)
+      fetchLesson(id)
         .then(
           (lesson) => {
             done = !isMaking(lesson);
@@ -55,12 +64,9 @@ export default function useLesson(id: string): LessonData {
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [id]);
+  }, [id, stored]);
 
-  const refresh = useCallback(
-    () => api<LessonWithScenes>(`/lessons/${id}`).then((lesson) => setState((s) => ({ ...s, lesson }))),
-    [id],
-  );
+  const refresh = useCallback(() => fetchLesson(id).then((lesson) => setState((s) => ({ ...s, lesson }))), [id]);
 
   return { ...state, refresh };
 }
