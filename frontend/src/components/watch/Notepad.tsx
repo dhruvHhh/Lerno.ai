@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { BUTTON, NOTE_MAX, SOLID } from "@/components/watch/shared";
+import ActionButton, { type ActionState } from "@/components/watch/ActionButton";
+import { BUTTON, DONE_MS, NOTE_MAX, SOLID } from "@/components/watch/shared";
 import Stamp from "@/components/watch/Stamp";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -12,10 +13,11 @@ interface NotepadProps {
   onCancel: () => void;
 }
 
-// A small card over the video, stamped with the moment the note belongs to.
+// A small card over the video, stamped with the moment the note belongs to. It stays open after a save, empty and
+// ready for the next note.
 export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
   const [text, setText] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [state, setState] = useState<ActionState>("idle");
   const [error, setError] = useState("");
   const field = useRef<HTMLTextAreaElement>(null);
 
@@ -25,16 +27,21 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
 
   const save = async (event: FormEvent) => {
     event.preventDefault();
-    if (!text.trim() || saving) return;
-    setSaving(true);
+    if (!text.trim() || state !== "idle") return;
+    setState("busy");
     setError("");
     try {
       await onSave(text.trim());
     } catch {
-      // The notepad stays open with the text, so nothing typed is lost.
+      // The text stays, so nothing typed is lost.
       setError("Couldn't save your note. Try again.");
-      setSaving(false);
+      setState("idle");
+      return;
     }
+    setText("");
+    setState("done");
+    field.current?.focus();
+    window.setTimeout(() => setState("idle"), DONE_MS);
   };
 
   return (
@@ -55,6 +62,7 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
         ref={field}
         value={text}
         onChange={(event) => setText(event.target.value)}
+        readOnly={state === "busy"}
         maxLength={NOTE_MAX}
         placeholder="What do you want to remember?"
         className="text-foreground caret-accent-soft rounded-tight h-[76px] w-full resize-none bg-[#05060a] px-3 py-2.5 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.1)] outline-none focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_2px_rgba(155,124,255,0.7)]"
@@ -64,9 +72,13 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
         <button type="button" onClick={onCancel} className={BUTTON}>
           Cancel
         </button>
-        <button type="submit" disabled={!text.trim() || saving} className={SOLID}>
-          Save
-        </button>
+        <ActionButton
+          type="submit"
+          state={state}
+          labels={["Save", "Saving…", "Saved"]}
+          disabled={!text.trim()}
+          className={SOLID}
+        />
       </div>
     </form>
   );

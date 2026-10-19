@@ -374,7 +374,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                 onCancel={() => setNotepadAt(null)}
                 onSave={async (content) => {
                   await notes.add(scene, Math.min(notepadAt, TIME_MAX), content);
-                  setNotepadAt(null);
+                  setNotepadAt(video.current?.currentTime ?? notepadAt);
                 }}
               />
             )}
@@ -439,6 +439,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         }}
         onEdit={notes.edit}
         onDelete={notes.remove}
+        onDropped={notes.drop}
         focus={notesFocus}
         className={right}
       />

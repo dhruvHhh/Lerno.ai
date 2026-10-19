@@ -43,13 +43,14 @@ export default function useNotes(lessonId: string) {
     [path],
   );
 
+  // Deleting is two steps, so the note can show its tick and fold away before it leaves the list.
   const remove = useCallback(
     async (id: string) => {
       await api(`${path}/${id}`, { method: "DELETE" });
-      setNotes((list) => list.filter((n) => n.id !== id));
     },
     [path],
   );
+  const drop = useCallback((id: string) => setNotes((list) => list.filter((n) => n.id !== id)), []);
 
-  return { notes, add, edit, remove };
+  return { notes, add, edit, remove, drop };
 }
