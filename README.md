@@ -54,12 +54,12 @@ Lerno turns a maths question into a short lesson you watch. Ask *"Why is the are
     <td width="50%" valign="top">
       <img src=".github/assets/quiz.webp" alt="A multiple-choice quick check at the end of a scene">
       <h3>A quick check after every scene</h3>
-      One question at the end of each scene, so you know whether the idea landed before you move on. Your score waits in the Quiz panel.
+      A four-choice question at the end of each scene, so you know whether the idea landed before you move on. The Quiz panel keeps your score, plus a short written question for every scene with its answer.
     </td>
   </tr>
 </table>
 
-Also: three levels (school, high school, college), keyboard shortcuts (<kbd>Space</kbd>, <kbd>←</kbd> <kbd>→</kbd>, <kbd>T</kbd>, <kbd>N</kbd>, <kbd>Q</kbd>), progress that resumes where you stopped, and a live "being made" screen while a lesson renders.
+Also: three levels (school, high school, college), keyboard shortcuts (<kbd>Space</kbd>, <kbd>←</kbd> <kbd>→</kbd>, <kbd>T</kbd>, <kbd>N</kbd>, <kbd>Q</kbd>), progress that resumes where you stopped (saved in your browser), and a live "being made" screen while a lesson renders.
 
 ## How it works
 
@@ -69,9 +69,9 @@ Also: three levels (school, high school, college), keyboard shortcuts (<kbd>Spac
   <img alt="How Lerno works: you ask a question in the React app; FastAPI on Modal asks Claude Sonnet to plan three scenes and write Manim code; Manim renders each scene in its own sandbox; videos go to Supabase, which sends signed links back to the app; tutor questions go to Claude Haiku" src=".github/assets/architecture-light.webp" width="100%">
 </picture>
 
-1. **Plan.** Claude Sonnet turns the question and level into a lesson plan: for each of three scenes, a title, the narration, Manim code in the Lerno theme, and a quick-check question.
-2. **Render.** Each scene runs in its own Modal sandbox from the official Manim image, with the Lerno fonts and theme added. A check stops any scene whose text leaves the frame, and a scene that cannot be animated still plays as narration.
-3. **Store.** Videos go to Supabase Storage; the lesson, scenes, notes and tutor messages live in Postgres. The player gets short-lived signed links.
+1. **Plan.** Claude Sonnet turns the question and level into a lesson plan: a title and, for each of three scenes, a title, the narration, a description of the animation, a four-choice question, and a short written question with its answer.
+2. **Write and render.** The three scenes then run in parallel. For each one, Claude Sonnet writes Manim code in the Lerno theme, and the scene renders in its own Modal sandbox from the official Manim image, with the Lerno fonts and theme added. A check stops any scene whose text leaves the frame. If a render fails, the error goes back to Claude to repair the code, up to two times; a scene that still cannot be animated plays as narration, and the lesson fails only if no scene works.
+3. **Store.** Videos go to Supabase Storage; the lesson, scenes and notes live in Postgres, and tutor messages are kept for 24 hours. The player gets short-lived signed links.
 4. **Watch.** The React app polls while the lesson is made, then opens the player. The tutor runs on Claude Haiku with the scene and the moment as context.
 
 Daily limits keep costs in check: 3 lessons per person (failed ones are free), a cap on tries, a global daily cap, 20 tutor questions per person every 24 hours, and 100 notes per lesson.
@@ -89,9 +89,9 @@ Daily limits keep costs in check: 3 lessons per person (failed ones are free), a
 
 ## Run locally
 
-**You need:** Node.js 20+, Python 3.12+ with [uv](https://docs.astral.sh/uv/), a [Supabase](https://supabase.com) project, a [Modal](https://modal.com) account, and an [Anthropic API key](https://console.anthropic.com).
+**You need:** Node.js 20.19+ or 22.12+, Python 3.12+ with [uv](https://docs.astral.sh/uv/), a [Supabase](https://supabase.com) project, a [Modal](https://modal.com) account, and an [Anthropic API key](https://console.anthropic.com).
 
-**1. Database.** In the Supabase SQL editor, run [`supabase/schema.sql`](supabase/schema.sql). The files in `supabase/migrations` are only for databases made before those changes.
+**1. Database and sign-in.** In the Supabase SQL editor, run [`supabase/schema.sql`](supabase/schema.sql). The files in `supabase/migrations` are only for databases made before those changes. In Authentication, turn on Email (and Google, if you want it), and add `http://localhost:5173/**` to the redirect URLs.
 
 **2. Backend.**
 
@@ -139,7 +139,7 @@ backend/
     scene_kit/          the Lerno theme, fonts, and logo for every scene
 frontend/
   src/
-    pages/              home, sign-in, new lesson, lesson
+    pages/              home, sign-in and sign-up, password reset, new lesson, lesson
     components/
       app/              shell, sidebar, account menu, cards
       making/           the "being made" screen
