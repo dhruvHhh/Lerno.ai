@@ -63,17 +63,11 @@ Also: three levels (school, high school, college), keyboard shortcuts (<kbd>Spac
 
 ## How it works
 
-```mermaid
-flowchart LR
-    U([You ask a question]) --> W[React app<br/>on Vercel]
-    W -->|POST /lessons| A[FastAPI<br/>on Modal]
-    A --> P[Claude Sonnet<br/>plans 3 scenes<br/>and writes Manim code]
-    P --> R[Manim renders each scene<br/>in a Modal sandbox]
-    R --> S[(Supabase<br/>Postgres + Storage)]
-    W -->|polls the status| A
-    S -->|signed video links| W
-    W -->|tutor questions| T[Claude Haiku]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/architecture-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/architecture-light.webp">
+  <img alt="How Lerno works: you ask a question in the React app; FastAPI on Modal asks Claude Sonnet to plan three scenes and write Manim code; Manim renders each scene in its own sandbox; videos go to Supabase, which sends signed links back to the app; tutor questions go to Claude Haiku" src=".github/assets/architecture-light.webp" width="100%">
+</picture>
 
 1. **Plan.** Claude Sonnet turns the question and level into a lesson plan: for each of three scenes, a title, the narration, Manim code in the Lerno theme, and a quick-check question.
 2. **Render.** Each scene runs in its own Modal sandbox from the official Manim image, with the Lerno fonts and theme added. A check stops any scene whose text leaves the frame, and a scene that cannot be animated still plays as narration.
