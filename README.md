@@ -8,7 +8,7 @@
 
 <br>
 
-[![Live site](https://img.shields.io/badge/Live-lerno--ai.vercel.app-9b7cff?style=flat-square)](https://lerno-ai.vercel.app)
+
 ![React 19](https://img.shields.io/badge/React-19-20232a?style=flat-square&logo=react&logoColor=61dafb)
 ![Vite](https://img.shields.io/badge/Vite-646cff?style=flat-square&logo=vite&logoColor=white)
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-0b1120?style=flat-square&logo=tailwindcss&logoColor=38bdf8)
