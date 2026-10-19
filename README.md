@@ -18,7 +18,7 @@
 ![Claude](https://img.shields.io/badge/Claude-Anthropic-d97757?style=flat-square)
 ![Manim](https://img.shields.io/badge/Manim-0.19-1f6feb?style=flat-square)
 
-**[Live site](https://lerno-ai.vercel.app)** · **[How it works](#how-it-works)** · **[Run locally](#run-locally)**
+**[How it works](#how-it-works)** · **[Run locally](#run-locally)**
 
 </div>
 
