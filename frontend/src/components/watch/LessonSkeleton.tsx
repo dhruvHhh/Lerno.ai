@@ -32,17 +32,17 @@ export default function LessonSkeleton() {
 
       <div
         className={cn(
-          "bg-surface mt-2 rounded-[18px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:m-2.5 lg:ml-0",
+          "bg-surface rounded-panel mt-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:m-2.5 lg:ml-0",
           rail ? "lg:w-[60px]" : "lg:w-[300px]",
         )}
       >
         <div className="flex h-[60px] items-center px-4">
           <i className={cn(BAR, "h-3 w-24", rail && "lg:hidden")} />
         </div>
-        <div className={cn("grid gap-1.5 px-2.5 pb-2.5", rail && "lg:hidden")}>
+        <div className={cn("grid gap-1.5 px-2 pb-2", rail && "lg:hidden")}>
           {SCENES.map((scene) => (
             <div key={scene} className="grid grid-cols-[104px_1fr] items-center gap-3 p-2">
-              <div className={cn(TILE, "aspect-video rounded-lg")} />
+              <div className={cn(TILE, "rounded-tight aspect-video")} />
               <div className="grid gap-2">
                 <i className={cn(BAR, "h-2.5 w-4/5")} />
                 <i className={cn(BAR, "h-2 w-1/3")} />

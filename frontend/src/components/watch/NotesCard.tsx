@@ -70,7 +70,7 @@ export default function NotesCard({
   );
 }
 
-const TOOL = "text-muted-foreground hover:text-foreground rounded-md px-1.5 py-0.5 text-xs hover:bg-white/6";
+const TOOL = "text-muted-foreground hover:text-foreground rounded-tight px-1.5 py-0.5 text-xs hover:bg-white/6";
 
 interface NoteRowProps {
   note: Note;
@@ -103,14 +103,14 @@ function NoteRow({ note, flash, first, onOpen, onEdit, onDelete }: NoteRowProps)
 
   if (editing)
     return (
-      <div className="grid gap-2 rounded-xl bg-white/3 p-2.5 shadow-[inset_0_0_0_1px_rgba(155,124,255,0.3)]">
+      <div className="rounded-tight grid gap-2 bg-white/3 p-2.5 shadow-[inset_0_0_0_1px_rgba(155,124,255,0.3)]">
         <textarea
           value={text}
           onChange={(event) => setText(event.target.value)}
           maxLength={NOTE_MAX}
           autoFocus
           aria-label="Edit note"
-          className="text-foreground caret-accent-soft h-20 resize-none rounded-lg bg-[#05060a] px-2.5 py-2 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] outline-none"
+          className="text-foreground caret-accent-soft rounded-tight h-20 resize-none bg-[#05060a] px-2.5 py-2 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] outline-none"
         />
         {error && <p className="text-danger text-xs">{error}</p>}
         <div className="flex justify-end gap-2">
@@ -132,13 +132,13 @@ function NoteRow({ note, flash, first, onOpen, onEdit, onDelete }: NoteRowProps)
   return (
     <div
       ref={row}
-      className="group relative grid gap-1 rounded-xl bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-colors duration-250 hover:bg-white/5"
+      className="group rounded-tight relative grid gap-1 bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-colors duration-250 hover:bg-white/5"
     >
       {flash && (
         <span
           key={flash}
           aria-hidden="true"
-          className="animate-note-flash pointer-events-none absolute inset-0 rounded-xl"
+          className="animate-note-flash rounded-tight pointer-events-none absolute inset-0"
         />
       )}
       <button

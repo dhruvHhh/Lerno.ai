@@ -46,7 +46,7 @@ export default function ShortcutsDialog({ open, onClose }: ShortcutsDialogProps)
         role="dialog"
         aria-modal="true"
         aria-label="Keyboard shortcuts"
-        className="w-full max-w-[380px] rounded-[14px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.6)]"
+        className="rounded-surface w-full max-w-[380px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.6)]"
       >
         <header className="flex items-center justify-between py-2 pr-2 pl-4">
           <h2 className="text-[15px] font-semibold">Keyboard shortcuts</h2>
@@ -57,13 +57,13 @@ export default function ShortcutsDialog({ open, onClose }: ShortcutsDialogProps)
         <p className="text-muted-foreground px-4 pb-2 text-xs">On a lesson page, when you are not typing.</p>
         <dl className="grid px-1 pb-1">
           {KEYS.map(({ keys, does }) => (
-            <div key={does} className="flex h-10 items-center justify-between rounded-[10px] px-3 odd:bg-white/2">
+            <div key={does} className="rounded-tile flex h-10 items-center justify-between px-3 odd:bg-white/2">
               <dt className="text-secondary-foreground text-[13px]">{does}</dt>
               <dd className="flex gap-1">
                 {keys.map((key) => (
                   <kbd
                     key={key}
-                    className="text-foreground grid h-6 min-w-6 place-items-center rounded-[6px] bg-white/6 px-1.5 font-sans text-[11px] font-medium shadow-[inset_0_-1px_0_rgba(255,255,255,0.06),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                    className="text-foreground rounded-tight grid h-6 min-w-6 place-items-center bg-white/6 px-1.5 font-sans text-[11px] font-medium shadow-[inset_0_-1px_0_rgba(255,255,255,0.06),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
                   >
                     {key}
                   </kbd>

@@ -25,6 +25,13 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1.05rem;
   --radius-2xl: 1.35rem;
+  /* Nested corners: inner = outer - padding, never under 4px. Panels hold rows at 8px, tiles at 12px, tight items
+     at 16px or more; surfaces hold rows at 4px and tiles at 8px. */
+  --radius-panel: 18px;
+  --radius-surface: 14px;
+  --radius-row: 10px;
+  --radius-tile: 6px;
+  --radius-tight: 4px;
 
   --animate-caret: caret 1.1s step-end infinite;
   --animate-marquee: marquee 60s linear infinite;
@@ -159,7 +166,7 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Signing out: the app fades away, then the sign-in page fades in. */
+  /* Signing out: the app fades away, then the sign-in page fades in. The 250ms is FADE_MS in lib/signOut.ts. */
   #root {
     transition: opacity 250ms ease-out;
   }

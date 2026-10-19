@@ -13,7 +13,7 @@ import { cn, formatTime } from "@/lib/utils";
 const CARDS = 3;
 const ROW = "grid gap-2.5 [grid-area:1/1] lg:grid-cols-3 lg:gap-4";
 const FRAME =
-  "grid grid-cols-[112px_1fr] items-center gap-x-3 rounded-[14px] bg-white/2 p-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:block lg:pb-3.5";
+  "grid grid-cols-[112px_1fr] items-center gap-x-3 rounded-surface bg-white/2 p-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:block lg:pb-3.5";
 
 export default function ContinueWatching({ lessons, failed }: { lessons: Lesson[] | null; failed: boolean }) {
   // Placeholders only on a cold load, for as many cards as the last visit showed.
@@ -35,7 +35,7 @@ export default function ContinueWatching({ lessons, failed }: { lessons: Lesson[
           <Placeholder loading={!lessons} className={ROW}>
             {Array.from({ length: expected }, (_, index) => (
               <div key={index} className={FRAME}>
-                <div className="row-span-2 aspect-video rounded-[9px] bg-white/4 motion-safe:animate-pulse" />
+                <div className="rounded-tile row-span-2 aspect-video bg-white/4 motion-safe:animate-pulse" />
                 <div className="flex h-5 items-center self-end lg:mx-1.5 lg:mt-3">
                   <i className="h-2.5 w-3/5 rounded-full bg-white/6 motion-safe:animate-pulse" />
                 </div>
@@ -82,7 +82,7 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
       )}
       style={{ animationDelay: `${SETTLE_MS + index * 70}ms` }}
     >
-      <div className="relative row-span-2 aspect-video overflow-hidden rounded-[9px] bg-[#0a0b10]">
+      <div className="rounded-tile relative row-span-2 aspect-video overflow-hidden bg-[#0a0b10]">
         {video && (
           <StillFrame
             src={video}
@@ -90,7 +90,7 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
             className="opacity-85 transition-[opacity,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] group-hover:opacity-100"
           />
         )}
-        <span className="text-foreground absolute bottom-2.5 left-2 flex items-center gap-1.5 rounded-md bg-black/80 px-2 py-1 text-[11px] font-medium tabular-nums opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span className="text-foreground rounded-tight absolute bottom-2.5 left-2 flex items-center gap-1.5 bg-black/80 px-2 py-1 text-[11px] font-medium tabular-nums opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
           <PlayIcon size={10} />
           {progress ? `Resume · ${formatTime(progress.time)}` : "Play"}
         </span>

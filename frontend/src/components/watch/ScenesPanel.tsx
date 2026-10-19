@@ -93,7 +93,7 @@ export default function ScenesPanel(props: ScenesPanelProps) {
     <aside
       aria-label="Scenes in this lesson"
       className={cn(
-        "bg-surface mx-0 mt-2 mb-[110px] flex flex-col overflow-hidden rounded-[18px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:m-2.5 lg:ml-0",
+        "bg-surface rounded-panel mx-0 mt-2 mb-[110px] flex flex-col overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:m-2.5 lg:ml-0",
         "ease-snappy transition-[width] duration-[450ms]",
         strip ? "lg:w-[60px] lg:overflow-visible" : "lg:w-[300px]",
       )}
@@ -128,7 +128,7 @@ export default function ScenesPanel(props: ScenesPanelProps) {
 
 function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
   return (
-    <ul data-lenis-prevent className="grid gap-1.5 overflow-y-auto px-2.5 py-1 pb-2.5">
+    <ul data-lenis-prevent className="grid gap-1.5 overflow-y-auto px-2 py-1 pb-2">
       {scenes.map((scene) => {
         const on = scene.position === current;
         const done = watched.includes(scene.position);
@@ -139,7 +139,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
               type="button"
               onClick={() => onSelect(scene.position)}
               className={cn(
-                "group grid w-full grid-cols-[104px_1fr] items-center gap-3 rounded-xl p-2 text-left transition-[background-color,box-shadow] duration-250",
+                "group rounded-row grid w-full grid-cols-[104px_1fr] items-center gap-3 p-2 text-left transition-[background-color,box-shadow] duration-250",
                 on
                   ? "from-accent/12 to-accent/4 bg-linear-to-b shadow-[inset_0_0_0_1px_rgba(155,124,255,0.35)]"
                   : "hover:bg-white/4",
@@ -147,7 +147,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
             >
               <div
                 className={cn(
-                  "relative aspect-video overflow-hidden rounded-lg bg-[#0a0b10]",
+                  "rounded-tight relative aspect-video overflow-hidden bg-[#0a0b10]",
                   !scene.video_url && "text-danger grid place-items-center",
                 )}
               >
@@ -167,7 +167,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
                       />
                     )}
                     {length > 0 && (
-                      <span className="text-foreground absolute right-1 bottom-1 rounded-[5px] bg-black/75 px-[5px] py-px text-[10px] tabular-nums">
+                      <span className="text-foreground rounded-tight absolute right-1 bottom-1 bg-black/75 px-[5px] py-px text-[10px] tabular-nums">
                         {formatTime(length)}
                       </span>
                     )}

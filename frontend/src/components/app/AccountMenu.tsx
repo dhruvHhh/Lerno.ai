@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const GAP = 8;
 const WIDE = 1024;
 const ITEM =
-  "text-secondary-foreground hover:text-foreground focus-visible:text-foreground flex h-8 w-full items-center gap-2.5 rounded-[6px] px-2.5 text-left text-[13px] outline-none transition-colors duration-150 hover:bg-white/6 focus-visible:bg-white/6";
+  "text-secondary-foreground hover:text-foreground focus-visible:text-foreground flex h-8 w-full items-center gap-2.5 rounded-tile px-2.5 text-left text-[13px] outline-none transition-colors duration-150 hover:bg-white/6 focus-visible:bg-white/6";
 
 interface AccountMenuProps {
   rail: boolean;
@@ -89,7 +89,7 @@ export default function AccountMenu({ rail, fade }: AccountMenuProps) {
         aria-haspopup="menu"
         aria-label="Account"
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-[10px] px-1 py-1.5 text-left whitespace-nowrap transition-colors duration-150 hover:bg-white/4",
+          "rounded-tile flex w-full items-center gap-2.5 px-1 py-1.5 text-left whitespace-nowrap transition-colors duration-150 hover:bg-white/4",
           open && "bg-white/4",
           rail && "lg:px-[5px]",
         )}
@@ -111,7 +111,7 @@ export default function AccountMenu({ rail, fade }: AccountMenuProps) {
           onKeyDown={onKey}
           style={place.style}
           className={cn(
-            "fixed z-50 rounded-[10px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
+            "rounded-row fixed z-50 bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
             place.side === "right" ? "w-[248px] origin-bottom-left" : "origin-bottom",
             "transition-[opacity,scale] duration-[140ms] ease-out",
             open ? "scale-100 opacity-100" : "pointer-events-none scale-[0.96] opacity-0",

@@ -454,7 +454,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   );
 }
 
-const CONTROL = cn(ICON_BUTTON, "text-foreground size-[30px] rounded-[10px] hover:bg-white/10 sm:size-[34px]");
+const CONTROL = cn(ICON_BUTTON, "text-foreground size-[30px] rounded-tile hover:bg-white/10 sm:size-[34px]");
 
 const stampOf = (video: HTMLVideoElement | null) => Math.min(video?.currentTime ?? 0, TIME_MAX);
 

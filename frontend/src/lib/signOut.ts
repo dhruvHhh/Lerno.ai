@@ -4,6 +4,7 @@ import { forgetStills } from "@/lib/stills";
 import { supabase } from "@/lib/supabase";
 import { prefersReducedMotion } from "@/lib/utils";
 
+// The same 250ms as the #root opacity transition in index.css.
 const FADE_MS = 250;
 
 // The app fades out, this person's lessons, stills and counts leave the browser, and the sign-in page fades in.

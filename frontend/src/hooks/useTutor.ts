@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { api, ApiError } from "@/lib/api";
 
-export interface ChatMessage {
+interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }

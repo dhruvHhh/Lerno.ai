@@ -40,7 +40,7 @@ export default function QuizCard({ open, onClose, scenes, answers, onPick, class
             onPick={(choice) => onPick(scene.position, choice)}
             small
           />
-          <div className="mt-1 rounded-[10px] bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-tight mt-1 bg-white/3 px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
             <p className="text-secondary-foreground text-sm">{scene.fr_question}</p>
             {shown.includes(scene.position) ? (
               <p className="mt-1.5 text-sm">{scene.fr_answer}</p>

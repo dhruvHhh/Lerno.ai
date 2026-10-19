@@ -5,7 +5,7 @@ import { fetchLesson, storedLesson } from "@/lib/lessonStore";
 
 const POLL_MS = 3000;
 
-export interface LessonState {
+interface LessonState {
   lesson: LessonWithScenes | null;
   // The status when the page first loaded: a lesson already ready opens straight away, with no loader.
   firstStatus: Status | null;
@@ -13,7 +13,7 @@ export interface LessonState {
   offline: boolean;
 }
 
-export interface LessonData extends LessonState {
+interface LessonData extends LessonState {
   // Asks once more, for fresh video links when the old ones expire. Rejects if the server can't be reached.
   refresh: () => Promise<void>;
 }

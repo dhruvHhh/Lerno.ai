@@ -40,7 +40,7 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
   return (
     <form
       onSubmit={save}
-      className="absolute bottom-[46px] left-4 z-10 grid w-[min(340px,calc(100%-32px))] gap-2.5 rounded-[14px] bg-[rgba(14,13,24,0.9)] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-[16px] sm:bottom-[60px]"
+      className="rounded-tile absolute bottom-[46px] left-4 z-10 grid w-[min(340px,calc(100%-32px))] gap-2.5 bg-[rgba(14,13,24,0.9)] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-[16px] sm:bottom-[60px]"
     >
       <header className="text-secondary-foreground flex items-center gap-2.5 text-xs">
         <span className="text-foreground text-[13px] font-medium">New note</span>
@@ -57,7 +57,7 @@ export default function Notepad({ time, onSave, onCancel }: NotepadProps) {
         onChange={(event) => setText(event.target.value)}
         maxLength={NOTE_MAX}
         placeholder="What do you want to remember?"
-        className="text-foreground caret-accent-soft h-[76px] w-full resize-none rounded-[10px] bg-[#05060a] px-3 py-2.5 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.1)] outline-none focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_2px_rgba(155,124,255,0.7)]"
+        className="text-foreground caret-accent-soft rounded-tight h-[76px] w-full resize-none bg-[#05060a] px-3 py-2.5 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.1)] outline-none focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6),0_0_0_2px_rgba(155,124,255,0.7)]"
       />
       {error && <p className="text-danger text-xs">{error}</p>}
       <div className="flex justify-end gap-2">

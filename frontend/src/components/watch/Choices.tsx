@@ -20,7 +20,7 @@ export default function Choices({ choices, correct, picked, onPick, small }: Cho
           disabled={answered}
           onClick={() => onPick(k)}
           className={cn(
-            "text-foreground flex items-center gap-3 rounded-xl bg-white/4 text-left shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-[background-color,box-shadow] duration-250",
+            "text-foreground rounded-tight flex items-center gap-3 bg-white/4 text-left shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-[background-color,box-shadow] duration-250",
             small ? "px-2.5 py-2 text-[13px]" : "px-3.5 py-3 text-[13px] sm:text-[15px]",
             !answered && "hover:bg-accent/8 hover:shadow-[inset_0_0_0_1px_rgba(155,124,255,0.45)]",
             answered && k === correct && "bg-[rgba(120,220,170,0.1)] shadow-[inset_0_0_0_1px_rgba(120,220,170,0.55)]",
@@ -29,7 +29,7 @@ export default function Choices({ choices, correct, picked, onPick, small }: Cho
         >
           <span
             className={cn(
-              "text-secondary-foreground grid flex-none place-items-center rounded-[7px] text-xs shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]",
+              "text-secondary-foreground rounded-tight grid flex-none place-items-center text-xs shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]",
               small ? "size-5 text-[11px]" : "size-6",
             )}
           >

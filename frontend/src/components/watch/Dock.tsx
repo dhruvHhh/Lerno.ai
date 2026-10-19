@@ -22,7 +22,7 @@ export default function Dock({ card, onPick, className }: DockProps) {
     <div
       data-dock
       className={cn(
-        "fixed right-4 bottom-4 z-30 flex gap-1 rounded-[14px] bg-[rgba(14,13,24,0.86)] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-[16px] lg:bottom-[26px]",
+        "rounded-surface fixed right-4 bottom-4 z-30 flex gap-1 bg-[rgba(14,13,24,0.86)] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-[16px] lg:bottom-[26px]",
         className,
       )}
     >
@@ -35,7 +35,7 @@ export default function Dock({ card, onPick, className }: DockProps) {
           aria-pressed={card === name}
           aria-keyshortcuts={key}
           className={cn(
-            "group relative flex h-9 items-center gap-2 rounded-[10px] px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200",
+            "group rounded-row relative flex h-9 items-center gap-2 px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200",
             card === name
               ? "bg-accent/16 text-foreground shadow-[inset_0_0_0_1px_rgba(155,124,255,0.35)]"
               : "text-secondary-foreground hover:text-foreground hover:bg-white/6",

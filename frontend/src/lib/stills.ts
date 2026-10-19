@@ -5,7 +5,7 @@ const STILL_AT = 0.6;
 // Wide enough for the player's poster; the small thumbnails share the same image.
 const WIDTH = 960;
 
-export interface Still {
+interface Still {
   url: string;
   duration: number;
 }

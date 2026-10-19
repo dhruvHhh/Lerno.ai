@@ -22,7 +22,7 @@ export const savedLevel = () => read<Level>("lerno:level", "high_school");
 export const saveLevel = (level: Level) => write("lerno:level", level);
 
 // Known before the lesson list loads: the example chips never pop in late, and placeholders match what will come.
-export interface LessonCounts {
+interface LessonCounts {
   lessons: number;
   ready: number;
 }

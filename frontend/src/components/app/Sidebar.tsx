@@ -19,7 +19,7 @@ const SKELETON_ROWS = 8;
 const ROW_WIDTHS = [72, 54, 64, 46, 68, 58, 50, 62];
 
 export const ICON_BUTTON =
-  "grid size-8 flex-none place-items-center rounded-[9px] text-muted-foreground transition-colors duration-300 hover:bg-white/5 hover:text-foreground";
+  "grid size-8 flex-none place-items-center rounded-tile text-muted-foreground transition-colors duration-300 hover:bg-white/5 hover:text-foreground";
 
 // In the rail, words fade out while the sidebar narrows, so nothing wraps mid-animation.
 const fades = (rail: boolean) => cn("transition-opacity duration-200", rail && "lg:pointer-events-none lg:opacity-0");
@@ -37,7 +37,7 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
     <aside
       aria-label="Lessons"
       className={cn(
-        "bg-surface fixed inset-y-2 left-2 z-20 flex w-[min(300px,calc(100vw-48px))] flex-col overflow-hidden rounded-[18px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.7)]",
+        "bg-surface rounded-panel fixed inset-y-2 left-2 z-20 flex w-[min(300px,calc(100vw-48px))] flex-col overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.7)]",
         "ease-snappy transition-[translate,width] duration-[450ms]",
         open ? "translate-x-0" : "-translate-x-[calc(100%+16px)]",
         "lg:relative lg:inset-auto lg:my-2.5 lg:ml-2.5 lg:translate-x-0 lg:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]",
@@ -88,7 +88,7 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
         to="/new"
         onClick={onClose}
         className={cn(
-          "mx-3 mt-1 flex h-10 flex-none items-center gap-2.5 rounded-[10px] px-3 text-sm font-medium whitespace-nowrap",
+          "rounded-tile mx-3 mt-1 flex h-10 flex-none items-center gap-2.5 px-3 text-sm font-medium whitespace-nowrap",
           RAISED_KEY,
           PRESS,
           rail && "lg:mx-2.5 lg:w-10",
@@ -145,7 +145,7 @@ function LessonList({ data, onClose, className }: { data: AppData; onClose: () =
                 onFocus={prefetch}
                 title={lesson.status === "failed" ? "Couldn't make this lesson" : lesson.topic}
                 className={cn(
-                  "flex h-8 items-center gap-2.5 rounded-[8px] px-2 text-sm whitespace-nowrap transition-colors duration-200",
+                  "rounded-row flex h-8 items-center gap-2.5 px-2 text-sm whitespace-nowrap transition-colors duration-200",
                   pathname === `/lesson/${lesson.id}`
                     ? "text-foreground bg-accent/8 shadow-[inset_0_0_0_1px_rgba(155,124,255,0.18)]"
                     : "text-secondary-foreground hover:text-foreground hover:bg-white/4",
