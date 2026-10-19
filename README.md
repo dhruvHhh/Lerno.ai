@@ -149,12 +149,6 @@ supabase/
   schema.sql            tables, row-level security, storage
 ```
 
-## Roadmap
-
-- Narration that follows the animation sentence by sentence, from timing marks written while each scene renders
-- A wait estimate on the "being made" screen
-- Terms and privacy pages
-
 ## License
 
 Copyright © 2026 Suryansh Pratap Singh. All rights reserved. The source is public to read; it is not licensed for reuse.
