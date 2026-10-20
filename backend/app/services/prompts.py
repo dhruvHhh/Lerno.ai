@@ -7,14 +7,19 @@ AUDIENCES = {
     "college": "a college student",
 }
 
-# Raw string, never .format()-ed, so LaTeX like \vec stays intact.
-MANIM_RULES = r"""Write Manim Community Edition v0.19.0 code for one scene of an educational video.
+# Shared by the plan and the code rules, so the planner never designs a screen the code may not draw.
+COLORS = "WHITE, YELLOW, BLUE, GREEN, RED, PURPLE, ORANGE, PINK, GRAY"
+SCREEN_LIMITS = "at most 6 labels and equations on screen at once, each equation at most about 20 characters"
+
+# A raw f-string: LaTeX like \vec stays intact, and literal braces are doubled.
+MANIM_RULES = rf"""Write Manim Community Edition v0.19.0 code for one scene of an educational video.
 
 Rules:
 - Start with: from lerno_theme import *
   (it includes all of manim and sets Lerno's fonts, colours, background and line style; never override them)
 - Define exactly one class: class LessonScene(Scene)
-- 10 to 20 seconds long, at most 7 self.play() calls, with self.wait() between them
+- 12 to 20 seconds long: reveal the idea step by step in 5 to 7 self.play() calls, with self.wait() between them
+- Show every label, number and equation the description names, with its exact text; they carry the explanation
 - Simple sequential animations only: no loops, comprehensions, custom functions, randomness or if statements
 - Use only: scene_label, Text, MathTex, Axes, NumberPlane, Arrow, Line, DashedLine, Dot, Circle, Square, Rectangle,
   Polygon, SurroundingRectangle, Brace, VGroup
@@ -22,34 +27,40 @@ Rules:
 - No images, SVGs, sounds, file access or imports other than lerno_theme
 - Title: the first line of construct is title = scene_label("Scene title") in sentence case, shown with
   self.play(FadeIn(title)); never make a title with Text or put any text at the top centre
-- Text: font_size 32-44, at most 10 words per Text, never overlapping and never on top of a line or curve;
-  put labels and equations beside the diagram with .next_to(diagram, RIGHT, buff=0.5) or below it;
-  stack several texts in a VGroup with .arrange(DOWN, buff=0.4); text beside a wide diagram has little room,
+- Text and MathTex: font_size 32-44, at most 10 words per Text; {SCREEN_LIMITS}, so FadeOut text that is done
+  before adding more; show longer working as short lines one after another, or Transform(old, new) so the old line
+  is gone; never shrink text to fit
+- Placement: never on top of a line, curve, axis number or other text; a label goes just outside its shape with
+  .next_to(shape, direction, buff=0.2); equations go beside the diagram with .next_to(diagram, RIGHT, buff=0.5) or
+  below it, several stacked in a VGroup with .arrange(DOWN, buff=0.4); text beside a wide diagram has little room,
   so keep it to 4 words per line or put it below; the render stops with an error if any text leaves the screen
 - Numbers: show only values given in the scene description or exact simple ones; never work out new decimals;
   round any approximation to 2 decimal places and write it with \approx
 - Layout: the safe area is x from -6 to 6 and y from -3.4 to 2.7; the main diagram fills most of it
   (about 9 units wide or 5 units tall) and nothing leaves it; keep the bottom-right corner empty for the logo
-- Axes: size them with x_length and y_length (for example x_length=10, y_length=5) and place points on them
-  with axes.c2p(x, y)
-- Colors: WHITE, YELLOW, BLUE, GREEN, RED, PURPLE, ORANGE, PINK, GRAY (they are Lerno's palette); never set a
-  background colour
+- Axes: only for graphs and coordinates; size them with x_length and y_length (for example x_length=10,
+  y_length=5); show their numbers with axis_config={{"include_numbers": True, "font_size": 24}} and range steps
+  that give at most 6 numbers per axis; place points on them with axes.c2p(x, y)
+- Colors: {COLORS} (they are Lerno's palette); never set a background colour
 - Arrows: Arrow(start=ORIGIN, end=[2, 1, 0], buff=0, color=YELLOW); never use scale_tips or add_tip()
 - 2D points are [x, y, 0]
 
-Example:
+Example of the style (a full scene has 5 to 7 steps):
 from lerno_theme import *
 
 class LessonScene(Scene):
     def construct(self):
         title = scene_label("A vector on the plane")
-        axes = Axes(x_range=[-5, 5, 1], y_range=[-3, 3, 1], x_length=10, y_length=5)
+        axes = Axes(x_range=[-4, 4, 2], y_range=[-2, 2, 1], x_length=10, y_length=5,
+                    axis_config={{"include_numbers": True, "font_size": 24}})
         axes.shift(DOWN * 0.4)
         vector = Arrow(start=axes.c2p(0, 0), end=axes.c2p(2, 1), buff=0, color=YELLOW)
-        label = MathTex(r"\vec{v} = (2, 1)", font_size=40).next_to(vector.get_end(), UR, buff=0.2)
+        label = MathTex(r"\vec{{v}} = (2, 1)", font_size=40).next_to(vector.get_end(), UR, buff=0.2)
         self.play(FadeIn(title), Create(axes))
         self.wait(0.5)
-        self.play(GrowArrow(vector), Write(label))
+        self.play(GrowArrow(vector))
+        self.wait(0.5)
+        self.play(Write(label))
         self.wait(1)
 """
 
@@ -57,17 +68,31 @@ class LessonScene(Scene):
 def plan_prompt(topic: str, audience: str) -> str:
     return f"""Plan a short animated lesson in the style of 3Blue1Brown that explains "{topic}" to {AUDIENCES[audience]}.
 
-Create exactly {SCENES_PER_LESSON} scenes that build on each other. Each scene is one simple visual idea that can be
-animated in 10-20 seconds, for example drawing two vectors from the origin, then adding them tip to tail.
+Create exactly {SCENES_PER_LESSON} scenes that build on each other:
+1. Set up a concrete example the student can see, and show the first key idea on it (not only the starting picture).
+2. Develop the method on that example, with real numbers worked out on screen.
+3. Reach the result or general rule, with a short worked step on screen that shows why it is true.
+Each scene is one visual idea that can be animated in 12-20 seconds, for example drawing two vectors from the
+origin, then adding them tip to tail. Each scene shows a diagram with labels (names of the key quantities such as
+"width = 1/2" or "height = x²", and axis numbers on graphs) and at least one equation or result written on screen.
+Use axes only for graphs and coordinates, never for shapes like triangles or squares.
+Keep each screen easy to read: {SCREEN_LIMITS}. When there are many values, write them in one equation beside the
+diagram instead of a label on every shape; split longer working into short lines that appear one after another, and
+fade out text that is no longer needed.
 
 Give the whole lesson a title: a short name of at most 5 words in plain text, for example "Area under y = x²".
 
 For each scene give:
 - title: at most 5 words
-- narration: read aloud to the student, at most 30 words
-- animation_description: what appears on screen and where (positions, colors, motion), precise enough to animate
-- mcq_question and mcq_choices: exactly 4 choices, the correct one at a random position, its 0-based index in mcq_correct_index
-- fr_question and fr_answer: a short free-response question and its model answer"""
+- narration: read aloud to the student, 20-30 words; say what appears and why it matters, in the order it appears
+- animation_description: 5 to 7 numbered steps in the order they are animated; for each step say what appears, its
+  exact text (every label and equation), its colour (one of {COLORS}), and where it is placed (left, right of the
+  diagram, below); work out every number shown and check it, so the animation never has to calculate
+- mcq_question and mcq_choices: test understanding, not memory: the student applies the idea or predicts a result;
+  exactly 4 choices, the wrong ones being common mistakes (for example a wrong formula or a skipped step), the
+  correct one at a random position, its 0-based index in mcq_correct_index
+- fr_question and fr_answer: a short question that asks the student to explain why or to work out a new case,
+  and its model answer"""
 
 
 def manim_prompt(scene: ScenePlan) -> str:

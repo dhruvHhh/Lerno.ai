@@ -1,3 +1,5 @@
+from typing import Literal
+
 from anthropic import Anthropic
 from pydantic import BaseModel, ValidationError
 
@@ -10,10 +12,11 @@ TUTOR = "claude-haiku-5-5"
 client = Anthropic()
 
 
-def _ask[T: BaseModel](prompt: str, schema: type[T]) -> T:
+def _ask[T: BaseModel](prompt: str, schema: type[T], effort: Literal["low", "medium", "high"]) -> T:
     response = client.messages.parse(
         model=PLANNER,
         max_tokens=16000,
+        output_config={"effort": effort},
         messages=[{"role": "user", "content": prompt}],
         output_format=schema,
     )
@@ -24,19 +27,20 @@ def _ask[T: BaseModel](prompt: str, schema: type[T]) -> T:
 
 def plan_lesson(topic: str, audience: str) -> LessonPlan:
     prompt = prompts.plan_prompt(topic, audience)
+    # The plan decides how good the lesson is, so it gets high effort; the code only follows its steps.
     try:
-        return _ask(prompt, LessonPlan)
+        return _ask(prompt, LessonPlan, "high")
     except ValidationError:
         # A plan that breaks a quiz rule is rare, so one more try usually gives a full lesson.
-        return _ask(prompt, LessonPlan)
+        return _ask(prompt, LessonPlan, "high")
 
 
 def write_manim(scene: ScenePlan) -> str:
-    return _ask(prompts.manim_prompt(scene), ManimCode).code
+    return _ask(prompts.manim_prompt(scene), ManimCode, "medium").code
 
 
 def fix_manim(code: str, error: str) -> str:
-    return _ask(prompts.fix_prompt(code, error), ManimCode).code
+    return _ask(prompts.fix_prompt(code, error), ManimCode, "medium").code
 
 
 def tutor_reply(system: str, messages: list[dict]) -> str:
