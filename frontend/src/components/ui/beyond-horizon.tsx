@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 import { prefersReducedMotion } from "@/lib/utils";
 import { animateWhileVisible, createFullscreenProgram, hexToRgb } from "@/lib/webgl";
@@ -201,6 +201,8 @@ interface BeyondHorizonProps {
   speed: number;
   horizonY: number;
   breathe: number;
+  // Holds the picture still while something covers it, such as a popup over the page.
+  paused?: boolean;
 }
 
 export function BeyondHorizon({
@@ -211,9 +213,12 @@ export function BeyondHorizon({
   speed,
   horizonY,
   breathe,
+  paused = false,
 }: BeyondHorizonProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Read on each frame, so pausing does not rebuild the WebGL setup.
+  const isPaused = useEffectEvent(() => paused);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -310,7 +315,10 @@ export function BeyondHorizon({
     const ro = new ResizeObserver(onResize);
     ro.observe(host);
 
-    const stopAnimation = animateWhileVisible(host, draw, { fps: FPS, smoothSeconds: REVEAL_SECONDS });
+    const stopAnimation = animateWhileVisible(host, (t) => !isPaused() && draw(t), {
+      fps: FPS,
+      smoothSeconds: REVEAL_SECONDS,
+    });
 
     return () => {
       stopAnimation();

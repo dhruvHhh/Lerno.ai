@@ -1,6 +1,8 @@
 import { ChatCircleDotsIcon, PlayIcon, StackIcon, TimerIcon } from "@phosphor-icons/react";
+import { useState } from "react";
 
 import GradientText from "@/components/brand/GradientText";
+import DemoDialog from "@/components/home/DemoDialog";
 import { BeyondHorizon } from "@/components/ui/beyond-horizon";
 import CtaLink from "@/components/ui/cta-link";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -12,6 +14,8 @@ const VALUES = [
 ];
 
 export default function Hero() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <section className="relative isolate overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[720px] md:h-[880px]">
@@ -23,6 +27,7 @@ export default function Hero() {
           horizonY={0.75}
           speed={0.15}
           breathe={0.08}
+          paused={demoOpen}
         />
       </div>
 
@@ -42,16 +47,18 @@ export default function Hero() {
             Start learning for free
           </CtaLink>
           <HoverBorderGradient>
-            <a
-              href="#demo"
-              className="bg-accent-surface text-foreground flex items-center gap-3 rounded-full py-2 pr-2 pl-6 font-medium"
+            <button
+              type="button"
+              onClick={() => setDemoOpen(true)}
+              className="bg-accent-surface text-foreground flex cursor-pointer items-center gap-3 rounded-full py-2 pr-2 pl-6 font-medium"
             >
               Watch demo
               <span className="grid size-8 place-items-center rounded-full bg-white/10">
                 <PlayIcon weight="fill" className="size-3.5" />
               </span>
-            </a>
+            </button>
           </HoverBorderGradient>
+          <DemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
         </div>
 
         <ul className="text-foreground mt-10 flex justify-center gap-x-5 text-xs whitespace-nowrap sm:gap-x-6 sm:text-sm">
