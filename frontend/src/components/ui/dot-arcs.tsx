@@ -35,7 +35,8 @@ const float CELL = 4.0;
 const float DOT = 1.2;
 const float APEX = 0.52;
 const float GAP = 0.09;
-const float CURVE = 0.7;
+// How far the arcs rise at the edges, as a share of the width.
+const float CURVE = 0.29;
 const float INTENSITY = 0.8;
 
 void main() {
@@ -53,7 +54,7 @@ void main() {
   float glow = 0.0;
   for (int n = 0; n < ARCS; n++) {
     float fn = float(n);
-    float arcY = h * (APEX + fn * GAP) + normX * normX * h * CURVE * (1.0 + 0.08 * fn);
+    float arcY = h * (APEX + fn * GAP) + normX * normX * w * CURVE * (1.0 + 0.08 * fn);
     float thickness = 40.0 + (1.0 - min(abs(normX), 1.0)) * 25.0;
     float band = max(0.0, 1.0 - abs(y - arcY) / thickness);
     float pulse = 0.45 + 0.55 * (0.5 + 0.5 * sin(uTime * 1.5 - fn * 0.9));

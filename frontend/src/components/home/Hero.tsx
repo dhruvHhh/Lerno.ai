@@ -17,7 +17,7 @@ export default function Hero() {
   const [demoOpen, setDemoOpen] = useState(false);
 
   return (
-    <section className="relative isolate overflow-hidden">
+    <section className="relative isolate min-h-svh overflow-hidden md:min-h-0">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[720px] md:h-[880px]">
         <BeyondHorizon
           background="#050609"
@@ -31,7 +31,7 @@ export default function Hero() {
         />
       </div>
 
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pt-32 pb-[300px] text-center md:pt-40 md:pb-[360px]">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pt-32 pb-[240px] text-center md:pt-40 md:pb-[360px]">
         <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl 2xl:text-7xl">
           Turn your curiosity <br className="hidden sm:block" />
           into <GradientText>visual understanding</GradientText>

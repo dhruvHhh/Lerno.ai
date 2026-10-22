@@ -83,8 +83,7 @@ function GiantLogo() {
         <defs>
           <linearGradient id={`${id}-stroke`} gradientUnits="userSpaceOnUse" x1="20" x2="1120">
             <stop offset="0" stopColor="#35394a" />
-            <stop offset="0.6" stopColor="#4a3f80" />
-            <stop offset="1" stopColor="#b7a4ff" />
+            <stop offset="1" stopColor="#4a3f80" />
           </linearGradient>
           <linearGradient id={`${id}-fill`} gradientUnits="userSpaceOnUse" y1="10" y2="246" x1="0" x2="0">
             <stop offset="0" stopColor="#9b7cff" stopOpacity="0.1" />

@@ -83,12 +83,14 @@ export default function Navbar() {
         </m.nav>
 
         {open && (
-          <m.div
-            layout="position"
-            className="border-border bg-surface mt-2 flex flex-col gap-4 rounded-2xl border p-5 md:hidden"
-          >
-            <NavLinks onNavigate={() => setOpen(false)} />
-            <NavActions />
+          <m.div layout="position" className="border-border bg-surface mt-2 rounded-2xl border p-5 md:hidden">
+            <div className="flex flex-col gap-2">
+              <NavLinks onNavigate={() => setOpen(false)} />
+            </div>
+            {/* The actions sit in one row at their own width, as on desktop, not stretched across the menu. */}
+            <div className="mt-4 flex items-center justify-between border-t border-white/7 pt-4">
+              <NavActions />
+            </div>
           </m.div>
         )}
       </header>

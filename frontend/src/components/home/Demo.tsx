@@ -77,7 +77,7 @@ export default function Demo() {
           <div className="overflow-hidden rounded-[20px] border border-white/10 bg-black">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 text-xs">
               <div className="flex min-w-0 items-center gap-3">
-                <span aria-hidden="true" className="flex shrink-0 gap-1.5">
+                <span aria-hidden="true" className="hidden shrink-0 gap-1.5 sm:flex">
                   <span className="size-2.5 rounded-full bg-white/15" />
                   <span className="size-2.5 rounded-full bg-white/15" />
                   <span className="size-2.5 rounded-full bg-white/15" />
@@ -91,7 +91,7 @@ export default function Demo() {
               </span>
             </div>
 
-            <div className="relative">
+            <div className="relative flex flex-col sm:block">
               <div className="relative aspect-video">
                 {DEMO_LESSONS.filter(({ id }) => id === lesson.id || id === outgoing?.id).map((item) => {
                   const incoming = item.id === lesson.id;
@@ -118,52 +118,45 @@ export default function Demo() {
                 ref={dockRef}
                 role="group"
                 aria-label="Example lessons"
-                className="group/dock sm:border-foreground/10 sm:bg-foreground/5 flex items-start justify-center gap-4 px-3 pt-4 pb-1 sm:absolute sm:top-1/2 sm:right-4 sm:z-20 sm:-translate-y-1/2 sm:flex-col sm:gap-2 sm:rounded-[20px] sm:border sm:p-2 sm:backdrop-blur-lg"
+                className="group/dock sm:border-foreground/10 sm:bg-foreground/5 order-first flex gap-2 px-3 pt-3 pb-3 sm:absolute sm:top-1/2 sm:right-4 sm:z-20 sm:-translate-y-1/2 sm:flex-col sm:gap-2 sm:rounded-[20px] sm:border sm:p-2 sm:backdrop-blur-lg"
               >
                 {DEMO_LESSONS.map((option) => {
                   const selected = option.id === lesson.id;
                   return (
-                    <div key={option.id} className="flex flex-col items-center gap-1.5">
-                      <button
-                        type="button"
-                        aria-label={option.topic}
-                        aria-pressed={selected}
-                        onClick={() => choose(option)}
-                        className={cn(
-                          "group/tab relative grid size-11 place-items-center rounded-[10px] transition-colors duration-300",
-                          KEY,
-                          selected ? "text-white" : "text-secondary-foreground hover:text-foreground",
-                        )}
-                      >
-                        {selected && (
-                          <m.span
-                            layoutId="active-lesson"
-                            transition={reduceMotion ? INSTANT : SLIDE}
-                            style={{ borderRadius: 10 }}
-                            className="border-accent/40 absolute -inset-px border bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
-                          />
-                        )}
-                        <option.icon className="relative size-[18px]" />
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#101219] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
-                            (selected || hinting) && "opacity-100 group-hover/dock:opacity-0",
-                          )}
-                        >
-                          {option.topic}
-                        </span>
-                      </button>
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-label={option.topic}
+                      aria-pressed={selected}
+                      onClick={() => choose(option)}
+                      className={cn(
+                        "group/tab relative flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] text-[13px] font-medium transition-colors duration-300 sm:size-11 sm:flex-none sm:gap-0",
+                        KEY,
+                        selected ? "text-white" : "text-secondary-foreground hover:text-foreground",
+                      )}
+                    >
+                      {selected && (
+                        <m.span
+                          layoutId="active-lesson"
+                          transition={reduceMotion ? INSTANT : SLIDE}
+                          style={{ borderRadius: 10 }}
+                          className="border-accent/40 absolute -inset-px border bg-[radial-gradient(120%_90%_at_50%_0%,#7a6aa8_0%,#463c6b_45%,#2a2440_100%)] shadow-[0_8px_20px_rgba(0,0,0,0.6),0_0_18px_rgba(155,124,255,0.25),inset_0_1px_0_rgba(255,255,255,0.25)]"
+                        />
+                      )}
+                      <option.icon className="relative size-[18px]" />
+                      <span aria-hidden="true" className="relative sm:hidden">
+                        {option.topic}
+                      </span>
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "text-[11px] transition-colors duration-300 sm:hidden",
-                          selected ? "text-foreground" : "text-muted-foreground",
+                          "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#101219] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
+                          (selected || hinting) && "opacity-100 group-hover/dock:opacity-0",
                         )}
                       >
                         {option.topic}
                       </span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>

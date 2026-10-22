@@ -237,7 +237,7 @@ export function PlanPanel() {
         <div>
           <div className="relative">
             {/* The lesson's background behind each frame hides letterbox bars. */}
-            <ol className="flex h-24 gap-px overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10 sm:h-32">
+            <ol className="flex aspect-[48/9] gap-px overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10">
               {SCENES.map(({ title, src, seconds, phase }) => (
                 <li key={title} className="group bg-background relative" style={{ flex: `${seconds} 1 0` }}>
                   <m.img
@@ -278,12 +278,16 @@ export function PlanPanel() {
         </div>
 
         {/* Narrations share one spot; each fades out before the next fades in. */}
-        <div className="border-accent/50 grid border-l-2 pl-4 *:col-start-1 *:row-start-1">
+        <div className="grid *:col-start-1 *:row-start-1">
           {SCENES.map(({ title, narration, phase }, index) => (
             <m.div key={title} variants={appear} custom={phase.starts}>
-              <m.div variants={phase.last ? undefined : fadeOut} custom={phase.ends - 0.35}>
+              <m.div
+                variants={phase.last ? undefined : fadeOut}
+                custom={phase.ends - 0.35}
+                className="border-accent/50 border-l-2 pl-4"
+              >
                 <p className="text-muted-foreground mb-1.5 text-xs">Scene {index + 1} · Narration</p>
-                <p className="text-secondary-foreground leading-relaxed">{narration}</p>
+                <p className="text-secondary-foreground text-sm leading-relaxed sm:text-base">{narration}</p>
               </m.div>
             </m.div>
           ))}
