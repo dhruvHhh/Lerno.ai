@@ -254,10 +254,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
             {lesson.title ?? lesson.topic}
           </h1>
 
-          {/* On phones the film runs edge to edge, like a video app; the main area's 16px gutter is undone here. */}
+          {/* On phones the film runs edge to edge, like a video app; the main area's 16px gutter is undone here. A quiz
+              is too tall for a 16:9 phone film, so there the film grows to hold it. */}
           <div
             ref={film}
-            className="relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl"
+            data-overlay={overlay ? "" : undefined}
+            className="relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] max-sm:data-overlay:aspect-auto sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl"
           >
             {current.video_url && !videoFailed && (
               <video
@@ -408,7 +410,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
           </div>
 
           {/* The narration under the film, like subtitles; the sentence being spoken is lit. */}
-          <Narration video={videoEl} text={current.narration} />
+          {/* On phones the quiz fills the film, so the finished scene's narration steps aside for it. */}
+          <Narration video={videoEl} text={current.narration} className={cn(overlay && "max-sm:hidden")} />
         </div>
       </div>
 
@@ -480,7 +483,7 @@ function Poster({ video, src, playing }: { video: HTMLVideoElement | null; src: 
 }
 
 // The narration under the film, like subtitles; the sentence being spoken is lit.
-function Narration({ video, text }: { video: HTMLVideoElement | null; text: string }) {
+function Narration({ video, text, className }: { video: HTMLVideoElement | null; text: string; className?: string }) {
   const sentences = text.match(/[^.?!]+[.?!]*/g) ?? [text];
   const lit = useVideoTime(
     video,
@@ -489,7 +492,12 @@ function Narration({ video, text }: { video: HTMLVideoElement | null; text: stri
     0,
   );
   return (
-    <p className="text-foreground/50 mx-auto mt-3.5 max-w-[720px] text-center text-base leading-relaxed tracking-[-0.01em] sm:mt-5 sm:min-h-[60px] sm:text-[19px]">
+    <p
+      className={cn(
+        "text-foreground/50 mx-auto mt-3.5 max-w-[720px] text-center text-base leading-relaxed tracking-[-0.01em] sm:mt-5 sm:min-h-[60px] sm:text-[19px]",
+        className,
+      )}
+    >
       {sentences.map((sentence, k) => (
         <span key={k} className={cn("transition-colors duration-[400ms]", k === lit && "text-foreground")}>
           {sentence.trim()}{" "}

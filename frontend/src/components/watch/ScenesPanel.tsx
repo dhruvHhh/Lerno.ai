@@ -128,7 +128,9 @@ export default function ScenesPanel(props: ScenesPanelProps) {
 
 function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
   return (
-    <ul data-lenis-prevent className="grid gap-1.5 overflow-y-auto px-2 py-1 pb-2">
+    // Scrolls on its own only on desktop. On phones it must not be a scroller: Lenis's overscroll containment would
+    // keep a swipe here from scrolling the page.
+    <ul data-lenis-prevent className="grid gap-1.5 px-2 py-1 pb-2 lg:overflow-y-auto">
       {scenes.map((scene) => {
         const on = scene.position === current;
         const done = watched.includes(scene.position);

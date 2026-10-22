@@ -197,7 +197,8 @@ function NoteRow({ note, flash, first, folded, onOpen, onEdit, onDelete, onDelet
           {error && <p className="text-danger text-xs">{error}</p>}
           <span
             className={cn(
-              "absolute top-2 right-2 flex gap-0.5 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100",
+              // A touch screen has no hover, so there the tools always show.
+              "absolute top-2 right-2 flex gap-0.5 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
               deleting !== "idle" && "opacity-100",
             )}
           >

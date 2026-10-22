@@ -10,7 +10,7 @@ function Overlay({ label, children, className = "" }: { label: string; children:
     <div
       role="dialog"
       aria-label={label}
-      className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-[rgba(5,6,9,0.93)] p-4 backdrop-blur-[14px] sm:p-6"
+      className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-[rgba(5,6,9,0.93)] p-4 backdrop-blur-[14px] max-sm:relative max-sm:min-h-[56.25vw] max-sm:py-6 sm:p-6"
     >
       <div className={`grid w-[min(520px,100%)] gap-3.5 ${className}`}>{children}</div>
     </div>
