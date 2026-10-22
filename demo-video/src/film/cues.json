@@ -1,0 +1,29 @@
+{
+  "length": 2160,
+  "pull": 300,
+  "ask": 480,
+  "making": 810,
+  "lesson": 1080,
+  "tutor": 1230,
+  "notes": 1470,
+  "quiz": 1680,
+  "wall": 1890,
+  "lockup": 2030,
+  "strips": [150, 180, 210, 240],
+  "smooth": 270,
+  "clicks": {
+    "newLesson": 552,
+    "level": 760,
+    "send": 790,
+    "tutorSend": 1340,
+    "note": 1490,
+    "save": 1595,
+    "answer": 1800
+  },
+  "typing": [
+    [640, 740],
+    [1272, 1332],
+    [1508, 1578]
+  ],
+  "chimes": [1227, 1625, 1800]
+}
