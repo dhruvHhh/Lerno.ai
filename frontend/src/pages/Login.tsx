@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import AuthForm from "@/components/auth/AuthForm";
+import AuthForm, { GoogleSignIn } from "@/components/auth/AuthForm";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthSwitch from "@/components/auth/AuthSwitch";
 import EmailField from "@/components/auth/EmailField";
@@ -28,12 +28,8 @@ export default function Login() {
 
   return (
     <AuthLayout shapes={SURFACES}>
-      <AuthForm
-        title="Sign in to Lerno"
-        subtitle="Pick up your lessons where you left off."
-        withGoogle
-        onSubmit={submit}
-      >
+      <AuthForm title="Sign in to Lerno" subtitle="Pick up your lessons where you left off." onSubmit={submit}>
+        <GoogleSignIn />
         <div className="flex flex-col gap-4">
           <EmailField error={errors.email} onChange={() => clearError("email")} />
           <PasswordField

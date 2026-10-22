@@ -11,11 +11,10 @@ interface QuizCardProps {
   scenes: Scene[];
   answers: Record<number, number>;
   onPick: (position: number, choice: number) => void;
-  className?: string;
 }
 
 // Every scene's question, and its written question, which shows only here and never in the overlay.
-export default function QuizCard({ open, onClose, scenes, answers, onPick, className }: QuizCardProps) {
+export default function QuizCard({ open, onClose, scenes, answers, onPick }: QuizCardProps) {
   const [shown, setShown] = useState<number[]>([]);
   return (
     <Card
@@ -25,7 +24,6 @@ export default function QuizCard({ open, onClose, scenes, answers, onPick, class
       chip={
         <span className="text-accent-soft text-xs">{`${scoreOf(scenes, answers)} of ${scenes.length} correct`}</span>
       }
-      className={className}
     >
       {scenes.map((scene) => (
         <div key={scene.position} className="grid gap-2 border-b border-white/6 pb-3.5 last:border-0">

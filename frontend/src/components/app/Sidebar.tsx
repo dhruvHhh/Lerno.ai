@@ -21,8 +21,10 @@ const ROW_WIDTHS = [72, 54, 64, 46, 68, 58, 50, 62];
 export const ICON_BUTTON =
   "grid size-8 flex-none place-items-center rounded-tile text-muted-foreground transition-colors duration-300 hover:bg-white/5 hover:text-foreground";
 
-// In the rail, words fade out while the sidebar narrows, so nothing wraps mid-animation.
-const fades = (rail: boolean) => cn("transition-opacity duration-200", rail && "lg:pointer-events-none lg:opacity-0");
+// In the rail, words fade out while the sidebar narrows, so nothing wraps mid-animation. The sidebar's `data-rail`
+// drives it, so no part needs to be told.
+export const FADE =
+  "transition-opacity duration-200 lg:group-data-rail/sidebar:pointer-events-none lg:group-data-rail/sidebar:opacity-0";
 
 interface SidebarProps {
   data: AppData;
@@ -36,8 +38,9 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
   return (
     <aside
       aria-label="Lessons"
+      data-rail={rail || undefined}
       className={cn(
-        "bg-surface rounded-panel fixed inset-y-2 left-2 z-20 flex w-[min(300px,calc(100vw-48px))] flex-col overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.7)]",
+        "group/sidebar bg-surface rounded-panel fixed inset-y-2 left-2 z-20 flex w-[min(300px,calc(100vw-48px))] flex-col overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_rgba(0,0,0,0.7)]",
         "ease-snappy transition-[translate,width] duration-[450ms]",
         open ? "translate-x-0" : "-translate-x-[calc(100%+16px)]",
         "lg:relative lg:inset-auto lg:my-2.5 lg:ml-2.5 lg:translate-x-0 lg:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]",
@@ -66,7 +69,7 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
               rail && "lg:group-hover/head:opacity-0 lg:group-has-[[data-rail-toggle]:focus-visible]/head:opacity-0",
             )}
           />
-          <span className={fades(rail)}>Lerno</span>
+          <span className={FADE}>Lerno</span>
         </button>
         <button
           type="button"
@@ -95,30 +98,28 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
         )}
       >
         <Plus size={16} weight="bold" className="text-accent-soft flex-none" />
-        <span className={fades(rail)}>New lesson</span>
+        <span className={FADE}>New lesson</span>
       </Link>
 
-      <p className={cn("text-muted-foreground mx-4 mt-[22px] mb-1.5 text-xs whitespace-nowrap", fades(rail))}>
-        Your lessons
-      </p>
-      <LessonList data={data} onClose={onClose} className={fades(rail)} />
+      <p className={cn("text-muted-foreground mx-4 mt-[22px] mb-1.5 text-xs whitespace-nowrap", FADE)}>Your lessons</p>
+      <LessonList data={data} onClose={onClose} />
 
       <div className="grid flex-none gap-2.5 border-t border-white/5 p-3">
-        {data.usage && <UsageMeter {...data.usage} className={fades(rail)} />}
-        <AccountMenu rail={rail} fade={fades(rail)} />
+        {data.usage && <UsageMeter {...data.usage} />}
+        <AccountMenu />
       </div>
     </aside>
   );
 }
 
-function LessonList({ data, onClose, className }: { data: AppData; onClose: () => void; className: string }) {
+function LessonList({ data, onClose }: { data: AppData; onClose: () => void }) {
   const { pathname } = useLocation();
   // Placeholders only on a cold load, for as many rows as the last visit had.
   const [expected] = useState(() => (data.lessons ? 0 : Math.min(savedCounts().lessons, SKELETON_ROWS)));
   const failed = data.failed && !data.lessons;
 
   return (
-    <div className={cn("relative min-h-0 flex-1", className)}>
+    <div className={cn("relative min-h-0 flex-1", FADE)}>
       <ul data-lenis-prevent className="h-full [scrollbar-width:none] overflow-y-auto px-2">
         {failed && (
           <li className="text-muted-foreground px-2 py-1 text-xs whitespace-nowrap">Couldn't load your lessons.</li>
@@ -192,10 +193,10 @@ function StatusMark({ lesson }: { lesson: Lesson }) {
   );
 }
 
-function UsageMeter({ used, limit, className }: { used: number; limit: number; className: string }) {
+function UsageMeter({ used, limit }: { used: number; limit: number }) {
   const left = Math.max(limit - used, 0);
   return (
-    <div className={cn("motion-safe:animate-enter grid gap-[7px] px-1 pt-1 pb-0.5 whitespace-nowrap", className)}>
+    <div className={cn("motion-safe:animate-enter grid gap-[7px] px-1 pt-1 pb-0.5 whitespace-nowrap", FADE)}>
       <p className="text-secondary-foreground text-xs">
         {left} of {limit} lessons left today
       </p>

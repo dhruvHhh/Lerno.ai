@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 
 import Avatar from "@/components/app/Avatar";
 import ShortcutsDialog from "@/components/app/ShortcutsDialog";
+import { FADE } from "@/components/app/Sidebar";
 import useAuth from "@/hooks/useAuth";
 import { userName } from "@/lib/auth";
 import signOut from "@/lib/signOut";
@@ -14,14 +15,8 @@ const WIDE = 1024;
 const ITEM =
   "text-secondary-foreground hover:text-foreground focus-visible:text-foreground flex h-8 w-full items-center gap-2.5 rounded-tile px-2.5 text-left text-[13px] outline-none transition-colors duration-150 hover:bg-white/6 focus-visible:bg-white/6";
 
-interface AccountMenuProps {
-  rail: boolean;
-  // The sidebar's fade for words, so the name and the caret hide with the rest in the rail.
-  fade: string;
-}
-
 // The account row and its menu. The menu is drawn over the page, since the sidebar clips what leaves its edges.
-export default function AccountMenu({ rail, fade }: AccountMenuProps) {
+export default function AccountMenu() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
@@ -91,15 +86,15 @@ export default function AccountMenu({ rail, fade }: AccountMenuProps) {
         className={cn(
           "rounded-tile flex w-full items-center gap-2.5 px-1 py-1.5 text-left whitespace-nowrap transition-colors duration-150 hover:bg-white/4",
           open && "bg-white/4",
-          rail && "lg:px-[5px]",
+          "lg:group-data-rail/sidebar:px-[5px]",
         )}
       >
         <Avatar name={name} />
-        <span className={cn("min-w-0 flex-1", fade)}>
+        <span className={cn("min-w-0 flex-1", FADE)}>
           <b className="block text-[13px] font-medium">{name}</b>
           <small className="text-muted-foreground block truncate text-[11px]">{user.email}</small>
         </span>
-        <CaretUpDown size={14} className={cn("text-muted-foreground mr-1 flex-none", fade)} />
+        <CaretUpDown size={14} className={cn("text-muted-foreground mr-1 flex-none", FADE)} />
       </button>
 
       {createPortal(

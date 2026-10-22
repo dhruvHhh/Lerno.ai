@@ -15,10 +15,9 @@ interface TutorCardProps {
   tutor: ReturnType<typeof useTutor>;
   moment: ReactNode;
   onAsk: () => void;
-  className?: string;
 }
 
-export default function TutorCard({ open, onClose, tutor, moment, onAsk, className }: TutorCardProps) {
+export default function TutorCard({ open, onClose, tutor, moment, onAsk }: TutorCardProps) {
   const input = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
   const { messages, draft, setDraft, pending, error, locked } = tutor;
@@ -41,7 +40,6 @@ export default function TutorCard({ open, onClose, tutor, moment, onAsk, classNa
       open={open}
       onClose={onClose}
       chip={<Stamp>{moment}</Stamp>}
-      className={className}
       footer={
         <div className="mx-3.5 mb-3.5 grid flex-none gap-1.5">
           {error && <p className="text-danger px-1 text-xs">{error}</p>}

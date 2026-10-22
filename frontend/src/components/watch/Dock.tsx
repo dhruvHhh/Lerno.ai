@@ -13,17 +13,16 @@ const ITEMS = [
 interface DockProps {
   card: CardName | null;
   onPick: (card: CardName) => void;
-  className?: string;
 }
 
 // The three tools, always in view, one click each. The open tool's card shows above the bar.
-export default function Dock({ card, onPick, className }: DockProps) {
+export default function Dock({ card, onPick }: DockProps) {
   return (
     <div
       data-dock
       className={cn(
         "rounded-surface fixed right-4 bottom-4 z-30 flex gap-1 bg-[rgba(14,13,24,0.86)] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-[16px] lg:bottom-[26px]",
-        className,
+        "ease-snappy transition-[right] duration-[450ms] lg:right-(--rail-edge)",
       )}
     >
       {ITEMS.map(({ name, label, key, Icon }) => (

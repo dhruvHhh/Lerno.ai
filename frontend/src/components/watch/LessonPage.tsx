@@ -140,6 +140,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   }, []);
   // A tool's button opens its card, or closes it when it is the open one.
   const pickCard = useCallback((name: CardName) => (card === name ? setCard(null) : openCard(name)), [card, openCard]);
+  const closeCard = () => setCard(null);
   const closeAll = useCallback(() => {
     setCard(null);
     setNotepadAt(null);
@@ -225,7 +226,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     (position: number, seconds: number) => setDurations((d) => (d[position] ? d : { ...d, [position]: seconds })),
     [],
   );
-  const right = railRight ? "lg:right-[94px]" : "lg:right-[334px]";
   const hasVideo = !!current.video_url && !videoFailed;
   const notesFull = notes.notes.length >= NOTES_LIMIT;
 
@@ -234,6 +234,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     <div
       className={cn(
         "w-full lg:-mx-6 lg:-mb-12 lg:grid lg:h-svh lg:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,1fr)_auto]",
+        // Where the scenes panel ends on desktop; the dock and the cards sit beside it.
+        railRight ? "[--rail-edge:94px]" : "[--rail-edge:334px]",
         className,
       )}
     >
@@ -419,18 +421,17 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         onToggleRail={toggleRail}
       />
 
-      <Dock card={card} onPick={pickCard} className={cn("ease-snappy transition-[right] duration-[450ms]", right)} />
+      <Dock card={card} onPick={pickCard} />
       <TutorCard
         open={card === "tutor"}
-        onClose={() => setCard(null)}
+        onClose={closeCard}
         tutor={tutor}
         moment={<Moment video={videoEl} scene={scene} />}
         onAsk={() => tutor.ask(scene, stampOf(video.current))}
-        className={right}
       />
       <NotesCard
         open={card === "notes"}
-        onClose={() => setCard(null)}
+        onClose={closeCard}
         notes={notes.notes}
         scenes={scenes}
         onOpenNote={(note: Note) => {
@@ -441,15 +442,13 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         onDelete={notes.remove}
         onDropped={notes.drop}
         focus={notesFocus}
-        className={right}
       />
       <QuizCard
         open={card === "quiz"}
-        onClose={() => setCard(null)}
+        onClose={closeCard}
         scenes={scenes}
         answers={answers}
         onPick={(position, choice) => setAnswers((a) => ({ ...a, [position]: choice }))}
-        className={right}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
-import AuthForm from "@/components/auth/AuthForm";
+import AuthForm, { GoogleSignIn } from "@/components/auth/AuthForm";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthSwitch from "@/components/auth/AuthSwitch";
 import EmailField from "@/components/auth/EmailField";
@@ -51,9 +51,9 @@ export default function SignUp() {
       <AuthForm
         title="Create your Lerno account"
         subtitle="Turn any maths topic into a lesson you can watch."
-        withGoogle
         onSubmit={submit}
       >
+        <GoogleSignIn />
         <div className="flex flex-col gap-4">
           <TextField
             id="name"

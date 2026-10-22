@@ -19,7 +19,6 @@ interface NotesCardProps {
   onDropped: (id: string) => void;
   // Notes picked from a marker on the bar: the card shows them and lights them once. `at` replays the light.
   focus: { ids: string[]; at: number } | null;
-  className?: string;
 }
 
 export default function NotesCard({
@@ -32,7 +31,6 @@ export default function NotesCard({
   onDelete,
   onDropped,
   focus,
-  className,
 }: NotesCardProps) {
   // Deleted notes fold away first, then leave the list. A scene whose notes are all folding folds with them.
   const [folding, setFolding] = useState<string[]>([]);
@@ -49,7 +47,6 @@ export default function NotesCard({
       open={open}
       onClose={onClose}
       chip={notes.length > 0 && <span className="text-accent-soft text-xs">{notes.length} saved</span>}
-      className={className}
     >
       {!notes.length && (
         <p className="text-muted-foreground px-2.5 py-8 text-center text-[13px]">
