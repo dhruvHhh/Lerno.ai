@@ -2,19 +2,15 @@ import { List } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Outlet } from "react-router";
 
-import Avatar from "@/components/app/Avatar";
 import Sidebar, { ICON_BUTTON } from "@/components/app/Sidebar";
 import { LogoIcon } from "@/components/brand/Logo";
 import useAppData from "@/hooks/useAppData";
-import useAuth from "@/hooks/useAuth";
-import { userName } from "@/lib/auth";
 import { saveRail, savedRail } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
 // The frame around every signed-in page: the lessons sidebar, and on phones a top bar that opens it as a drawer.
 export default function AppShell() {
   const data = useAppData();
-  const { user } = useAuth();
   const [rail, setRail] = useState(savedRail);
   const [drawer, setDrawer] = useState(false);
 
@@ -39,7 +35,8 @@ export default function AppShell() {
         data-lenis-prevent
         className="relative isolate flex h-svh min-w-0 [scrollbar-width:thin] [scrollbar-color:#2a2b38_transparent] flex-col items-center overflow-x-clip overflow-y-auto px-4 pb-10 lg:px-6 lg:pb-12"
       >
-        <div className="flex h-14 w-full flex-none items-center justify-between lg:hidden">
+        {/* Three columns keep the logo centred; the account lives in the sidebar, so the right is empty. */}
+        <div className="grid h-14 w-full flex-none grid-cols-[1fr_auto_1fr] items-center lg:hidden">
           <button type="button" onClick={() => setDrawer(true)} aria-label="Open lessons" className={ICON_BUTTON}>
             <List size={18} />
           </button>
@@ -47,7 +44,6 @@ export default function AppShell() {
             <LogoIcon className="size-6" />
             Lerno
           </span>
-          {user && <Avatar name={userName(user)} />}
         </div>
         <Outlet context={data} />
       </main>

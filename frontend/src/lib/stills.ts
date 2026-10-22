@@ -15,10 +15,16 @@ const ready = new Map<string, Still>();
 const loading = new Map<string, Promise<Still>>();
 const keyOf = (src: string) => new URL(src).pathname;
 
+// Captures run one by one, so a video that never answers gives up instead of holding up the rest.
+const WAIT_MS = 15000;
+
 const once = (video: HTMLVideoElement, event: string) =>
   new Promise<void>((resolve, reject) => {
-    video.addEventListener(event, () => resolve(), { once: true });
-    video.addEventListener("error", () => reject(new Error("The video didn't load.")), { once: true });
+    const timer = setTimeout(() => reject(new Error("The video took too long.")), WAIT_MS);
+    video.addEventListener(event, () => (clearTimeout(timer), resolve()), { once: true });
+    video.addEventListener("error", () => (clearTimeout(timer), reject(new Error("The video didn't load."))), {
+      once: true,
+    });
   });
 
 async function capture(src: string): Promise<Still> {
@@ -31,6 +37,8 @@ async function capture(src: string): Promise<Still> {
     await once(video, "loadedmetadata");
     video.currentTime = video.duration * STILL_AT;
     await once(video, "seeked");
+    // Some phones report the seek before the frame is decoded, and would draw a black still.
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) await once(video, "loadeddata");
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH;
     canvas.height = Math.round((WIDTH * video.videoHeight) / video.videoWidth);
@@ -45,11 +53,17 @@ async function capture(src: string): Promise<Still> {
   }
 }
 
+// One video at a time: phones run only a few video decoders at once, so captures started together failed there.
+let queue: Promise<unknown> = Promise.resolve();
+
 function loadStill(src: string) {
   const key = keyOf(src);
   let request = loading.get(key);
   if (!request) {
-    request = capture(src).then(
+    // One more try covers a dropped connection.
+    request = queue.then(() => capture(src).catch(() => capture(src)));
+    queue = request.catch(() => {});
+    request = request.then(
       (still) => {
         ready.set(key, still);
         return still;

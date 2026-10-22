@@ -85,7 +85,8 @@ export default function MakingScreen({ lesson, offline, onReady }: MakingScreenP
       onPointerLeave={() => lean(0, 0)}
       className="relative flex w-full flex-1 flex-col items-center justify-start pt-[4vh] sm:justify-center sm:pt-0"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(410px_310px_at_50%_46%,rgba(122,96,230,0.17),transparent)]" />
+      {/* Reaches past the main area's 16px phone gutter, so the glow has no hard side edges. */}
+      <div className="pointer-events-none absolute -inset-x-4 inset-y-0 bg-[radial-gradient(410px_310px_at_50%_46%,rgba(122,96,230,0.17),transparent)] lg:inset-x-0" />
       {!reduceMotion && <Dust around={stage} tilt={tilt} />}
 
       <header className="relative text-center">
