@@ -235,7 +235,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     // The page fills the shell's main area edge to edge on desktop, with its own scroll and the scenes on the right.
     <div
       className={cn(
-        "w-full lg:-mx-6 lg:-mb-12 lg:grid lg:h-svh lg:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,1fr)_auto]",
+        // On phones the bottom padding keeps the last scene clear of the floating dock.
+        "w-full pb-8 lg:-mx-6 lg:-mb-12 lg:grid lg:h-svh lg:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,1fr)_auto] lg:pb-0",
         // Where the scenes panel ends on desktop; the dock and the cards sit beside it.
         railRight ? "[--rail-edge:94px]" : "[--rail-edge:334px]",
         className,
@@ -245,7 +246,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         data-lenis-prevent
         className="relative min-w-0 pb-2 lg:[scrollbar-width:thin] lg:overflow-y-auto lg:px-8 lg:pt-[22px] lg:pb-10"
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(550px_350px_at_50%_40%,rgba(122,96,230,0.16),transparent)]" />
+        <div className="pointer-events-none absolute -inset-x-4 inset-y-0 bg-[radial-gradient(550px_350px_at_50%_40%,rgba(122,96,230,0.16),transparent)] lg:inset-x-0" />
         {!online && <p className="text-muted-foreground relative mb-2 text-center text-xs">You're offline.</p>}
         <div className="relative mx-auto max-w-[min(1040px,max(440px,calc((100vh-330px)*16/9)))]">
           <small className="text-muted-foreground text-[13px]">{LEVELS[lesson.audience]}</small>
@@ -253,9 +254,10 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
             {lesson.title ?? lesson.topic}
           </h1>
 
+          {/* On phones the film runs edge to edge, like a video app; the main area's 16px gutter is undone here. */}
           <div
             ref={film}
-            className="relative mt-2.5 aspect-video overflow-hidden rounded-xl bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] lg:mt-4 lg:rounded-2xl"
+            className="relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl"
           >
             {current.video_url && !videoFailed && (
               <video

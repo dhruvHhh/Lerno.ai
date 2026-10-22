@@ -1,3 +1,4 @@
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -82,16 +83,32 @@ export default function Demo() {
                   <span className="size-2.5 rounded-full bg-white/15" />
                   <span className="size-2.5 rounded-full bg-white/15" />
                 </span>
-                <span className="text-muted-foreground truncate">
-                  Lerno · <span className="text-foreground">{lesson.title}</span>
-                </span>
+                {/* On phones the title is the lesson picker: the phone's own list opens over it. */}
+                <label className="text-muted-foreground relative flex min-w-0 items-center gap-1.5">
+                  <span className="truncate">
+                    Lerno · <span className="text-foreground">{lesson.title}</span>
+                  </span>
+                  <CaretDownIcon weight="bold" className="text-foreground size-3 flex-none sm:hidden" />
+                  <select
+                    aria-label="Example lesson"
+                    value={lesson.id}
+                    onChange={(event) => choose(DEMO_LESSONS.find(({ id }) => id === event.target.value)!)}
+                    className="absolute inset-0 cursor-pointer opacity-0 sm:hidden"
+                  >
+                    {DEMO_LESSONS.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
               <span className="text-muted-foreground shrink-0 tabular-nums">
                 Scene {scene + 1} of {lesson.scenes.length}
               </span>
             </div>
 
-            <div className="relative flex flex-col sm:block">
+            <div className="relative">
               <div className="relative aspect-video">
                 {DEMO_LESSONS.filter(({ id }) => id === lesson.id || id === outgoing?.id).map((item) => {
                   const incoming = item.id === lesson.id;
@@ -118,7 +135,7 @@ export default function Demo() {
                 ref={dockRef}
                 role="group"
                 aria-label="Example lessons"
-                className="group/dock sm:border-foreground/10 sm:bg-foreground/5 order-first flex gap-2 px-3 pt-3 pb-3 sm:absolute sm:top-1/2 sm:right-4 sm:z-20 sm:-translate-y-1/2 sm:flex-col sm:gap-2 sm:rounded-[20px] sm:border sm:p-2 sm:backdrop-blur-lg"
+                className="group/dock border-foreground/10 bg-foreground/5 absolute top-1/2 right-4 z-20 hidden -translate-y-1/2 flex-col gap-2 rounded-[20px] border p-2 backdrop-blur-lg sm:flex"
               >
                 {DEMO_LESSONS.map((option) => {
                   const selected = option.id === lesson.id;
@@ -130,7 +147,7 @@ export default function Demo() {
                       aria-pressed={selected}
                       onClick={() => choose(option)}
                       className={cn(
-                        "group/tab relative flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] text-[13px] font-medium transition-colors duration-300 sm:size-11 sm:flex-none sm:gap-0",
+                        "group/tab relative grid size-11 place-items-center rounded-[10px] transition-colors duration-300",
                         KEY,
                         selected ? "text-white" : "text-secondary-foreground hover:text-foreground",
                       )}
@@ -144,13 +161,10 @@ export default function Demo() {
                         />
                       )}
                       <option.icon className="relative size-[18px]" />
-                      <span aria-hidden="true" className="relative sm:hidden">
-                        {option.topic}
-                      </span>
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "pointer-events-none absolute top-1/2 right-full mr-3 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-[#101219] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100! sm:block",
+                          "pointer-events-none absolute top-1/2 right-full mr-3 -translate-y-1/2 rounded-lg border border-white/10 bg-[#101219] px-2.5 py-1 text-[13px] font-medium whitespace-nowrap text-white opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300 group-hover/tab:opacity-100!",
                           (selected || hinting) && "opacity-100 group-hover/dock:opacity-0",
                         )}
                       >

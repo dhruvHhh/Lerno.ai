@@ -34,9 +34,10 @@ export default function AppShell() {
       />
       <Sidebar data={data} rail={rail} onToggleRail={toggleRail} open={drawer} onClose={() => setDrawer(false)} />
 
+      {/* `isolate` keeps the page's own layers (the dock, the cards) under the drawer and its shade. */}
       <main
         data-lenis-prevent
-        className="relative flex h-svh min-w-0 [scrollbar-width:thin] [scrollbar-color:#2a2b38_transparent] flex-col items-center overflow-x-clip overflow-y-auto px-4 pb-10 lg:px-6 lg:pb-12"
+        className="relative isolate flex h-svh min-w-0 [scrollbar-width:thin] [scrollbar-color:#2a2b38_transparent] flex-col items-center overflow-x-clip overflow-y-auto px-4 pb-10 lg:px-6 lg:pb-12"
       >
         <div className="flex h-14 w-full flex-none items-center justify-between lg:hidden">
           <button type="button" onClick={() => setDrawer(true)} aria-label="Open lessons" className={ICON_BUTTON}>
