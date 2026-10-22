@@ -1,10 +1,11 @@
-import { CornersInIcon } from "@phosphor-icons/react";
+import { CornersInIcon, CornersOutIcon, SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react";
 import { useLenis } from "lenis/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import VideoControls, { BarButton, CloseButton, POPUP_WIDTH } from "@/components/lesson/VideoControls";
+import useFullscreen from "@/hooks/useFullscreen";
 import useVideoControls from "@/hooks/useVideoControls";
 import { EASE_EXPO } from "@/lib/variants";
 
@@ -26,6 +27,9 @@ export default function DemoDialog({ open, onClose }: DemoDialogProps) {
 function DemoPlayer({ onClose }: { onClose: () => void }) {
   const { videoRef, videoProps, controls } = useVideoControls();
   const closeButton = useRef<HTMLButtonElement>(null);
+  const frame = useRef<HTMLElement>(null);
+  const fullscreen = useFullscreen(frame);
+  const [muted, setMuted] = useState(false);
   const lenis = useLenis();
   const still = useReducedMotion();
 
@@ -62,13 +66,14 @@ function DemoPlayer({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-70 grid place-items-center bg-black/70 backdrop-blur-sm"
     >
       <m.section
+        ref={frame}
         role="dialog"
         aria-modal="true"
         aria-label="Lerno demo"
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0, transition: still ? STILL : OPEN }}
         exit={{ opacity: 0, scale: 0.97, y: 8, transition: still ? STILL : CLOSE }}
-        className={`relative overflow-hidden rounded-2xl border border-white/10 bg-black ${POPUP_WIDTH}`}
+        className={`relative overflow-hidden rounded-2xl border border-white/10 bg-black ${POPUP_WIDTH} [&:fullscreen]:rounded-none [&:fullscreen]:border-0`}
       >
         <video
           ref={videoRef}
@@ -77,15 +82,19 @@ function DemoPlayer({ onClose }: { onClose: () => void }) {
           width={1920}
           height={1080}
           autoPlay
+          muted={muted}
           playsInline
           onClick={controls.toggle}
           {...videoProps}
-          className="aspect-video w-full cursor-pointer"
+          className="aspect-video w-full cursor-pointer [:fullscreen>&]:aspect-auto [:fullscreen>&]:h-full"
         />
         <CloseButton ref={closeButton} onClick={close} />
         <VideoControls controls={controls}>
-          <BarButton label="Shrink" onClick={close}>
-            <CornersInIcon className="size-4" />
+          <BarButton label={muted ? "Unmute" : "Mute"} onClick={() => setMuted(!muted)}>
+            {muted ? <SpeakerSlashIcon className="size-4" /> : <SpeakerHighIcon className="size-4" />}
+          </BarButton>
+          <BarButton label={fullscreen.full ? "Exit full screen" : "Full screen"} onClick={fullscreen.toggle}>
+            {fullscreen.full ? <CornersInIcon className="size-4" /> : <CornersOutIcon className="size-4" />}
           </BarButton>
         </VideoControls>
       </m.section>

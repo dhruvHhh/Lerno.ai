@@ -1,4 +1,4 @@
-import { CornersOut, NotePencil, Pause } from "@phosphor-icons/react";
+import { CornersIn, CornersOut, NotePencil, Pause } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
@@ -13,6 +13,7 @@ import ScenesPanel from "@/components/watch/ScenesPanel";
 import Scrub from "@/components/watch/Scrub";
 import { DOCK_KEYS, SOLID, scoreOf } from "@/components/watch/shared";
 import TutorCard from "@/components/watch/TutorCard";
+import useFullscreen from "@/hooks/useFullscreen";
 import useNotes, { type Note } from "@/hooks/useNotes";
 import useTutor from "@/hooks/useTutor";
 import useVideoTime from "@/hooks/useVideoTime";
@@ -72,6 +73,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setVideoEl(element);
   }, []);
   const film = useRef<HTMLDivElement>(null);
+  const fullscreen = useFullscreen(film);
   // What to do once the next video's details load: where to start, and whether to play.
   const pending = useRef({ at: start?.time ?? 0, play: false });
   const retried = useRef(false);
@@ -360,11 +362,11 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   </button>
                   <button
                     type="button"
-                    onClick={() => film.current?.requestFullscreen().catch(() => {})}
-                    aria-label="Full screen"
+                    onClick={fullscreen.toggle}
+                    aria-label={fullscreen.full ? "Exit full screen" : "Full screen"}
                     className={CONTROL}
                   >
-                    <CornersOut size={18} />
+                    {fullscreen.full ? <CornersIn size={18} /> : <CornersOut size={18} />}
                   </button>
                 </div>
               </>

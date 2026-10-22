@@ -1,4 +1,4 @@
-import { CaretUpDown, CircleNotch, Keyboard, SignOut } from "@phosphor-icons/react";
+import { CaretUpDown, Keyboard, SignOut } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -20,7 +20,6 @@ export default function AccountMenu() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const [place, setPlace] = useState<{ style: CSSProperties; side: "right" | "top" }>({ style: {}, side: "top" });
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -137,15 +136,15 @@ export default function AccountMenu() {
           <button
             type="button"
             role="menuitem"
-            disabled={leaving}
             onClick={() => {
-              setLeaving(true);
+              // The menu is drawn outside the app, so it closes here; otherwise it stays while the app fades out.
+              close(false);
               void signOut();
             }}
             className={ITEM}
           >
-            {leaving ? <CircleNotch size={15} className="motion-safe:animate-spin" /> : <SignOut size={15} />}
-            {leaving ? "Signing out…" : "Sign out"}
+            <SignOut size={15} />
+            Sign out
           </button>
         </div>,
         document.body,
