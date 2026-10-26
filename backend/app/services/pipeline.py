@@ -3,8 +3,14 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from functools import partial
 
-from app.config import SCENES_PER_LESSON, STALE_AFTER_MINUTES, VIDEO_BUCKET
-from app.db import db, now_iso, window_start
+from app.config import (
+    SCENES_PER_LESSON,
+    STALE_AFTER_MINUTES,
+    THUMBNAIL_BUCKET,
+    THUMBNAIL_CACHE_SECONDS,
+    VIDEO_BUCKET,
+)
+from app.db import db, now_iso, thumbnail_path, window_start
 from app.schemas import ScenePlan
 from app.services import llm, renderer
 
@@ -22,33 +28,46 @@ def _finish(lesson_id: str, **fields) -> None:
     _update(lesson_id, finished_at=now_iso(), **fields)
 
 
-def _animate(lesson: dict, position: int, code: str) -> tuple[str | None, str]:
+def _upload_thumbnail(lesson_id: str, position: int, thumbnail: bytes) -> None:
+    options = {"content-type": "image/webp", "cache-control": str(THUMBNAIL_CACHE_SECONDS), "upsert": "true"}
+    # A missing thumbnail is not worth losing a good scene over.
+    try:
+        db.storage.from_(THUMBNAIL_BUCKET).upload(thumbnail_path(lesson_id, position), thumbnail, options)
+    except Exception:
+        log.exception("Thumbnail upload for scene %s of lesson %s failed", position, lesson_id)
+
+
+def _animate(lesson: dict, position: int, code: str) -> tuple[dict, str]:
     for attempt in range(MAX_FIXES + 1):
-        video, error = renderer.render(code)
-        if video:
+        rendered, error = renderer.render(code)
+        if rendered:
             path = f"{lesson['user_id']}/{lesson['id']}/scene_{position}.mp4"
-            db.storage.from_(VIDEO_BUCKET).upload(path, video, {"content-type": "video/mp4", "upsert": "true"})
-            return path, code
+            db.storage.from_(VIDEO_BUCKET).upload(path, rendered.video, {"content-type": "video/mp4", "upsert": "true"})
+            if rendered.thumbnail:
+                _upload_thumbnail(lesson["id"], position, rendered.thumbnail)
+            return {"video_path": path, "duration_seconds": rendered.duration}, code
         log.warning("Scene %s render failed (attempt %s): %s", position, attempt + 1, error[-500:])
         if attempt < MAX_FIXES:
             code = llm.fix_manim(code, error)
-    return None, code
+    return {}, code
 
 
 def _scene_row(lesson: dict, position: int, scene: ScenePlan) -> dict:
-    code = video_path = None
+    code, video = None, {}
     # One scene crashing must not take down the other two.
     try:
         code = llm.write_manim(scene)
         _update(lesson["id"], step=3)
-        video_path, code = _animate(lesson, position, code)
+        video, code = _animate(lesson, position, code)
     except Exception:
         log.exception("Scene %s of lesson %s crashed", position, lesson["id"])
     return {
         "lesson_id": lesson["id"],
         "position": position,
         "manim_code": code,
-        "video_path": video_path,
+        "video_path": None,
+        "duration_seconds": None,
+        **video,
         **scene.model_dump(exclude={"animation_description"}),
     }
 

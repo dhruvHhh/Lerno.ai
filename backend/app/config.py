@@ -16,3 +16,6 @@ TUTOR_MESSAGE_LIMIT = 20
 STALE_AFTER_MINUTES = 25
 VIDEO_BUCKET = "videos"
 VIDEO_URL_TTL_SECONDS = 3600
+THUMBNAIL_BUCKET = "thumbnails"
+# A thumbnail never changes once made, so browsers may keep it for good.
+THUMBNAIL_CACHE_SECONDS = 365 * 24 * 3600

@@ -23,6 +23,11 @@ def lesson_scenes(lesson_id: str, fields: tuple[str, ...]) -> list[dict]:
     return db.table("scenes").select(*fields).eq("lesson_id", lesson_id).order("position").execute().data
 
 
+# No user id in the path: thumbnails are public, and the lesson id alone can't be guessed.
+def thumbnail_path(lesson_id: str, position: int) -> str:
+    return f"{lesson_id}/scene_{position}.webp"
+
+
 def now_iso(ago: timedelta = timedelta()) -> str:
     return (datetime.now(timezone.utc) - ago).isoformat()
 

@@ -22,6 +22,8 @@ create table scenes (
   narration text not null,
   manim_code text,
   video_path text,
+  -- The video's length, saved with its thumbnail so pages need not open the video.
+  duration_seconds real,
   mcq_question text not null,
   mcq_choices jsonb not null,
   mcq_correct_index int not null,
@@ -58,3 +60,7 @@ alter table tutor_messages enable row level security;
 grant select, insert, update, delete on lessons, scenes, notes, tutor_messages to service_role;
 
 insert into storage.buckets (id, name, public) values ('videos', 'videos', false);
+-- Public so browsers can cache the thumbnails by a fixed link. Paths are lesson ids, which can't be guessed; listing and
+-- writing still need the service key.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('thumbnails', 'thumbnails', true, 524288, array['image/webp']);
