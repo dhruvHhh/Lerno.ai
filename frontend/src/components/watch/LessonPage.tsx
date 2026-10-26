@@ -2,7 +2,6 @@ import { CornersIn, CornersOut, NotePencil, Pause } from "@phosphor-icons/react"
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
-import StillFrame from "@/components/app/StillFrame";
 import PlayIcon from "@/components/ui/play-icon";
 import Dock, { type CardName } from "@/components/watch/Dock";
 import Notepad from "@/components/watch/Notepad";
@@ -52,7 +51,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const [progress, setProgress] = useState<Record<number, number>>(() =>
     Object.fromEntries((start?.watched ?? []).map((position) => [position, 1])),
   );
-  const [durations, setDurations] = useState<Record<number, number>>({});
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [overlay, setOverlay] = useState<"quiz" | "complete" | null>(null);
@@ -224,10 +222,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     saveScenesRail(!railRight);
     setRailRight(!railRight);
   };
-  const keepDuration = useCallback(
-    (position: number, seconds: number) => setDurations((d) => (d[position] ? d : { ...d, [position]: seconds })),
-    [],
-  );
   const hasVideo = !!current.video_url && !videoFailed;
   const notesFull = notes.notes.length >= NOTES_LIMIT;
 
@@ -266,6 +260,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                 key={scene}
                 ref={attachVideo}
                 src={current.video_url}
+                // A scene's first frame is dark while its title fades in, so its thumbnail stands in until it plays.
+                poster={current.thumbnail_url ?? undefined}
                 playsInline
                 preload="metadata"
                 onClick={toggle}
@@ -327,8 +323,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 
             {hasVideo && (
               <>
-                {/* A scene's first frame is dark while its title fades in, so a still stands in until it plays. */}
-                <Poster video={videoEl} src={current.video_url!} playing={playing} />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-linear-to-b from-transparent to-black/75" />
                 <button
                   type="button"
@@ -420,9 +414,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         current={scene}
         watched={watched}
         progress={progress}
-        durations={durations}
         video={videoEl}
-        onDuration={keepDuration}
         onSelect={go}
         rail={railRight}
         onToggleRail={toggleRail}
@@ -474,12 +466,6 @@ function TimeLabel({ video, duration }: { video: HTMLVideoElement | null; durati
       {formatTime(seconds)} / {formatTime(duration)}
     </span>
   );
-}
-
-// A scene's first frame is dark while its title fades in, so a still stands in until it plays.
-function Poster({ video, src, playing }: { video: HTMLVideoElement | null; src: string; playing: boolean }) {
-  const atStart = useVideoTime(video, (v) => v.currentTime === 0, true);
-  return atStart && !playing ? <StillFrame src={src} className="pointer-events-none absolute inset-0" /> : null;
 }
 
 // The narration under the film, like subtitles; the sentence being spoken is lit.

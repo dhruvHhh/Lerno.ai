@@ -19,6 +19,8 @@ export interface Scene {
   title: string;
   narration: string;
   video_url: string | null;
+  thumbnail_url: string | null;
+  duration_seconds: number | null;
   mcq_question: string;
   mcq_choices: string[];
   mcq_correct_index: number;

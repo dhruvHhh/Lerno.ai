@@ -1,7 +1,7 @@
 import { Check, SidebarSimple, WarningCircle } from "@phosphor-icons/react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
-import StillFrame from "@/components/app/StillFrame";
+import Thumbnail from "@/components/app/Thumbnail";
 import useMediaQuery, { DESKTOP } from "@/hooks/useMediaQuery";
 import useVideoTime from "@/hooks/useVideoTime";
 import type { Scene } from "@/lib/api";
@@ -12,8 +12,6 @@ interface ScenesPanelProps {
   current: number;
   watched: number[];
   progress: Record<number, number>;
-  durations: Record<number, number>;
-  onDuration: (position: number, seconds: number) => void;
   onSelect: (position: number) => void;
   rail: boolean;
   onToggleRail: () => void;
@@ -83,11 +81,11 @@ function SceneRing({ kept, done, video, className }: RingProps) {
 
 // The scenes of this lesson. Collapsed, it is a filmstrip of tiny frames, like the slide strip in Keynote.
 export default function ScenesPanel(props: ScenesPanelProps) {
-  const { scenes, durations, rail, onToggleRail } = props;
+  const { scenes, rail, onToggleRail } = props;
   // On a phone the scenes are always a list under the video.
   const desktop = useMediaQuery(DESKTOP);
   const strip = rail && desktop;
-  const total = scenes.reduce((sum, scene) => sum + (durations[scene.position] ?? 0), 0);
+  const total = scenes.reduce((sum, scene) => sum + (scene.duration_seconds ?? 0), 0);
 
   return (
     <aside
@@ -126,7 +124,7 @@ export default function ScenesPanel(props: ScenesPanelProps) {
   );
 }
 
-function SceneList({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
+function SceneList({ scenes, current, watched, progress, onSelect, video }: ScenesPanelProps) {
   return (
     // Scrolls on its own only on desktop. On phones it must not be a scroller: Lenis's overscroll containment would
     // keep a swipe here from scrolling the page.
@@ -134,7 +132,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
       {scenes.map((scene) => {
         const on = scene.position === current;
         const done = watched.includes(scene.position);
-        const length = durations[scene.position];
+        const length = scene.duration_seconds ?? 0;
         return (
           <li key={scene.position}>
             <button
@@ -155,11 +153,9 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
               >
                 {scene.video_url ? (
                   <>
-                    <StillFrame
-                      src={scene.video_url}
-                      onDuration={(d) => onDuration(scene.position, d)}
-                      className={on ? "" : "opacity-75"}
-                    />
+                    {scene.thumbnail_url && (
+                      <Thumbnail src={scene.thumbnail_url} className={on ? "" : "opacity-75"} />
+                    )}
                     {(on || done || (progress[scene.position] ?? 0) > 0) && (
                       <SceneRing
                         kept={progress[scene.position] ?? 0}
@@ -216,7 +212,7 @@ function SceneList({ scenes, current, watched, progress, durations, onDuration, 
   );
 }
 
-function Filmstrip({ scenes, current, watched, progress, durations, onDuration, onSelect, video }: ScenesPanelProps) {
+function Filmstrip({ scenes, current, watched, progress, onSelect, video }: ScenesPanelProps) {
   return (
     <ul className="flex flex-col items-center gap-3.5 py-1.5">
       {scenes.map((scene) => {
@@ -228,7 +224,7 @@ function Filmstrip({ scenes, current, watched, progress, durations, onDuration, 
             ? "playing"
             : done
               ? "watched"
-              : formatTime(durations[scene.position] ?? 0);
+              : formatTime(scene.duration_seconds ?? 0);
         const label = `${scene.position}. ${scene.title}, ${state}`;
         return (
           <li key={scene.position}>
@@ -247,14 +243,15 @@ function Filmstrip({ scenes, current, watched, progress, durations, onDuration, 
             >
               {scene.video_url ? (
                 <>
-                  <StillFrame
-                    src={scene.video_url}
-                    onDuration={(d) => onDuration(scene.position, d)}
-                    className={cn(
-                      "rounded-md transition-opacity duration-250 group-hover:opacity-100",
-                      on ? "" : "opacity-60",
-                    )}
-                  />
+                  {scene.thumbnail_url && (
+                    <Thumbnail
+                      src={scene.thumbnail_url}
+                      className={cn(
+                        "rounded-md transition-opacity duration-250 group-hover:opacity-100",
+                        on ? "" : "opacity-60",
+                      )}
+                    />
+                  )}
                   {(on || done || (progress[scene.position] ?? 0) > 0) && (
                     <SceneRing
                       kept={progress[scene.position] ?? 0}

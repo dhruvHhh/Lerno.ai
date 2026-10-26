@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import Placeholder from "@/components/app/Placeholder";
-import StillFrame from "@/components/app/StillFrame";
+import Thumbnail from "@/components/app/Thumbnail";
 import PlayIcon from "@/components/ui/play-icon";
 import { LEVELS, type Lesson, type Scene } from "@/lib/api";
 import { fetchLesson, storedLesson } from "@/lib/lessonStore";
@@ -54,7 +54,6 @@ export default function ContinueWatching({ lessons, failed }: { lessons: Lesson[
 function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; index: number }) {
   // The full lesson is kept, so a click opens the player with no wait.
   const [scenes, setScenes] = useState<Scene[]>(() => storedLesson(lesson.id)?.scenes ?? []);
-  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     if (storedLesson(lesson.id)) return;
@@ -65,8 +64,8 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
 
   const progress = savedProgress(lesson.id);
   const current = progress?.scene ?? 1;
-  const video =
-    scenes.find((scene) => scene.position === current)?.video_url ?? scenes.find((scene) => scene.video_url)?.video_url;
+  const shown = scenes.find((scene) => scene.position === current) ?? scenes.find((scene) => scene.thumbnail_url);
+  const duration = shown?.duration_seconds ?? 0;
   const watched =
     progress && scenes.length ? (current - 1 + (duration && Math.min(progress.time / duration, 1))) / scenes.length : 0;
 
@@ -83,10 +82,9 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
       style={{ animationDelay: `${SETTLE_MS + index * 70}ms` }}
     >
       <div className="rounded-tile relative row-span-2 aspect-video overflow-hidden bg-[#0a0b10]">
-        {video && (
-          <StillFrame
-            src={video}
-            onDuration={setDuration}
+        {shown?.thumbnail_url && (
+          <Thumbnail
+            src={shown.thumbnail_url}
             className="opacity-85 transition-[opacity,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] group-hover:opacity-100"
           />
         )}
