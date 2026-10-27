@@ -1,7 +1,21 @@
-import { CornersIn, CornersOut, NotePencil, Pause, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
+import {
+  CornersIn,
+  CornersOut,
+  Fire,
+  NotePencil,
+  Pause,
+  Sparkle,
+  SpeakerHigh,
+  SpeakerSlash,
+} from "@phosphor-icons/react";
+import { AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
+import LumoQuestionCard from "@/components/lesson/mascot/LumoQuestionCard";
+import { placeLumo, type LumoPlacement } from "@/components/lesson/mascot/lumoPlacement";
+import LumoStage, { LumoScrim } from "@/components/lesson/mascot/LumoStage";
+import useLumoCheckpoints from "@/components/lesson/mascot/useLumoCheckpoints";
 import PlayIcon from "@/components/ui/play-icon";
 import Dock, { type CardName } from "@/components/watch/Dock";
 import Notepad from "@/components/watch/Notepad";
@@ -19,7 +33,14 @@ import useTutor from "@/hooks/useTutor";
 import useVideoTime from "@/hooks/useVideoTime";
 import useVoice from "@/hooks/useVoice";
 import { LEVELS, type Language, type LessonWithScenes, type Scene } from "@/lib/api";
-import { saveProgress, saveScenesRail, savedProgress, savedScenesRail } from "@/lib/saved";
+import {
+  saveLumoSound,
+  saveProgress,
+  saveScenesRail,
+  savedLumoSound,
+  savedProgress,
+  savedScenesRail,
+} from "@/lib/saved";
 import { cn, formatTime } from "@/lib/utils";
 
 const NOTES_LIMIT = 100;
@@ -66,6 +87,9 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const [muted, setMuted] = useState(false);
   const [railRight, setRailRight] = useState(savedScenesRail);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine);
+  const [lumoSound, setLumoSound] = useState(savedLumoSound);
+  // Where Lumo and its card go over the film, from the film's measured size.
+  const [lumoPlace, setLumoPlace] = useState<LumoPlacement | null>(null);
 
   const notes = useNotes(lesson.id);
   const tutor = useTutor(lesson.id);
@@ -77,6 +101,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setVideoEl(element);
   }, []);
   const film = useRef<HTMLDivElement>(null);
+  const controls = useRef<HTMLDivElement>(null);
   // The controls fade out while the video plays and the pointer rests, so they never cover the bottom of the picture.
   const [idle, setIdle] = useState(false);
   const idleTimer = useRef(0);
@@ -93,6 +118,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     return () => clearTimeout(idleTimer.current);
   }, [playing, wake]);
   const fullscreen = useFullscreen(film);
+  const playButton = useRef<HTMLButtonElement>(null);
   // What to do once the next video's details load: where to start, and whether to play.
   const pending = useRef({ at: start?.time ?? 0, play: false });
   const retried = useRef(false);
@@ -156,6 +182,90 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setMuted(v.muted);
   }, []);
 
+  // Lumo's quick check partway through the scene. Its answer is the scene's answer, so the end of the scene and the
+  // quiz card show it too.
+  const lumo = useLumoCheckpoints({
+    lessonId: lesson.id,
+    scene,
+    video: videoEl,
+    correct: current.mcq_correct_index,
+    answer: current.mcq_choices[current.mcq_correct_index],
+    answered: answers[scene] !== undefined,
+    blocked: card !== null || notepadAt !== null || overlay !== null,
+    // A muted lesson is a quiet one: Lumo's own switch only counts while the lesson has sound.
+    sound: lumoSound && !muted,
+    onAnswer: (choice) => setAnswers((a) => ({ ...a, [scene]: choice })),
+    onResume: (rewind) => {
+      // The controls stayed up through the check; they fade again only after a fresh idle spell.
+      wake();
+      const v = video.current;
+      if (v) {
+        if (rewind) v.currentTime = Math.max(0, v.currentTime - rewind);
+        playVideo(v);
+      }
+      playButton.current?.focus({ preventScroll: true });
+    },
+    onExplain: () => {
+      tutor.setDraft(
+        `Can you explain this? "${current.mcq_question}" The answer is "${current.mcq_choices[current.mcq_correct_index]}".`,
+      );
+      openCard("tutor");
+    },
+  });
+  // Lumo pops up at the film's bottom-left corner, from behind the controls, and its question goes over the paused
+  // video beside it, or under the film where the video is too short to hold it. The film never moves for either.
+  const cardOpen = lumo.phase !== null && lumo.phase !== "entrance";
+  const lumoCard = (place: LumoPlacement, className?: string) =>
+    lumo.phase !== null &&
+    lumo.phase !== "entrance" && (
+      <LumoQuestionCard
+        key="lumo-card"
+        scene={current}
+        time={lumo.time}
+        phase={lumo.phase}
+        picked={lumo.picked}
+        line={lumo.speech?.text ?? null}
+        from={place.card.from}
+        notch={place.card.notch}
+        sound={lumoSound}
+        onSound={toggleSound}
+        onPick={lumo.pick}
+        onSkip={lumo.skip}
+        onRewind={lumo.rewind}
+        onContinue={lumo.resume}
+        onExplain={lumo.explain}
+        style={place.card.box ?? undefined}
+        compact={place.card.compact}
+        className={className}
+      />
+    );
+  const toggleSound = () => {
+    saveLumoSound(!lumoSound);
+    setLumoSound(!lumoSound);
+  };
+
+  // Lumo's place follows the film's size, which changes with the window, the sidebar, the scenes panel and full screen.
+  useEffect(() => {
+    const frame = film.current;
+    if (!frame) return;
+    const observer = new ResizeObserver(() => {
+      const box = frame.getBoundingClientRect();
+      const bar = controls.current?.getBoundingClientRect();
+      setLumoPlace(
+        placeLumo({
+          width: box.width,
+          height: box.height,
+          controls: bar ? box.bottom - bar.top : 48,
+          offset: frame.offsetLeft,
+          dpr: window.devicePixelRatio || 1,
+          full: fullscreen.full,
+        }),
+      );
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [fullscreen.full]);
+
   const go = useCallback(
     (position: number, at = 0, play = true) => {
       keepProgress();
@@ -178,10 +288,10 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 
   const toggle = useCallback(() => {
     const v = video.current;
-    if (!v || overlay) return;
+    if (!v || overlay || lumo.phase) return;
     if (v.paused) playVideo(v);
     else v.pause();
-  }, [overlay, playVideo]);
+  }, [overlay, playVideo, lumo.phase]);
 
   const finishScene = () => {
     video.current?.pause();
@@ -283,7 +393,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setRailRight(!railRight);
   };
   const hasVideo = !!current.video_url && !videoFailed;
-  const hideControls = idle && playing && !overlay && notepadAt === null;
+  // A Lumo check keeps the controls in view until its card has closed; the video playing on restarts the idle timer.
+  const hideControls = idle && playing && !overlay && notepadAt === null && lumo.phase === null;
   // A voice still being made for this scene: its narration waits for it. A silent scene has none to wait for.
   const waiting =
     voice.language !== "en" && !dubbed && !!current.word_starts_ms && voice.statusOf(current) !== "failed";
@@ -307,7 +418,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     >
       <div
         data-lenis-prevent
-        className="relative min-w-0 pb-2 lg:[scrollbar-width:thin] lg:overflow-y-auto lg:px-8 lg:pt-[22px] lg:pb-10"
+        // The scrollbar's room is kept, so a page that grows taller around a check never narrows the film.
+        className="relative min-w-0 pb-2 lg:[scrollbar-width:thin] lg:[scrollbar-gutter:stable] lg:overflow-y-auto lg:px-8 lg:pt-[22px] lg:pb-10"
       >
         <div className="pointer-events-none absolute -inset-x-4 inset-y-0 bg-[radial-gradient(550px_350px_at_50%_40%,rgba(122,96,230,0.16),transparent)] lg:inset-x-0" />
         {!online && <p className="text-muted-foreground relative mb-2 text-center text-xs">You're offline.</p>}
@@ -326,7 +438,9 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
             onPointerDown={wake}
             onFocus={wake}
             className={cn(
-              "relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] max-sm:data-overlay:aspect-auto sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl",
+              // Clipped, not hidden: the film is no scroll container, so bringing Lumo's card into view can never scroll
+              // the video inside it.
+              "relative -mx-4 mt-2.5 aspect-video overflow-clip bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] max-sm:data-overlay:aspect-auto sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl",
               hideControls && "cursor-none",
             )}
           >
@@ -402,6 +516,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 
             {hasVideo && (
               <>
+                {lumoPlace && <LumoScrim on={lumo.presence === "in"} wide={lumoPlace.card.box !== null} />}
                 <div
                   className={cn(
                     "pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-linear-to-b from-transparent to-black/75 transition-opacity duration-300",
@@ -414,18 +529,26 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   aria-label="Play"
                   className={cn(
                     "ease-snappy absolute inset-0 m-auto grid size-[72px] place-items-center rounded-full bg-[#f5f5f7]/94 shadow-[0_0_60px_rgba(155,124,255,0.45)] transition-[opacity,scale] duration-[400ms] hover:scale-105",
-                    (playing || overlay || notepadAt !== null) && "pointer-events-none scale-90 opacity-0",
+                    (playing || overlay || lumo.phase || notepadAt !== null) &&
+                      "pointer-events-none scale-90 opacity-0",
                   )}
                 >
                   <PlayIcon size={28} className="text-background" />
                 </button>
                 <div
+                  ref={controls}
                   className={cn(
                     "text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums transition-opacity duration-300 select-none sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5",
                     hideControls && "pointer-events-none opacity-0",
                   )}
                 >
-                  <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className={CONTROL}>
+                  <button
+                    ref={playButton}
+                    type="button"
+                    onClick={toggle}
+                    aria-label={playing ? "Pause" : "Play"}
+                    className={CONTROL}
+                  >
                     {playing ? <Pause size={18} weight="fill" /> : <PlayIcon size={16} />}
                   </button>
                   <button
@@ -445,11 +568,15 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                     notes={sceneNotes}
                     onSeek={seek}
                     onOpenNotes={openNotes}
+                    checkpoint={
+                      lumo.marker === null ? undefined : { at: lumo.marker, done: answers[scene] !== undefined }
+                    }
                   />
                   <button
                     type="button"
                     onClick={openNotepad}
-                    disabled={notesFull}
+                    // The notepad opens where Lumo and its question sit.
+                    disabled={notesFull || !!lumo.phase}
                     aria-label="Add a note"
                     title={notesFull ? NOTES_FULL : undefined}
                     className={cn(CONTROL, "group relative disabled:cursor-default disabled:opacity-40")}
@@ -466,6 +593,39 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                     {fullscreen.full ? <CornersIn size={18} /> : <CornersOut size={18} />}
                   </button>
                 </div>
+
+                <p className="text-foreground absolute top-2 right-2 flex h-7 items-center gap-2.5 rounded-full border border-white/10 bg-black/55 px-2.5 text-xs font-medium tabular-nums backdrop-blur-sm sm:top-3 sm:right-3">
+                  <span className="sr-only">
+                    {lumo.score.xp} XP, {lumo.score.streak} right in a row
+                  </span>
+                  <span aria-hidden="true" className="inline-flex items-center gap-1">
+                    <Sparkle size={13} weight="fill" className="text-accent-soft" />
+                    {lumo.score.xp} XP
+                  </span>
+                  <span aria-hidden="true" className="inline-flex items-center gap-1">
+                    <Fire
+                      size={13}
+                      weight="fill"
+                      className={lumo.score.streak ? "text-danger" : "text-muted-foreground"}
+                    />
+                    {lumo.score.streak}
+                  </span>
+                </p>
+
+                {lumoPlace && (
+                  <>
+                    <LumoStage
+                      state={lumo.lumo}
+                      onDone={lumo.lumoDone}
+                      place={lumoPlace}
+                      presence={lumo.presence}
+                      reaction={lumo.reaction}
+                      speech={lumo.speech}
+                      className="z-10"
+                    />
+                    <AnimatePresence>{lumoPlace.card.box && lumoCard(lumoPlace, "absolute z-10")}</AnimatePresence>
+                  </>
+                )}
               </>
             )}
 
@@ -504,28 +664,35 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 
           {/* On phones the quiz fills the film, so the finished scene's narration steps aside for it. */}
           {voice.voiced && <VoicePicker voice={voice} onPick={pickVoice} className={cn(overlay && "max-sm:hidden")} />}
-          {waiting ? (
-            <p
-              role="status"
-              className={cn(
-                "text-muted-foreground mt-4 flex items-center justify-center gap-2.5 text-sm sm:mt-5",
-                overlay && "max-sm:hidden",
-              )}
-            >
-              <span
-                aria-hidden
-                className="border-accent-soft/25 border-t-accent-soft size-4 flex-none rounded-full border-[1.5px] motion-safe:animate-spin"
+          <AnimatePresence mode="wait" initial={false}>
+            {cardOpen && lumoPlace && !lumoPlace.card.box ? (
+              // Under a film too short to hold it. Room below, so the card can scroll up clear of the floating dock.
+              lumoCard(lumoPlace, "mt-3.5 mb-20 sm:mt-5")
+            ) : waiting ? (
+              <p
+                key="waiting"
+                role="status"
+                className={cn(
+                  "text-muted-foreground mt-4 flex items-center justify-center gap-2.5 text-sm sm:mt-5",
+                  overlay && "max-sm:hidden",
+                )}
+              >
+                <span
+                  aria-hidden
+                  className="border-accent-soft/25 border-t-accent-soft size-4 flex-none rounded-full border-[1.5px] motion-safe:animate-spin"
+                />
+                Making the {LANGUAGE_NAMES[voice.language as Language]} voice. This takes about 30 seconds.
+              </p>
+            ) : (
+              <Narration
+                key="narration"
+                video={videoEl}
+                text={dubbed?.narration ?? current.narration}
+                wordStarts={dubbed ? dubbed.word_starts_ms : current.word_starts_ms}
+                className={cn(overlay && "max-sm:hidden")}
               />
-              Making the {LANGUAGE_NAMES[voice.language as Language]} voice. This takes about 30 seconds.
-            </p>
-          ) : (
-            <Narration
-              video={videoEl}
-              text={dubbed?.narration ?? current.narration}
-              wordStarts={dubbed ? dubbed.word_starts_ms : current.word_starts_ms}
-              className={cn(overlay && "max-sm:hidden")}
-            />
-          )}
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

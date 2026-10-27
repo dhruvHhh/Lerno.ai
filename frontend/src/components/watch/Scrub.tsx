@@ -15,6 +15,8 @@ interface ScrubProps {
   notes: Note[];
   onSeek: (fraction: number) => void;
   onOpenNotes: (ids: string[]) => void;
+  // Lumo's quick check in this scene, as a share of the bar; filled once the question is answered.
+  checkpoint?: { at: number; done: boolean };
 }
 
 function mergeMarkers(notes: Note[], duration: number) {
@@ -28,7 +30,7 @@ function mergeMarkers(notes: Note[], duration: number) {
   return groups;
 }
 
-export default function Scrub({ video, playing, duration, notes, onSeek, onOpenNotes }: ScrubProps) {
+export default function Scrub({ video, playing, duration, notes, onSeek, onOpenNotes, checkpoint }: ScrubProps) {
   const bar = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
   const knob = useRef<HTMLSpanElement>(null);
@@ -95,6 +97,21 @@ export default function Scrub({ video, playing, duration, notes, onSeek, onOpenN
         ref={fill}
         className="bg-foreground absolute inset-x-0 top-[7px] h-1 origin-left rounded will-change-transform"
       />
+      {checkpoint && (
+        // Only a mark: a press on it still seeks the bar.
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[4.5px] grid -translate-x-1/2"
+          style={{ left: `${checkpoint.at * 100}%` }}
+        >
+          <i
+            className={cn(
+              "border-foreground size-[9px] rotate-45 rounded-[2px] border-[1.5px] shadow-[0_0_0_2px_#000]",
+              checkpoint.done ? "bg-foreground" : "bg-black/70",
+            )}
+          />
+        </span>
+      )}
       {duration > 0 &&
         mergeMarkers(notes, duration).map(({ at, notes: group }) => (
           // A marker opens its notes; it must not also seek the bar under it.

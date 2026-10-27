@@ -45,6 +45,19 @@ export interface Progress {
 export const savedProgress = (lessonId: string) => read<Progress | null>(`lerno:progress:${lessonId}`, null);
 export const saveProgress = (lessonId: string, progress: Progress) => write(`lerno:progress:${lessonId}`, progress);
 
+// Lumo's quick checks, across lessons: points for right answers, and how many were right in a row.
+export interface LumoScore {
+  xp: number;
+  streak: number;
+}
+
+export const savedLumo = () => read<LumoScore>("lerno:lumo", { xp: 0, streak: 0 });
+export const saveLumo = (score: LumoScore) => write("lerno:lumo", score);
+
+// Whether Lumo's answer sounds play. On until the learner turns them off.
+export const savedLumoSound = () => read("lerno:lumo-sound", true);
+export const saveLumoSound = (on: boolean) => write("lerno:lumo-sound", on);
+
 export const savedScenesRail = () => read("lerno:scenes-rail", false);
 export const saveScenesRail = (rail: boolean) => write("lerno:scenes-rail", rail);
 
