@@ -14,7 +14,8 @@ const FADE = { duration: 0.7, ease: EASE };
 
 const HIDDEN = { opacity: 0, scale: 1.02, filter: "blur(8px)" };
 
-const SHOWN = { opacity: 1, scale: 1, filter: "blur(0px)" };
+// The filter is dropped once shown: even blur(0px) can make iOS filter every frame of the playing video.
+const SHOWN = { opacity: 1, scale: 1, filter: "blur(0px)", transitionEnd: { filter: "none" } };
 
 const HINT_MS = 2500;
 

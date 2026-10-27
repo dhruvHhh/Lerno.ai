@@ -41,7 +41,7 @@ export default function Dock({ card, onPick }: DockProps) {
       data-dock
       className={cn(
         "fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2 lg:bottom-[26px]",
-        "sm:rounded-surface sm:flex-row sm:gap-1 sm:bg-[rgba(14,13,24,0.86)] sm:p-1 sm:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] sm:backdrop-blur-[16px]",
+        "sm:rounded-surface sm:flex-row sm:gap-1 sm:bg-[rgba(14,13,24,0.86)] sm:p-1 sm:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)]",
         "ease-snappy transition-[right] duration-[450ms] lg:right-(--rail-edge)",
       )}
     >
@@ -64,7 +64,7 @@ export default function Dock({ card, onPick }: DockProps) {
             // On a phone each tool is its own pill that rises out of the button; closed, it is hidden from taps and keys.
             "max-sm:ease-snappy max-sm:h-11 max-sm:rounded-full max-sm:px-4 max-sm:text-sm max-sm:transition-[opacity,translate,visibility] max-sm:duration-300",
             card !== name &&
-              "max-sm:bg-[rgba(14,13,24,0.9)] max-sm:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] max-sm:backdrop-blur-[16px]",
+              "max-sm:bg-[rgba(14,13,24,0.9)] max-sm:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)]",
             open ? rise : "max-sm:invisible max-sm:translate-y-3 max-sm:opacity-0",
           )}
         >
@@ -81,7 +81,7 @@ export default function Dock({ card, onPick }: DockProps) {
         onClick={() => setOpen(!open)}
         aria-label={open ? "Close lesson tools" : "Lesson tools"}
         aria-expanded={open}
-        className="text-foreground grid size-[52px] place-items-center rounded-full bg-[rgba(14,13,24,0.9)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-[16px] sm:hidden"
+        className="text-foreground grid size-[52px] place-items-center rounded-full bg-[rgba(14,13,24,0.9)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] sm:hidden"
       >
         <Plus
           size={20}
