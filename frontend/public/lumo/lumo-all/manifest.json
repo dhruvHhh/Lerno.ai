@@ -1,0 +1,37 @@
+{
+  "size": 512,
+  "fps": 30,
+  "background": "transparent",
+  "states": [
+    {
+      "state": "idle",
+      "duration": 4.111111111111112,
+      "frames": 124,
+      "loop": true
+    },
+    {
+      "state": "thinking",
+      "duration": 2,
+      "frames": 60,
+      "loop": true
+    },
+    {
+      "state": "speaking",
+      "duration": 2.888888888888889,
+      "frames": 87,
+      "loop": true
+    },
+    {
+      "state": "elastic",
+      "duration": 4,
+      "frames": 120,
+      "loop": false
+    },
+    {
+      "state": "found",
+      "duration": 1.2444444444444445,
+      "frames": 38,
+      "loop": false
+    }
+  ]
+}

@@ -31,6 +31,7 @@
   --color-accent: #9b7cff;
   --color-accent-soft: #b7a4ff;
   --color-danger: #ff7f7a;
+  --color-success: #78dcaa;
   --color-accent-surface: color-mix(in oklab, var(--color-accent) 10%, var(--color-background));
 
   --radius-control: 0.625rem;
