@@ -12,4 +12,20 @@ export const trackPointer = (event: PointerEvent<HTMLElement>) => {
   target.style.setProperty("--reveal-y", `${((event.clientY - top) / height) * 100}%`);
 };
 
-export const CTA_POINTER = { onPointerEnter: trackPointer, onPointerLeave: trackPointer };
+// Touch lights the button the moment the finger lands; :active would wait until the browser rules out a scroll.
+const press = (event: PointerEvent<HTMLElement>) => {
+  if (event.pointerType !== "mouse") event.currentTarget.dataset.pressed = "";
+};
+const release = (event: PointerEvent<HTMLElement>) => delete event.currentTarget.dataset.pressed;
+
+export const CTA_POINTER = {
+  onPointerEnter: trackPointer,
+  onPointerLeave: (event: PointerEvent<HTMLElement>) => {
+    trackPointer(event);
+    release(event);
+  },
+  onPointerDown: press,
+  onPointerUp: release,
+  // Sent when the touch turns into a scroll.
+  onPointerCancel: release,
+};

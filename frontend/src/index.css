@@ -2,7 +2,19 @@
 @import "@fontsource-variable/geist";
 @import "lenis/dist/lenis.css";
 
-@custom-variant cta-hover (&:is(:where(.cta):is(:hover, :focus-visible) *));
+/* Like Tailwind's hover:, only where a real hover exists: a tap fakes one just as the page starts to change. */
+@custom-variant cta-hover {
+  &:is(:where(.cta):focus-visible *) {
+    @slot;
+  }
+  @media (hover: hover) {
+    &:is(:where(.cta):hover *) {
+      @slot;
+    }
+  }
+}
+@custom-variant touch (@media (hover: none));
+@custom-variant cta-press (&:is(:where(.cta)[data-pressed] *));
 
 /* Lerno palette, dark only. */
 @theme {
