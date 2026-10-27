@@ -70,9 +70,10 @@ export default function Demo() {
       </p>
 
       <div className="relative isolate mt-8">
+        {/* A gradient, not a blur filter: iOS Safari drew the 100px blur so slowly the hero above stayed black. */}
         <div
           aria-hidden="true"
-          className="bg-accent/25 absolute inset-x-12 inset-y-8 -z-10 rounded-full blur-[100px]"
+          className="absolute -inset-x-[127px] -inset-y-[143px] -z-10 bg-[radial-gradient(closest-side,rgba(155,124,255,0.25),rgba(155,124,255,0.2)_25%,rgba(155,124,255,0.11)_50%,rgba(155,124,255,0.04)_75%,transparent)]"
         />
         <div className="rounded-[28px] border border-white/10 bg-white/3 p-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]">
           <div className="overflow-hidden rounded-[20px] border border-white/10 bg-black">

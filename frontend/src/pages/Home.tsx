@@ -10,7 +10,8 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <main>
+      {/* Soft glows reach past the screen edge; clip keeps them from widening the page. */}
+      <main className="overflow-x-clip">
         <Hero />
         <Demo />
         <Features />
