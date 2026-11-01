@@ -7,7 +7,7 @@ import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
 import { api, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
-import { saveLevel, savedCounts, savedLevel } from "@/lib/saved";
+import { lastLanguage, saveLevel, savedCounts, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -45,9 +45,11 @@ export default function NewLesson() {
     setSending(true);
     setError("");
     try {
+      // The last voice the user picked is made with the lesson, so it is ready when they open it.
+      const language = lastLanguage();
       const { id } = await api<{ id: string }>("/lessons", {
         method: "POST",
-        body: JSON.stringify({ topic, audience: level }),
+        body: JSON.stringify({ topic, audience: level, ...(language !== "en" && { language }) }),
       });
       saveLevel(level);
       void reload();

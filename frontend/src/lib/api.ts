@@ -14,6 +14,17 @@ export interface Lesson {
   created_at: string;
 }
 
+export type Language = "hi" | "ta" | "bn";
+
+// The narration in another language: the same video with a new voice, made the first time someone picks it.
+export interface SceneVoice {
+  position: number;
+  status: "making" | "ready" | "failed";
+  narration: string | null;
+  word_starts_ms: number[] | null;
+  video_url: string | null;
+}
+
 export interface Scene {
   position: number;
   title: string;
@@ -23,6 +34,7 @@ export interface Scene {
   duration_seconds: number | null;
   // When each narration word is spoken, one per space-separated word; null for silent scenes.
   word_starts_ms: number[] | null;
+  voices: Partial<Record<Language, SceneVoice>>;
   mcq_question: string;
   mcq_choices: string[];
   mcq_correct_index: number;

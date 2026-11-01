@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from functools import partial
@@ -12,7 +13,7 @@ from app.config import (
 )
 from app.db import db, now_iso, thumbnail_path, window_start
 from app.schemas import ScenePlan
-from app.services import llm, renderer, voice
+from app.services import dub, llm, renderer, voice
 from app.services.voice import Sentence, Voice
 
 MAX_FIXES = 2
@@ -83,7 +84,17 @@ def _scene_row(lesson: dict, position: int, scene: ScenePlan) -> dict:
     }
 
 
-def run(lesson_id: str) -> None:
+def _voice(lesson: dict, language: str, start_dub: Callable[[str, str], object]) -> None:
+    # A voice that can't start must not fail the lesson: it stays in English.
+    try:
+        dub.request_voice(lesson["id"], lesson["user_id"], language, start_dub)
+    except (dub.NothingToVoice, dub.VoiceLimitReached):
+        log.info("No %s voice for lesson %s: nothing to voice or the limit is reached", language, lesson["id"])
+    except Exception:
+        log.exception("The %s voice for lesson %s did not start", language, lesson["id"])
+
+
+def run(lesson_id: str, language: str | None = None, start_dub: Callable[[str, str], object] | None = None) -> None:
     lesson = db.table("lessons").select("*").eq("id", lesson_id).single().execute().data
     # Already expired before the job started, so the work would be thrown away.
     if lesson["status"] not in ACTIVE:
@@ -100,6 +111,9 @@ def run(lesson_id: str) -> None:
         if rows:
             db.table("scenes").insert(rows).execute()
         if any(row["video_path"] for row in rows):
+            # Before "ready", so the page that opens on it already knows the voice is coming.
+            if language and start_dub:
+                _voice(lesson, language, start_dub)
             _finish(lesson_id, status="ready")
         else:
             _finish(lesson_id, status="failed", error="We couldn't animate this topic. Try rephrasing it.")
@@ -124,4 +138,5 @@ def delete_old_tutor_logs() -> None:
 
 def clean_up() -> None:
     expire_stale_lessons()
+    dub.expire_stale_voices()
     delete_old_tutor_logs()

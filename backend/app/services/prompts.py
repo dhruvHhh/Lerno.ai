@@ -7,6 +7,7 @@ AUDIENCES = {
     "high_school": "a high school student",
     "college": "a college student",
 }
+LANGUAGES = {"hi": "Hindi", "ta": "Tamil", "bn": "Bengali"}
 
 # Shared by the plan and the code rules, so the planner never designs a screen the code may not draw.
 COLORS = "WHITE, YELLOW, BLUE, GREEN, RED, PURPLE, ORANGE, PINK, GRAY"
@@ -122,6 +123,28 @@ def fix_prompt(code: str, error: str, sentences: list[Sentence]) -> str:
         f"{MANIM_RULES}\n{_timing(sentences)}\n\n"
         f"This code failed to render:\n\n{code}\n\nError:\n{error}\n\nReturn the corrected full code."
     )
+
+
+def translate_prompt(language: str, sentences: list[str], seconds: list[float], too_long: list[int]) -> str:
+    # The voice in the new language must fit the English timeline, so each sentence gets the time its English one has.
+    name = LANGUAGES[language]
+    lines = "\n".join(f"{n}. ({s:.1f} s) {text}" for n, (text, s) in enumerate(zip(sentences, seconds), 1))
+    retry = (
+        f"\nThese sentences were too long when spoken: {', '.join(map(str, too_long))}. "
+        "Make those clearly shorter; keep the others as before."
+        if too_long
+        else ""
+    )
+    return f"""Translate this maths lesson narration into {name} for a voice-over.
+Rules:
+- One sentence out for each sentence in, in the same order.
+- Each sentence must be spoken comfortably within the seconds shown. Prefer short, natural, everyday {name}; don't
+  translate word for word; drop filler.
+- Write all maths as spoken words in {name} (no symbols, no digits). Keep variable letters such as x and y as
+  Latin letters.
+- End every sentence with a full stop.{retry}
+
+{lines}"""
 
 
 def tutor_prompt(topic: str, audience: str, scenes: list[dict], scene_position: int, time_seconds: float) -> str:

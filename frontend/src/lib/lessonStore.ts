@@ -28,6 +28,8 @@ export function fetchLesson(id: string) {
 }
 
 export const forgetLessons = () => stored.clear();
+// After a change the stored copy doesn't have, such as a new voice, so the next visit asks again.
+export const forgetLesson = (id: string) => stored.delete(id);
 
 // Starts loading before the click: a pointer or focus on a link comes a few hundred ms before it.
 export const prefetchLesson = (id: string) => {

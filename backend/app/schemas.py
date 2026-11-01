@@ -6,6 +6,7 @@ from app.config import SCENES_PER_LESSON
 
 Audience = Literal["school", "high_school", "college"]
 Role = Literal["user", "assistant"]
+Language = Literal["hi", "ta", "bn"]
 
 
 class RequestBody(BaseModel):
@@ -15,6 +16,11 @@ class RequestBody(BaseModel):
 class LessonCreate(RequestBody):
     topic: str = Field(min_length=3, max_length=200)
     audience: Audience
+    language: Language | None = None
+
+
+class VoiceCreate(RequestBody):
+    language: Language
 
 
 class PlaybackPosition(RequestBody):
@@ -83,3 +89,7 @@ class LessonPlan(BaseModel):
 
 class ManimCode(BaseModel):
     code: str
+
+
+class Translation(BaseModel):
+    sentences: list[str]

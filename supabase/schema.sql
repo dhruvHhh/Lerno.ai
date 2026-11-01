@@ -34,6 +34,23 @@ create table scenes (
   unique (lesson_id, position)
 );
 
+-- A scene's narration in another language, made the first time a student picks it: the same video with a new voice.
+create table scene_voices (
+  id uuid primary key default gen_random_uuid(),
+  lesson_id uuid not null references lessons on delete cascade,
+  -- Kept here so the daily limit is one simple count, like notes and tutor messages.
+  user_id uuid not null references auth.users on delete cascade,
+  position int not null,
+  language text not null check (language in ('hi', 'ta', 'bn')),
+  status text not null default 'making' check (status in ('making', 'ready', 'failed')),
+  narration text,
+  word_starts_ms int[],
+  video_path text,
+  created_at timestamptz not null default now(),
+  unique (lesson_id, position, language)
+);
+create index scene_voices_user_created on scene_voices (user_id, created_at);
+
 create table notes (
   id uuid primary key default gen_random_uuid(),
   lesson_id uuid not null references lessons on delete cascade,
@@ -57,9 +74,10 @@ create index tutor_messages_user_created on tutor_messages (user_id, created_at)
 -- Only the backend (service key) may touch these tables.
 alter table lessons enable row level security;
 alter table scenes enable row level security;
+alter table scene_voices enable row level security;
 alter table notes enable row level security;
 alter table tutor_messages enable row level security;
-grant select, insert, update, delete on lessons, scenes, notes, tutor_messages to service_role;
+grant select, insert, update, delete on lessons, scenes, scene_voices, notes, tutor_messages to service_role;
 
 insert into storage.buckets (id, name, public) values ('videos', 'videos', false);
 -- Public so browsers can cache the thumbnails by a fixed link. Paths are lesson ids, which can't be guessed; listing and

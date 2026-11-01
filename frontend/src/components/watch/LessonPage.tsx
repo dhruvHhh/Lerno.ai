@@ -1,5 +1,5 @@
 import { CornersIn, CornersOut, NotePencil, Pause, SpeakerSlash } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
 import PlayIcon from "@/components/ui/play-icon";
@@ -16,12 +16,15 @@ import useFullscreen from "@/hooks/useFullscreen";
 import useNotes, { type Note } from "@/hooks/useNotes";
 import useTutor from "@/hooks/useTutor";
 import useVideoTime from "@/hooks/useVideoTime";
-import { LEVELS, type LessonWithScenes } from "@/lib/api";
+import useVoice from "@/hooks/useVoice";
+import { LEVELS, type Language, type LessonWithScenes, type Scene } from "@/lib/api";
 import { saveProgress, saveScenesRail, savedProgress, savedScenesRail } from "@/lib/saved";
 import { cn, formatTime } from "@/lib/utils";
 
 const NOTES_LIMIT = 100;
 const SKIP_SECONDS = 5;
+// Just short of the end, so a new voice for a finished scene shows its last frame without ending it again.
+const END_GAP = 0.05;
 // The server keeps note and tutor times under 10 minutes; scenes are far shorter.
 const TIME_MAX = 600;
 
@@ -81,6 +84,21 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   const current = scenes.find((s) => s.position === scene)!;
   const index = scenes.indexOf(current);
   const sceneNotes = notes.notes.filter((note) => note.scene_position === scene);
+
+  const voice = useVoice(lesson);
+  // The scene in the picked language when its voice is ready; otherwise the English one.
+  const dubbed = voice.ready(current);
+  const videoUrl = dubbed?.video_url ?? current.video_url;
+  // A new voice for the same scene starts again from the start of the sentence, playing or paused as it was, so no
+  // sentence is heard half. A scene that has ended stays at its end, under its quiz.
+  const shown = useRef({ scene, url: videoUrl });
+  useLayoutEffect(() => {
+    const last = shown.current;
+    shown.current = { scene, url: videoUrl };
+    if (last.scene !== scene || last.url === videoUrl) return;
+    const at = overlay ? Math.max(0, duration - END_GAP) : sentenceStart(current, timeNow.current);
+    pending.current = { at, play: playing };
+  }, [scene, videoUrl, playing, overlay, duration, current]);
 
   // Progress is saved whenever the scene, the ticks or the answers change, and on pause and on leaving.
   const save = useCallback(
@@ -280,7 +298,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
               <video
                 key={scene}
                 ref={attachVideo}
-                src={current.video_url}
+                src={videoUrl ?? undefined}
                 // A scene's first frame is dark while its title fades in, so its thumbnail stands in until it plays.
                 poster={current.thumbnail_url ?? undefined}
                 playsInline
@@ -435,10 +453,11 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
           </div>
 
           {/* On phones the quiz fills the film, so the finished scene's narration steps aside for it. */}
+          {voice.voiced && <VoicePicker voice={voice} className={cn(overlay && "max-sm:hidden")} />}
           <Narration
             video={videoEl}
-            text={current.narration}
-            wordStarts={current.word_starts_ms}
+            text={dubbed?.narration ?? current.narration}
+            wordStarts={dubbed ? dubbed.word_starts_ms : current.word_starts_ms}
             className={cn(overlay && "max-sm:hidden")}
           />
         </div>
@@ -503,14 +522,82 @@ function TimeLabel({ video, duration }: { video: HTMLVideoElement | null; durati
   );
 }
 
+// Each language in its own script, so a student finds theirs at a glance.
+const VOICE_OPTIONS: [Language | "en", string][] = [
+  ["en", "English"],
+  ["hi", "हिन्दी"],
+  ["ta", "தமிழ்"],
+  ["bn", "বাংলা"],
+];
+const LANGUAGE_NAMES: Record<Language, string> = { hi: "Hindi", ta: "Tamil", bn: "Bengali" };
+
+function VoicePicker({ voice, className }: { voice: ReturnType<typeof useVoice>; className?: string }) {
+  const name = voice.language === "en" ? "" : LANGUAGE_NAMES[voice.language];
+  return (
+    <div className={cn("mt-3 flex flex-col items-center gap-1.5 sm:mt-4", className)}>
+      <div role="radiogroup" aria-label="Narration language" className="flex flex-wrap justify-center gap-1">
+        {VOICE_OPTIONS.map(([code, label]) => (
+          <button
+            key={code}
+            type="button"
+            role="radio"
+            aria-checked={voice.language === code}
+            onClick={() => void voice.pick(code)}
+            className={cn(
+              "rounded-full px-3 py-1 text-[13px] transition-colors",
+              voice.language === code
+                ? "text-foreground bg-white/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p aria-live="polite" className="text-muted-foreground text-xs empty:hidden">
+        {voice.error ??
+          (voice.making
+            ? `Making the ${name} voice. This takes about 30 seconds.`
+            : voice.failed && (
+                <>
+                  Couldn't make the {name} voice.{" "}
+                  <button
+                    type="button"
+                    onClick={() => void voice.pick(voice.language)}
+                    className="text-foreground underline"
+                  >
+                    Try again
+                  </button>
+                </>
+              ))}
+      </p>
+    </div>
+  );
+}
+
 // Words grouped in sentences, split the way the server splits, so word k here is word k of the voice.
 function sentencesOf(text: string) {
   const sentences: string[][] = [[]];
   for (const word of text.trim().split(/\s+/)) {
     sentences[sentences.length - 1].push(word);
-    if (/[.!?]$/.test(word)) sentences.push([]);
+    if (/[.!?।]$/.test(word)) sentences.push([]);
   }
   return sentences.filter((words) => words.length);
+}
+
+// The start of the sentence playing at this time, from the English timing: every voice starts its sentences at the
+// same moments. Before the first sentence, and in a silent scene, the time itself.
+function sentenceStart(scene: Scene, seconds: number) {
+  const sentences = sentencesOf(scene.narration);
+  const starts = scene.word_starts_ms;
+  if (starts?.length !== sentences.flat().length) return seconds;
+  let word = 0;
+  const firsts = sentences.map((words) => {
+    const at = starts[word] / 1000;
+    word += words.length;
+    return at;
+  });
+  return firsts.findLast((at) => at <= seconds) ?? seconds;
 }
 
 // The last word that has started at this time; -1 before the voice begins.

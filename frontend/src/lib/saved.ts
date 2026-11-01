@@ -1,4 +1,4 @@
-import type { Level } from "@/lib/api";
+import type { Language, Level } from "@/lib/api";
 
 // Browser storage can be blocked (private windows, strict settings), so every read and write may fail quietly.
 function read<T>(key: string, fallback: T): T {
@@ -56,3 +56,11 @@ export const forgetUser = () => {
 
 export const savedScenesRail = () => read("lerno:scenes-rail", false);
 export const saveScenesRail = (rail: boolean) => write("lerno:scenes-rail", rail);
+
+// The narration language picked for each lesson. A lesson with no pick uses the last one, which new lessons are
+// also voiced in.
+export const lastLanguage = () => read<Language | "en">("lerno:language", "en");
+export const saveLastLanguage = (language: Language | "en") => write("lerno:language", language);
+export const savedLanguage = (lessonId: string) => read(`lerno:language:${lessonId}`, lastLanguage());
+export const saveLanguage = (lessonId: string, language: Language | "en") =>
+  write(`lerno:language:${lessonId}`, language);

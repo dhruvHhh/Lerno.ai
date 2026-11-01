@@ -3,7 +3,7 @@ from typing import Literal
 from anthropic import Anthropic
 from pydantic import BaseModel, ValidationError
 
-from app.schemas import LessonPlan, ManimCode, ScenePlan
+from app.schemas import LessonPlan, ManimCode, ScenePlan, Translation
 from app.services import prompts
 from app.services.voice import Sentence
 
@@ -42,6 +42,10 @@ def write_manim(scene: ScenePlan, sentences: list[Sentence]) -> str:
 
 def fix_manim(code: str, error: str, sentences: list[Sentence]) -> str:
     return _ask(prompts.fix_prompt(code, error, sentences), ManimCode, "medium").code
+
+
+def translate(language: str, sentences: list[str], seconds: list[float], too_long: list[int]) -> list[str]:
+    return _ask(prompts.translate_prompt(language, sentences, seconds, too_long), Translation, "low").sentences
 
 
 def tutor_reply(system: str, messages: list[dict]) -> str:

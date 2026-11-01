@@ -12,7 +12,12 @@ from app.config import MURF_API_KEY
 
 MURF_URL = "https://api.murf.ai/v1/speech/generate"
 MURF_SECONDS = 60
-VOICE = {"voiceId": "en-IN-isha", "locale": "en-IN", "style": "Narration"}
+VOICES = {
+    "en": {"voiceId": "en-IN-isha", "locale": "en-IN", "style": "Narration"},
+    "hi": {"voiceId": "hi-IN-shweta", "locale": "hi-IN"},
+    "ta": {"voiceId": "ta-IN-iniya", "locale": "ta-IN"},
+    "bn": {"voiceId": "bn-IN-anwesha", "locale": "bn-IN"},
+}
 SAMPLE_RATE = 24000
 PAUSE_SECONDS = 0.6
 PAUSE = array.array("h", bytes(2 * int(SAMPLE_RATE * PAUSE_SECONDS)))
@@ -21,7 +26,7 @@ WORDS_PER_SECOND = 3.3
 # -35 dB: quieter than this is silence, the level our Murf tests used.
 LOUD = 32768 * 10 ** (-35 / 20)
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
-PUNCTUATION = re.compile(r"^[\s.,!?;:()\"'“”‘’-]+$")
+NOT_LETTERS = re.compile(r"[\s.,!?;:()\"'“”‘’।\-–—]")
 log = logging.getLogger(__name__)
 
 
@@ -41,19 +46,29 @@ class Voice(NamedTuple):
     matched: bool
 
 
+class Clip(NamedTuple):
+    samples: array.array
+    # Where each word starts in the clip, in milliseconds.
+    word_ms: list[int]
+
+    @property
+    def seconds(self) -> float:
+        return len(self.samples) / SAMPLE_RATE
+
+
 class Track(NamedTuple):
     wav: bytes
     seconds: float
     word_starts_ms: list[int] | None
 
 
-def _sentences(narration: str) -> list[str]:
+def split_sentences(narration: str) -> list[str]:
     return SENTENCE_END.split(narration.strip())
 
 
 def estimate(narration: str) -> list[Sentence]:
     sentences, at = [], 0.0
-    for text in _sentences(narration):
+    for text in split_sentences(narration):
         length = len(text.split()) / WORDS_PER_SECOND
         sentences.append(Sentence(text, at, at + length))
         at += length + PAUSE_SECONDS
@@ -66,18 +81,51 @@ def _post(body: dict) -> dict:
     return response.json()
 
 
-def _speak(text: str) -> tuple[array.array, list[int]]:
-    body = {**VOICE, "text": text, "format": "WAV", "sampleRate": SAMPLE_RATE, "encodeAsBase64": True,
-            "wordDurationsAsOriginalText": True}
+def from_wav(wav: bytes) -> array.array:
+    with wave.open(io.BytesIO(wav)) as clip:
+        return array.array("h", clip.readframes(clip.getnframes()))
+
+
+def to_wav(samples: array.array) -> bytes:
+    wav = io.BytesIO()
+    with wave.open(wav, "wb") as out:
+        out.setnchannels(1)
+        out.setsampwidth(2)
+        out.setframerate(SAMPLE_RATE)
+        out.writeframes(samples.tobytes())
+    return wav.getvalue()
+
+
+def _align(text: str, words: list[dict]) -> list[int]:
+    # Murf splits joined words ("ऊपर-नीचे" comes back as two) and returns punctuation as words of its own, so each of
+    # our words takes as many of Murf's as it needs to spell it. Empty when they do not spell the same text.
+    spoken = [(NOT_LETTERS.sub("", word["word"]), word["startMs"]) for word in words]
+    spoken = [(letters, ms) for letters, ms in spoken if letters]
+    starts, k = [], 0
+    for word in text.split():
+        target, spelled = NOT_LETTERS.sub("", word), ""
+        if not target or k == len(spoken):
+            return []
+        starts.append(spoken[k][1])
+        while k < len(spoken) and len(spelled) < len(target):
+            spelled += spoken[k][0]
+            k += 1
+        if spelled != target:
+            return []
+    return starts if k == len(spoken) else []
+
+
+def _speak(text: str, language: str) -> tuple[array.array, list[int]]:
+    body = {**VOICES[language], "text": text, "format": "WAV", "sampleRate": SAMPLE_RATE, "encodeAsBase64": True}
+    # Murf keeps the words as written only in English; other languages already come back as written.
+    if language == "en":
+        body["wordDurationsAsOriginalText"] = True
     try:
         data = _post(body)
     except httpx.HTTPError:
         data = _post(body)
-    with wave.open(io.BytesIO(base64.b64decode(data["encodedAudio"]))) as clip:
-        samples = array.array("h", clip.readframes(clip.getnframes()))
-    # Murf returns punctuation as words of its own.
-    starts = [word["startMs"] for word in data["wordDurations"] if not PUNCTUATION.match(word["word"])]
-    return samples, starts
+    samples = from_wav(base64.b64decode(data["encodedAudio"]))
+    return samples, _align(text, data["wordDurations"])
 
 
 def _speech(samples: array.array) -> tuple[int, int]:
@@ -87,19 +135,24 @@ def _speech(samples: array.array) -> tuple[int, int]:
     return loud[0], loud[-1] + window
 
 
-def _narrate(narration: str) -> Voice:
+def speak(text: str, language: str) -> Clip:
     # One Murf call per sentence: a sentence start inside a longer clip comes back about 0.2 s early.
-    sentences, clips, word_ms, matched, at = [], [], [], True, 0
-    for text in _sentences(narration):
-        samples, starts = _speak(text)
-        first, last = _speech(samples)
-        lead_ms = first * 1000 / SAMPLE_RATE
-        # Murf puts the first word at 0 ms, inside the silence we cut.
-        word_ms.append([round(max(ms - lead_ms, 0)) for ms in starts])
-        matched &= len(starts) == len(text.split())
-        clips.append(samples[first:last])
-        sentences.append(Sentence(text, at / SAMPLE_RATE, (at + last - first) / SAMPLE_RATE))
-        at += last - first + len(PAUSE)
+    samples, starts = _speak(text, language)
+    first, last = _speech(samples)
+    lead_ms = first * 1000 / SAMPLE_RATE
+    # Murf puts the first word at 0 ms, inside the silence we cut.
+    return Clip(samples[first:last], [round(max(ms - lead_ms, 0)) for ms in starts])
+
+
+def _narrate(narration: str) -> Voice:
+    sentences, clips, word_ms, matched, at = [], [], [], True, 0.0
+    for text in split_sentences(narration):
+        clip = speak(text, "en")
+        matched &= len(clip.word_ms) == len(text.split())
+        clips.append(clip.samples)
+        word_ms.append(clip.word_ms)
+        sentences.append(Sentence(text, at, at + clip.seconds))
+        at += clip.seconds + PAUSE_SECONDS
     if not matched:
         log.warning("Murf words did not match the narration, so no word highlight: %s", narration[:80])
     return Voice(sentences, clips, word_ms, matched)
@@ -116,7 +169,7 @@ def narrate(narration: str) -> Voice | None:
         return None
 
 
-def track(voice: Voice, marks: dict[int, float]) -> Track:
+def track(voice: Voice, marks: dict[int, float], pause: array.array = PAUSE) -> Track:
     # Each sentence starts where the video reached it; a late picture only makes the pause before it longer.
     samples, starts = array.array("h"), []
     for number, (sentence, clip, word_ms) in enumerate(zip(voice.sentences, voice.clips, voice.word_ms), 1):
@@ -124,11 +177,5 @@ def track(voice: Voice, marks: dict[int, float]) -> Track:
         samples.extend(array.array("h", bytes(2 * (at - len(samples)))))
         starts += [round(at * 1000 / SAMPLE_RATE) + ms for ms in word_ms]
         samples.extend(clip)
-        samples.extend(PAUSE)
-    wav = io.BytesIO()
-    with wave.open(wav, "wb") as out:
-        out.setnchannels(1)
-        out.setsampwidth(2)
-        out.setframerate(SAMPLE_RATE)
-        out.writeframes(samples.tobytes())
-    return Track(wav.getvalue(), len(samples) / SAMPLE_RATE, starts if voice.matched else None)
+        samples.extend(pause)
+    return Track(to_wav(samples), len(samples) / SAMPLE_RATE, starts if voice.matched else None)
