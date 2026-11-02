@@ -1,14 +1,17 @@
-import { useCallback, useState } from "react";
+import { AnimatePresence, m } from "motion/react";
+import { useCallback, useRef, useState } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router";
 
 import AskBox, { MAX_QUESTION } from "@/components/app/AskBox";
 import ContinueWatching from "@/components/app/ContinueWatching";
+import TopicSuggestion from "@/components/app/TopicSuggestion";
 import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
 import { api, ApiError, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
 import { lastLanguage, saveLevel, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
+import { EASE_EXPO } from "@/lib/variants";
 
 const EXAMPLES = [
   "Why is the area under y = x² from 0 to 2 equal to 8/3?",
@@ -33,8 +36,9 @@ export default function NewLesson() {
   const [sending, setSending] = useState(false);
   const [madeId, setMadeId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [suggestion, setSuggestion] = useState("");
+  const [refused, setRefused] = useState<{ topic: string; suggestion: string } | null>(null);
   const [tooShort, setTooShort] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
 
   const limit = limitNotice(lessons, usage);
   const newUser = lessons ? lessons.length === 0 : !lastCounts?.lessons;
@@ -45,7 +49,7 @@ export default function NewLesson() {
     if (topic.length < 3) return setTooShort(true);
     setSending(true);
     setError("");
-    setSuggestion("");
+    setRefused(null);
     try {
       // The last voice the user picked is made with the lesson, so it is ready when they open it.
       const language = lastLanguage();
@@ -58,8 +62,8 @@ export default function NewLesson() {
       setMadeId(id);
     } catch (failure) {
       // The question stays in the box, so the user can try again without typing it twice.
-      setError((failure as Error).message);
-      setSuggestion(failure instanceof ApiError ? (failure.suggestion ?? "") : "");
+      if (failure instanceof ApiError && failure.suggestion) setRefused({ topic, suggestion: failure.suggestion });
+      else setError((failure as Error).message);
       setSending(false);
       void reload();
     }
@@ -70,6 +74,13 @@ export default function NewLesson() {
   const type = (value: string) => {
     setQuestion(value);
     setTooShort(false);
+    setRefused(null);
+  };
+
+  // Into the box, not sent: the student reads it before it costs a lesson.
+  const takeSuggestion = () => {
+    type(refused!.suggestion);
+    input.current?.focus();
   };
 
   const full = question.length >= MAX_QUESTION;
@@ -118,9 +129,26 @@ export default function NewLesson() {
             examples={EXAMPLES}
             locked={sending || !!limit}
             busy={sending && !madeId}
+            inputRef={input}
             vanishing={!!madeId}
             onVanished={openLesson}
+            cover={refused && <TopicSuggestion key={refused.topic} {...refused} onTaken={takeSuggestion} />}
           />
+          {/* Right under the box, as a form shows a field's error, lined up with the box's text. */}
+          <AnimatePresence initial={false}>
+            {refused && (
+              <m.p
+                role="status"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.35, ease: EASE_EXPO }}
+                className="text-muted-foreground overflow-hidden pl-5 text-left text-[13px] sm:pl-[26px]"
+              >
+                <span className="block pt-2.5">Lerno makes maths lessons only. Pick the suggestion to use it.</span>
+              </m.p>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="mt-3.5 flex flex-col items-center gap-2.5 px-1.5 sm:flex-row sm:justify-between sm:gap-4">
@@ -143,27 +171,7 @@ export default function NewLesson() {
                 )}
               </>
             ) : (
-              <>
-                {error}
-                {suggestion && (
-                  <>
-                    {" "}
-                    Try: <b className="text-foreground font-medium">{suggestion}</b>{" "}
-                    {/* Into the box, not sent: the student reads it before it costs a lesson. */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        type(suggestion);
-                        setError("");
-                        setSuggestion("");
-                      }}
-                      className="text-accent-soft hover:text-foreground cursor-pointer underline underline-offset-2"
-                    >
-                      Use this
-                    </button>
-                  </>
-                )}
-              </>
+              error
             )}
           </p>
         )}

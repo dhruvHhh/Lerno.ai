@@ -1,6 +1,6 @@
 import { ArrowRight } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 
 import { EASE_EXPO } from "@/lib/variants";
 import { cn } from "@/lib/utils";
@@ -16,8 +16,11 @@ interface AskBoxProps {
   locked: boolean;
   // Sent and waiting for the server's answer.
   busy: boolean;
+  inputRef: RefObject<HTMLInputElement | null>;
   vanishing: boolean;
   onVanished: () => void;
+  // Drawn in place of the text, which is then hidden but still typed into.
+  cover?: ReactNode;
 }
 
 // Based on Aceternity's "Placeholders and Vanish Input", in Lerno's field style.
@@ -28,12 +31,13 @@ export default function AskBox({
   examples,
   locked,
   busy,
+  inputRef: input,
   vanishing,
   onVanished,
+  cover,
 }: AskBoxProps) {
   const reduceMotion = useReducedMotion();
   const [example, setExample] = useState(0);
-  const input = useRef<HTMLInputElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export default function AskBox({
     if (!vanishing) return;
     if (reduceMotion) return onVanished();
     return vanish(canvas.current!, input.current!, onVanished);
-  }, [vanishing, reduceMotion, onVanished]);
+  }, [vanishing, reduceMotion, onVanished, input]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -91,9 +95,10 @@ export default function AskBox({
         aria-label="Your question"
         className={cn(
           "caret-accent-soft text-foreground relative z-[2] size-full bg-transparent pr-16 pl-5 text-[15px] outline-none sm:pl-[26px] sm:text-base",
-          vanishing && "text-transparent",
+          (vanishing || cover) && "text-transparent",
         )}
       />
+      {cover}
       <canvas ref={canvas} className="pointer-events-none absolute top-0 left-0 z-[3]" />
       <button
         type="submit"
