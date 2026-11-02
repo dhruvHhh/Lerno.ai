@@ -1,4 +1,4 @@
-import { CaretDown, CornersIn, CornersOut, NotePencil, Pause, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
+import { CornersIn, CornersOut, NotePencil, Pause, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
@@ -12,6 +12,7 @@ import ScenesPanel from "@/components/watch/ScenesPanel";
 import Scrub from "@/components/watch/Scrub";
 import { DOCK_KEYS, SOLID, scoreOf } from "@/components/watch/shared";
 import TutorCard from "@/components/watch/TutorCard";
+import VoicePicker, { LANGUAGE_NAMES } from "@/components/watch/VoicePicker";
 import useFullscreen from "@/hooks/useFullscreen";
 import useNotes, { type Note } from "@/hooks/useNotes";
 import useTutor from "@/hooks/useTutor";
@@ -108,13 +109,16 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   // A new voice for the same scene starts again from the start of the sentence, playing or paused as it was, so no
   // sentence is heard half. A scene that has ended stays at its end, under its quiz.
   const shown = useRef({ scene, url: videoUrl });
+  // Read in the render, before the commit: setting the new source pauses the video at once. A pick that pauses it for
+  // a voice still being made has already done so.
+  const playingNow = !!video.current && !video.current.paused;
   useLayoutEffect(() => {
     const last = shown.current;
     shown.current = { scene, url: videoUrl };
     if (last.scene !== scene || last.url === videoUrl) return;
     const at = overlay ? Math.max(0, duration - END_GAP) : sentenceStart(current, timeNow.current);
-    pending.current = { at, play: playing };
-  }, [scene, videoUrl, playing, overlay, duration, current]);
+    pending.current = { at, play: playingNow };
+  }, [scene, videoUrl, playingNow, overlay, duration, current]);
 
   // Progress is saved whenever the scene, the ticks or the answers change, and on pause and on leaving.
   const save = useCallback(
@@ -280,6 +284,14 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   };
   const hasVideo = !!current.video_url && !videoFailed;
   const hideControls = idle && playing && !overlay && notepadAt === null;
+  // A voice still being made for this scene: its narration waits for it. A silent scene has none to wait for.
+  const waiting =
+    voice.language !== "en" && !dubbed && !!current.word_starts_ms && voice.statusOf(current) !== "failed";
+  // A voice that is not made yet pauses the video, so the student waits for it; Play still works, in English.
+  const pickVoice = (next: Language | "en") => {
+    if (!voice.isReady(next)) video.current?.pause();
+    void voice.pick(next);
+  };
   const notesFull = notes.notes.length >= NOTES_LIMIT;
 
   return (
@@ -335,7 +347,9 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   // A new scene's video keeps the sound as the user set it.
                   v.muted = muted;
                   if (at > 0 && at < v.duration) v.currentTime = at;
+                  // A new source drops the old video's queued pause event, so the paused state is set here.
                   if (play) playVideo(v);
+                  else setPlaying(false);
                 }}
                 onTimeUpdate={(event) => (timeNow.current = event.currentTarget.currentTime)}
                 onPlay={() => setPlaying(true)}
@@ -407,7 +421,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                 </button>
                 <div
                   className={cn(
-                    "text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums transition-opacity duration-300 sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5",
+                    "text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums transition-opacity duration-300 select-none sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5",
                     hideControls && "pointer-events-none opacity-0",
                   )}
                 >
@@ -488,13 +502,29 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
           </div>
 
           {/* On phones the quiz fills the film, so the finished scene's narration steps aside for it. */}
-          {voice.voiced && <VoicePicker voice={voice} className={cn(overlay && "max-sm:hidden")} />}
-          <Narration
-            video={videoEl}
-            text={dubbed?.narration ?? current.narration}
-            wordStarts={dubbed ? dubbed.word_starts_ms : current.word_starts_ms}
-            className={cn(overlay && "max-sm:hidden")}
-          />
+          {voice.voiced && <VoicePicker voice={voice} onPick={pickVoice} className={cn(overlay && "max-sm:hidden")} />}
+          {waiting ? (
+            <p
+              role="status"
+              className={cn(
+                "text-muted-foreground mt-4 flex items-center justify-center gap-2.5 text-sm sm:mt-5",
+                overlay && "max-sm:hidden",
+              )}
+            >
+              <span
+                aria-hidden
+                className="border-accent-soft/25 border-t-accent-soft size-4 flex-none rounded-full border-[1.5px] motion-safe:animate-spin"
+              />
+              Making the {LANGUAGE_NAMES[voice.language as Language]} voice. This takes about 30 seconds.
+            </p>
+          ) : (
+            <Narration
+              video={videoEl}
+              text={dubbed?.narration ?? current.narration}
+              wordStarts={dubbed ? dubbed.word_starts_ms : current.word_starts_ms}
+              className={cn(overlay && "max-sm:hidden")}
+            />
+          )}
         </div>
       </div>
 
@@ -554,69 +584,6 @@ function TimeLabel({ video, duration }: { video: HTMLVideoElement | null; durati
     <span className="hidden sm:inline">
       {formatTime(seconds)} / {formatTime(duration)}
     </span>
-  );
-}
-
-// Each language in its own script, so a student finds theirs at a glance, and in English for everyone else.
-const VOICE_OPTIONS: [Language | "en", string][] = [
-  ["en", "English"],
-  ["hi", "हिन्दी (Hindi)"],
-  ["ta", "தமிழ் (Tamil)"],
-  ["bn", "বাংলা (Bengali)"],
-];
-const LANGUAGE_NAMES: Record<Language, string> = { hi: "Hindi", ta: "Tamil", bn: "Bengali" };
-
-function VoicePicker({ voice, className }: { voice: ReturnType<typeof useVoice>; className?: string }) {
-  const name = voice.language === "en" ? "" : LANGUAGE_NAMES[voice.language];
-  return (
-    <div className={cn("mt-3 flex flex-col items-center gap-1.5 sm:mt-4", className)}>
-      <div className="flex items-center gap-2 text-[13px]">
-        <label htmlFor="voice-language" className="text-muted-foreground">
-          Voice
-        </label>
-        <div className="relative">
-          <select
-            id="voice-language"
-            value={voice.language}
-            onChange={(event) => void voice.pick(event.target.value as Language | "en")}
-            className="text-foreground focus-visible:ring-accent/60 h-8 cursor-pointer appearance-none rounded-full bg-white/8 pr-8 pl-3.5 [color-scheme:dark] outline-none hover:bg-white/12 focus-visible:ring-2"
-          >
-            {VOICE_OPTIONS.map(([code, label]) => (
-              <option key={code} value={code}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <CaretDown
-            size={12}
-            className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-          />
-        </div>
-        {voice.making && (
-          <span
-            aria-hidden
-            className="border-accent-soft/25 border-t-accent-soft size-3.5 rounded-full border-[1.5px] motion-safe:animate-spin"
-          />
-        )}
-      </div>
-      <p aria-live="polite" className="text-muted-foreground text-xs empty:hidden">
-        {voice.error ??
-          (voice.making
-            ? `Making the ${name} voice. This takes about 30 seconds.`
-            : voice.failed && (
-                <>
-                  Couldn't make the {name} voice.{" "}
-                  <button
-                    type="button"
-                    onClick={() => void voice.pick(voice.language)}
-                    className="text-foreground underline"
-                  >
-                    Try again
-                  </button>
-                </>
-              ))}
-      </p>
-    </div>
   );
 }
 

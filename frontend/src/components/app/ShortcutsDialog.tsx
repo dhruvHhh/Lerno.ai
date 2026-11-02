@@ -7,6 +7,7 @@ import { ICON_BUTTON } from "@/components/app/Sidebar";
 const KEYS = [
   { keys: ["Space"], does: "Play or pause" },
   { keys: ["←", "→"], does: "Skip back or ahead 5 seconds" },
+  { keys: ["M"], does: "Mute or unmute" },
   { keys: ["T"], does: "Open the tutor" },
   { keys: ["N"], does: "Open your notes" },
   { keys: ["Q"], does: "Open the quiz" },

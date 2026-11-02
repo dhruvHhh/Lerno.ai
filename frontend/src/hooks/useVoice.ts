@@ -35,6 +35,9 @@ export default function useVoice(lesson: LessonWithScenes) {
   const making = statuses.some((status) => status === "making");
   const failed = statuses.length > 0 && statuses.every((status) => status === "failed");
 
+  const isReady = (lang: Language | "en") =>
+    lang === "en" || voiced.every((scene) => voiceOf(scene, lang)?.status === "ready");
+
   const choose = useCallback(
     (next: Language | "en") => {
       setLanguage(next);
@@ -57,7 +60,7 @@ export default function useVoice(lesson: LessonWithScenes) {
     choose(next);
     // Only the user's own pick: falling back to English after an error must not stop new lessons being voiced.
     saveLastLanguage(next);
-    if (next === "en" || voiced.every((scene) => voiceOf(scene, next)?.status === "ready")) return;
+    if (next === "en" || isReady(next)) return;
     try {
       await api(`/lessons/${lesson.id}/voices`, { method: "POST", body: JSON.stringify({ language: next }) });
       forgetLesson(lesson.id);
@@ -83,5 +86,8 @@ export default function useVoice(lesson: LessonWithScenes) {
     return voice?.status === "ready" ? voice : null;
   };
 
-  return { language, pick, ready, making, failed, error, voiced: voiced.length > 0 };
+  // This scene's voice in the picked language: making, ready or failed; undefined for English or before it is asked for.
+  const statusOf = (scene: Scene) => (language === "en" ? undefined : voiceOf(scene, language)?.status);
+
+  return { language, pick, ready, isReady, statusOf, failed, error, voiced: voiced.length > 0 };
 }
