@@ -1,4 +1,4 @@
-import { CornersIn, CornersOut, NotePencil, Pause, SpeakerSlash } from "@phosphor-icons/react";
+import { CaretDown, CornersIn, CornersOut, NotePencil, Pause, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ICON_BUTTON } from "@/components/app/Sidebar";
@@ -119,7 +119,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
   }, [scene]);
 
   // Browsers, iPhones most of all, can refuse sound when play does not start inside a tap. The scene then plays
-  // muted and offers its sound, instead of not starting at all.
+  // muted, and the mute button shows it, instead of not starting at all.
   const playVideo = useCallback((v: HTMLVideoElement) => {
     v.play().catch((error: DOMException) => {
       if (error.name !== "NotAllowedError" || v.muted) return;
@@ -129,10 +129,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     });
   }, []);
 
-  const unmute = () => {
-    if (video.current) video.current.muted = false;
-    setMuted(false);
-  };
+  const toggleMute = useCallback(() => {
+    const v = video.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  }, []);
 
   const go = useCallback(
     (position: number, at = 0, play = true) => {
@@ -148,8 +150,6 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         v.currentTime = at;
         if (play) playVideo(v);
       } else {
-        // A new scene gets a new video element, which starts with its sound on.
-        setMuted(false);
         setScene(position);
       }
     },
@@ -220,7 +220,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     return () => document.removeEventListener("pointerdown", outside);
   }, [card]);
 
-  // Keys: Space plays, the arrows skip 5 seconds, T, N and Q open the tools, Esc closes what is open. Nothing fires
+  // Keys: Space plays, the arrows skip 5 seconds, M mutes, T, N and Q open the tools, Esc closes what is open. Nothing fires
   // while the user types.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -239,6 +239,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
       } else if (event.key === "ArrowRight" && v) v.currentTime = Math.min(v.duration, v.currentTime + SKIP_SECONDS);
       else if (event.key === "ArrowLeft" && v) v.currentTime = Math.max(0, v.currentTime - SKIP_SECONDS);
       else if (event.key === "Escape") closeAll();
+      else if (event.key.toLowerCase() === "m" && !event.ctrlKey && !event.metaKey && !event.altKey) toggleMute();
       else if (DOCK_KEYS[event.key.toLowerCase()] && !event.ctrlKey && !event.metaKey && !event.altKey) {
         // The card focuses its input at once; without this the key's letter would land in it.
         event.preventDefault();
@@ -247,7 +248,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [toggle, closeAll, pickCard]);
+  }, [toggle, closeAll, pickCard, toggleMute]);
 
   const seek = (fraction: number) => {
     const v = video.current;
@@ -308,6 +309,8 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                   const v = event.currentTarget;
                   const { at, play } = pending.current;
                   setDuration(v.duration);
+                  // A new scene's video keeps the sound as the user set it.
+                  v.muted = muted;
                   if (at > 0 && at < v.duration) v.currentTime = at;
                   if (play) playVideo(v);
                 }}
@@ -374,19 +377,18 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                 >
                   <PlayIcon size={28} className="text-background" />
                 </button>
-                {muted && current.word_starts_ms && (
-                  <button
-                    type="button"
-                    onClick={unmute}
-                    className="text-foreground absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-full bg-[#16171f]/90 px-3 py-1.5 text-xs font-medium shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] hover:bg-[#1f2029] sm:top-4 sm:left-4"
-                  >
-                    <SpeakerSlash size={15} />
-                    Tap for sound
-                  </button>
-                )}
                 <div className="text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5">
                   <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className={CONTROL}>
                     {playing ? <Pause size={18} weight="fill" /> : <PlayIcon size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    aria-label={muted ? "Unmute" : "Mute"}
+                    aria-pressed={muted}
+                    className={cn(CONTROL, muted && "text-accent-soft")}
+                  >
+                    {muted ? <SpeakerSlash size={18} /> : <SpeakerHigh size={18} />}
                   </button>
                   <TimeLabel video={videoEl} duration={duration} />
                   <Scrub
@@ -522,12 +524,12 @@ function TimeLabel({ video, duration }: { video: HTMLVideoElement | null; durati
   );
 }
 
-// Each language in its own script, so a student finds theirs at a glance.
+// Each language in its own script, so a student finds theirs at a glance, and in English for everyone else.
 const VOICE_OPTIONS: [Language | "en", string][] = [
   ["en", "English"],
-  ["hi", "हिन्दी"],
-  ["ta", "தமிழ்"],
-  ["bn", "বাংলা"],
+  ["hi", "हिन्दी (Hindi)"],
+  ["ta", "தமிழ் (Tamil)"],
+  ["bn", "বাংলা (Bengali)"],
 ];
 const LANGUAGE_NAMES: Record<Language, string> = { hi: "Hindi", ta: "Tamil", bn: "Bengali" };
 
@@ -535,24 +537,34 @@ function VoicePicker({ voice, className }: { voice: ReturnType<typeof useVoice>;
   const name = voice.language === "en" ? "" : LANGUAGE_NAMES[voice.language];
   return (
     <div className={cn("mt-3 flex flex-col items-center gap-1.5 sm:mt-4", className)}>
-      <div role="radiogroup" aria-label="Narration language" className="flex flex-wrap justify-center gap-1">
-        {VOICE_OPTIONS.map(([code, label]) => (
-          <button
-            key={code}
-            type="button"
-            role="radio"
-            aria-checked={voice.language === code}
-            onClick={() => void voice.pick(code)}
-            className={cn(
-              "rounded-full px-3 py-1 text-[13px] transition-colors",
-              voice.language === code
-                ? "text-foreground bg-white/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-            )}
+      <div className="flex items-center gap-2 text-[13px]">
+        <label htmlFor="voice-language" className="text-muted-foreground">
+          Voice
+        </label>
+        <div className="relative">
+          <select
+            id="voice-language"
+            value={voice.language}
+            onChange={(event) => void voice.pick(event.target.value as Language | "en")}
+            className="text-foreground focus-visible:ring-accent/60 h-8 cursor-pointer appearance-none rounded-full bg-white/8 pr-8 pl-3.5 [color-scheme:dark] outline-none hover:bg-white/12 focus-visible:ring-2"
           >
-            {label}
-          </button>
-        ))}
+            {VOICE_OPTIONS.map(([code, label]) => (
+              <option key={code} value={code}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <CaretDown
+            size={12}
+            className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
+          />
+        </div>
+        {voice.making && (
+          <span
+            aria-hidden
+            className="border-accent-soft/25 border-t-accent-soft size-3.5 rounded-full border-[1.5px] motion-safe:animate-spin"
+          />
+        )}
       </div>
       <p aria-live="polite" className="text-muted-foreground text-xs empty:hidden">
         {voice.error ??
