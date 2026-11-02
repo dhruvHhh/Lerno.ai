@@ -23,6 +23,7 @@ import { cn, formatTime } from "@/lib/utils";
 
 const NOTES_LIMIT = 100;
 const SKIP_SECONDS = 5;
+const IDLE_MS = 2500;
 // Just short of the end, so a new voice for a finished scene shows its last frame without ending it again.
 const END_GAP = 0.05;
 // The server keeps note and tutor times under 10 minutes; scenes are far shorter.
@@ -75,6 +76,21 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setVideoEl(element);
   }, []);
   const film = useRef<HTMLDivElement>(null);
+  // The controls fade out while the video plays and the pointer rests, so they never cover the bottom of the picture.
+  const [idle, setIdle] = useState(false);
+  const idleTimer = useRef(0);
+  const wake = useCallback(() => {
+    setIdle(false);
+    clearTimeout(idleTimer.current);
+    idleTimer.current = window.setTimeout(() => {
+      // A keyboard user on a control keeps the controls.
+      if (!film.current?.querySelector(":focus-visible")) setIdle(true);
+    }, IDLE_MS);
+  }, []);
+  useEffect(() => {
+    if (playing) wake();
+    return () => clearTimeout(idleTimer.current);
+  }, [playing, wake]);
   const fullscreen = useFullscreen(film);
   // What to do once the next video's details load: where to start, and whether to play.
   const pending = useRef({ at: start?.time ?? 0, play: false });
@@ -263,6 +279,7 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
     setRailRight(!railRight);
   };
   const hasVideo = !!current.video_url && !videoFailed;
+  const hideControls = idle && playing && !overlay && notepadAt === null;
   const notesFull = notes.notes.length >= NOTES_LIMIT;
 
   return (
@@ -293,7 +310,13 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
           <div
             ref={film}
             data-overlay={overlay ? "" : undefined}
-            className="relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] max-sm:data-overlay:aspect-auto sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl"
+            onPointerMove={wake}
+            onPointerDown={wake}
+            onFocus={wake}
+            className={cn(
+              "relative -mx-4 mt-2.5 aspect-video overflow-hidden bg-black shadow-[0_40px_120px_-40px_rgba(120,90,230,0.6),0_0_0_1px_rgba(255,255,255,0.07)] max-sm:data-overlay:aspect-auto sm:mx-0 sm:rounded-xl lg:mt-4 lg:rounded-2xl",
+              hideControls && "cursor-none",
+            )}
           >
             {current.video_url && !videoFailed && (
               <video
@@ -365,7 +388,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
 
             {hasVideo && (
               <>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-linear-to-b from-transparent to-black/75" />
+                <div
+                  className={cn(
+                    "pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-linear-to-b from-transparent to-black/75 transition-opacity duration-300",
+                    hideControls && "opacity-0",
+                  )}
+                />
                 <button
                   type="button"
                   onClick={toggle}
@@ -377,7 +405,12 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                 >
                   <PlayIcon size={28} className="text-background" />
                 </button>
-                <div className="text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5">
+                <div
+                  className={cn(
+                    "text-secondary-foreground absolute inset-x-2 bottom-1.5 flex items-center gap-1.5 text-xs tabular-nums transition-opacity duration-300 sm:inset-x-4 sm:bottom-3.5 sm:gap-3.5",
+                    hideControls && "pointer-events-none opacity-0",
+                  )}
+                >
                   <button type="button" onClick={toggle} aria-label={playing ? "Pause" : "Play"} className={CONTROL}>
                     {playing ? <Pause size={18} weight="fill" /> : <PlayIcon size={16} />}
                   </button>
