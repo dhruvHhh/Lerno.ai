@@ -7,7 +7,7 @@ import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
 import { api, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
-import { lastLanguage, saveLevel, savedCounts, savedLevel } from "@/lib/saved";
+import { lastLanguage, saveLevel, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -24,7 +24,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const COUNTER_FROM = 180;
 
 export default function NewLesson() {
-  const { lessons, usage, failed, reload } = useOutletContext<AppData>();
+  const { lessons, usage, failed, lastCounts, reload } = useOutletContext<AppData>();
   const navigate = useNavigate();
   // "Try again" on a failed lesson brings its topic and level here, in the box but not sent.
   const retry = useLocation().state as { topic: string; level: Level } | null;
@@ -36,7 +36,7 @@ export default function NewLesson() {
   const [tooShort, setTooShort] = useState(false);
 
   const limit = limitNotice(lessons, usage);
-  const newUser = lessons ? lessons.length === 0 : savedCounts().lessons === 0;
+  const newUser = lessons ? lessons.length === 0 : !lastCounts?.lessons;
 
   const submit = async () => {
     const topic = question.trim();
@@ -145,7 +145,7 @@ export default function NewLesson() {
         )}
       </section>
 
-      <ContinueWatching lessons={lessons} failed={failed} />
+      <ContinueWatching lessons={lessons} failed={failed} lastCounts={lastCounts} />
     </>
   );
 }

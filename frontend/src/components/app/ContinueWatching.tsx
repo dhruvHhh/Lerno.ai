@@ -6,7 +6,7 @@ import Thumbnail from "@/components/app/Thumbnail";
 import PlayIcon from "@/components/ui/play-icon";
 import { LEVELS, type Lesson, type Scene } from "@/lib/api";
 import { fetchLesson, storedLesson } from "@/lib/lessonStore";
-import { savedCounts, savedProgress } from "@/lib/saved";
+import { type LessonCounts, savedProgress } from "@/lib/saved";
 import { SETTLE_MS } from "@/lib/styles";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -15,9 +15,18 @@ const ROW = "grid gap-2.5 [grid-area:1/1] lg:grid-cols-3 lg:gap-4";
 const FRAME =
   "grid grid-cols-[112px_1fr] items-center gap-x-3 rounded-surface bg-white/2 p-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] lg:block lg:pb-3.5";
 
-export default function ContinueWatching({ lessons, failed }: { lessons: Lesson[] | null; failed: boolean }) {
-  // Placeholders only on a cold load, for as many cards as the last visit showed.
-  const [expected] = useState(() => (lessons ? 0 : Math.min(savedCounts().ready, CARDS)));
+export default function ContinueWatching({
+  lessons,
+  failed,
+  lastCounts,
+}: {
+  lessons: Lesson[] | null;
+  failed: boolean;
+  lastCounts: LessonCounts | null;
+}) {
+  // Placeholders only on a cold load, for as many cards as the last visit showed. None on a first visit: cards that
+  // vanish for a person with no lessons would move the page.
+  const [expected] = useState(() => (lessons ? 0 : Math.min(lastCounts?.ready ?? 0, CARDS)));
   const recent = lessons?.filter((lesson) => lesson.status === "ready").slice(0, CARDS) ?? [];
   if (lessons ? !recent.length : failed || !expected) return null;
 

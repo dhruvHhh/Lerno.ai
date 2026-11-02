@@ -22,13 +22,14 @@ export const savedLevel = () => read<Level>("lerno:level", "high_school");
 export const saveLevel = (level: Level) => write("lerno:level", level);
 
 // Known before the lesson list loads: the example chips never pop in late, and placeholders match what will come.
-interface LessonCounts {
+// Kept for each person, also after sign-out, so signing back in shows them too; only the numbers, never the lessons.
+export interface LessonCounts {
   lessons: number;
   ready: number;
 }
 
-export const savedCounts = () => read<LessonCounts>("lerno:lesson-counts", { lessons: 0, ready: 0 });
-export const saveCounts = (counts: LessonCounts) => write("lerno:lesson-counts", counts);
+export const savedCounts = (userId: string) => read<LessonCounts | null>(`lerno:lesson-counts:${userId}`, null);
+export const saveCounts = (userId: string, counts: LessonCounts) => write(`lerno:lesson-counts:${userId}`, counts);
 
 export const savedRail = () => read("lerno:sidebar-rail", false);
 export const saveRail = (rail: boolean) => write("lerno:sidebar-rail", rail);
@@ -43,16 +44,6 @@ export interface Progress {
 
 export const savedProgress = (lessonId: string) => read<Progress | null>(`lerno:progress:${lessonId}`, null);
 export const saveProgress = (lessonId: string, progress: Progress) => write(`lerno:progress:${lessonId}`, progress);
-
-// The next person on this browser must not see this person's placeholders. Watch progress stays: it is keyed by
-// lesson, which only its owner can open, and it is the only copy.
-export const forgetUser = () => {
-  try {
-    localStorage.removeItem("lerno:lesson-counts");
-  } catch {
-    // Nothing was kept.
-  }
-};
 
 export const savedScenesRail = () => read("lerno:scenes-rail", false);
 export const saveScenesRail = (rail: boolean) => write("lerno:scenes-rail", rail);

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import useAuth from "@/hooks/useAuth";
 import { api, isMaking, type Lesson, type Usage } from "@/lib/api";
-import { saveCounts } from "@/lib/saved";
+import { type LessonCounts, saveCounts, savedCounts } from "@/lib/saved";
 
 const POLL_MS = 5000;
 
@@ -9,6 +10,8 @@ export interface AppData {
   lessons: Lesson[] | null;
   usage: Usage | null;
   failed: boolean;
+  // From this person's last visit on this browser; null on their first.
+  lastCounts: LessonCounts | null;
   reload: () => Promise<void>;
 }
 
@@ -17,6 +20,10 @@ export default function useAppData(): AppData {
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [failed, setFailed] = useState(false);
+  // The app only shows to a signed-in person. Kept from the first render, as the user is gone during sign-out.
+  const { user } = useAuth();
+  const [userId] = useState(() => user!.id);
+  const [lastCounts] = useState(() => savedCounts(userId));
   // An answer that comes back after sign-out must not save the last person's counts again.
   const alive = useRef(true);
   useEffect(() => {
@@ -34,13 +41,16 @@ export default function useAppData(): AppData {
           if (!alive.current) return;
           setLessons(next);
           setFailed(false);
-          saveCounts({ lessons: next.length, ready: next.filter((lesson) => lesson.status === "ready").length });
+          saveCounts(userId, {
+            lessons: next.length,
+            ready: next.filter((lesson) => lesson.status === "ready").length,
+          });
         },
         () => setFailed(true),
       ),
       api<Usage>("/usage").then(setUsage, () => {}),
     ]);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     void reload();
@@ -54,5 +64,5 @@ export default function useAppData(): AppData {
     return () => clearInterval(timer);
   }, [making, reload]);
 
-  return { lessons, usage, failed, reload };
+  return { lessons, usage, failed, lastCounts, reload };
 }

@@ -8,13 +8,14 @@ import { LogoIcon } from "@/components/brand/Logo";
 import type { AppData } from "@/hooks/useAppData";
 import { isMaking, type Lesson } from "@/lib/api";
 import { prefetchLesson } from "@/lib/lessonStore";
-import { savedCounts } from "@/lib/saved";
 import { PRESS, RAISED_KEY, SETTLE_MS } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 const EmptyLessons = lazy(() => import("@/components/app/EmptyLessons"));
 
 const SKELETON_ROWS = 8;
+// A first visit on this browser has no count, so a few rows show it is loading.
+const UNKNOWN_ROWS = 3;
 // Uneven bars read as titles; equal ones read as a loading bar.
 const ROW_WIDTHS = [72, 54, 64, 46, 68, 58, 50, 62];
 
@@ -115,7 +116,9 @@ export default function Sidebar({ data, rail, onToggleRail, open, onClose }: Sid
 function LessonList({ data, onClose }: { data: AppData; onClose: () => void }) {
   const { pathname } = useLocation();
   // Placeholders only on a cold load, for as many rows as the last visit had.
-  const [expected] = useState(() => (data.lessons ? 0 : Math.min(savedCounts().lessons, SKELETON_ROWS)));
+  const [expected] = useState(() =>
+    data.lessons ? 0 : Math.min(data.lastCounts?.lessons ?? UNKNOWN_ROWS, SKELETON_ROWS),
+  );
   const failed = data.failed && !data.lessons;
 
   return (
