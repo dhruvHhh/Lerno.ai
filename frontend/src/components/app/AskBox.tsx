@@ -14,12 +14,23 @@ interface AskBoxProps {
   onSubmit: () => void;
   examples: string[];
   locked: boolean;
+  // Sent and waiting for the server's answer.
+  busy: boolean;
   vanishing: boolean;
   onVanished: () => void;
 }
 
 // Based on Aceternity's "Placeholders and Vanish Input", in Lerno's field style.
-export default function AskBox({ value, onChange, onSubmit, examples, locked, vanishing, onVanished }: AskBoxProps) {
+export default function AskBox({
+  value,
+  onChange,
+  onSubmit,
+  examples,
+  locked,
+  busy,
+  vanishing,
+  onVanished,
+}: AskBoxProps) {
   const reduceMotion = useReducedMotion();
   const [example, setExample] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -86,7 +97,7 @@ export default function AskBox({ value, onChange, onSubmit, examples, locked, va
       <canvas ref={canvas} className="pointer-events-none absolute top-0 left-0 z-[3]" />
       <button
         type="submit"
-        aria-label="Make lesson"
+        aria-label={busy ? "Checking your question" : "Make lesson"}
         className={cn(
           "group/send absolute top-2 right-2 z-[4] grid size-9 place-items-center rounded-full sm:size-10",
           "ease-snappy transition-[background-color,color,box-shadow,scale] duration-300 active:scale-94",
@@ -95,14 +106,18 @@ export default function AskBox({ value, onChange, onSubmit, examples, locked, va
             : "text-muted-foreground bg-[#1a1c26]",
         )}
       >
-        <ArrowRight
-          size={18}
-          weight="bold"
-          className={cn(
-            "ease-snappy transition-transform duration-[350ms]",
-            value && "group-hover/send:translate-x-0.5",
-          )}
-        />
+        {busy ? (
+          <span className="border-background/25 border-t-background size-4 animate-spin rounded-full border-2" />
+        ) : (
+          <ArrowRight
+            size={18}
+            weight="bold"
+            className={cn(
+              "ease-snappy transition-transform duration-[350ms]",
+              value && "group-hover/send:translate-x-0.5",
+            )}
+          />
+        )}
       </button>
     </form>
   );

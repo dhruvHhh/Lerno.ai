@@ -1,6 +1,8 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.auth import current_user
 from app.config import (
@@ -21,9 +23,10 @@ from app.db import (
     thumbnail_path,
 )
 from app.schemas import Language, LessonCreate, VoiceCreate
-from app.services import dub
+from app.services import dub, llm
 
 router = APIRouter(prefix="/lessons")
+log = logging.getLogger(__name__)
 
 LESSON_FIELDS = ("id", "topic", "title", "audience", "status", "step", "error", "created_at")
 SCENE_FIELDS = (
@@ -57,6 +60,14 @@ def _thumbnail_url(lesson_id: str, position: int) -> str:
 
 @router.post("", status_code=201)
 def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(current_user)):
+    # Before the insert, so a topic turned away is never saved and never counts toward the limits.
+    check = llm.check_topic(body.topic)
+    if check and not check.is_maths:
+        # Kept in the log, so wrong refusals can be found and the rule improved.
+        log.warning("Not a maths topic: %r, suggested %r", body.topic, check.suggestion)
+        return JSONResponse(
+            {"detail": "Lerno makes maths lessons only.", "suggestion": check.suggestion}, status_code=422
+        )
     fields = body.model_dump(exclude={"language"})
     lesson_id = db.table("lessons").insert({"user_id": user_id, **fields}).execute().data[0]["id"]
     # Counting after the insert stops parallel requests from slipping past the limits.

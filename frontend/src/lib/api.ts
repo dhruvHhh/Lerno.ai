@@ -58,9 +58,12 @@ export const isMaking = (lesson: Lesson) => lesson.status === "queued" || lesson
 // status is 0 when the server could not be reached at all.
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  // A topic the server offers in place of one it turned away.
+  suggestion?: string;
+  constructor(message: string, status: number, suggestion?: string) {
     super(message);
     this.status = status;
+    this.suggestion = suggestion;
   }
 }
 
@@ -79,7 +82,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const message = typeof body?.detail === "string" ? body.detail : "Something went wrong. Please try again.";
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, body?.suggestion);
   }
   return response.status === 204 ? (undefined as T) : response.json();
 }

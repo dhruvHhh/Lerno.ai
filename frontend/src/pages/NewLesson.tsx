@@ -6,7 +6,7 @@ import ContinueWatching from "@/components/app/ContinueWatching";
 import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
-import { api, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
+import { api, ApiError, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
 import { lastLanguage, saveLevel, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +33,7 @@ export default function NewLesson() {
   const [sending, setSending] = useState(false);
   const [madeId, setMadeId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [suggestion, setSuggestion] = useState("");
   const [tooShort, setTooShort] = useState(false);
 
   const limit = limitNotice(lessons, usage);
@@ -44,6 +45,7 @@ export default function NewLesson() {
     if (topic.length < 3) return setTooShort(true);
     setSending(true);
     setError("");
+    setSuggestion("");
     try {
       // The last voice the user picked is made with the lesson, so it is ready when they open it.
       const language = lastLanguage();
@@ -57,6 +59,7 @@ export default function NewLesson() {
     } catch (failure) {
       // The question stays in the box, so the user can try again without typing it twice.
       setError((failure as Error).message);
+      setSuggestion(failure instanceof ApiError ? (failure.suggestion ?? "") : "");
       setSending(false);
       void reload();
     }
@@ -114,6 +117,7 @@ export default function NewLesson() {
             onSubmit={submit}
             examples={EXAMPLES}
             locked={sending || !!limit}
+            busy={sending && !madeId}
             vanishing={!!madeId}
             onVanished={openLesson}
           />
@@ -139,7 +143,27 @@ export default function NewLesson() {
                 )}
               </>
             ) : (
-              error
+              <>
+                {error}
+                {suggestion && (
+                  <>
+                    {" "}
+                    Try: <b className="text-foreground font-medium">{suggestion}</b>{" "}
+                    {/* Into the box, not sent: the student reads it before it costs a lesson. */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        type(suggestion);
+                        setError("");
+                        setSuggestion("");
+                      }}
+                      className="text-accent-soft hover:text-foreground cursor-pointer underline underline-offset-2"
+                    >
+                      Use this
+                    </button>
+                  </>
+                )}
+              </>
             )}
           </p>
         )}
