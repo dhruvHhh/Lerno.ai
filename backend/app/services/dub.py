@@ -105,12 +105,10 @@ def _dub_scene(scene: dict, language: str) -> dict:
         took["retry"] = lap()
     tempos = [clip.seconds / slot for clip, slot in zip(clips, slots)]
     clips = [_faster(clip, tempo) for clip, tempo in zip(clips, tempos)]
-    matched = all(len(clip.word_ms) == len(text.split()) for clip, text in zip(clips, texts))
     spoken = Voice(
         [Sentence(text, start, start + clip.seconds) for text, start, clip in zip(texts, starts, clips)],
         [clip.samples for clip in clips],
         [clip.word_ms for clip in clips],
-        matched,
     )
     # The slots already hold the pauses, so the track adds none of its own.
     track = voice.track(spoken, {}, pause=array.array("h"))

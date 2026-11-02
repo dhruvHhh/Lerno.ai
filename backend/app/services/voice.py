@@ -42,8 +42,6 @@ class Voice(NamedTuple):
     # Each sentence's speech with Murf's silence cut, and where its words start in it.
     clips: list[array.array]
     word_ms: list[list[int]]
-    # False if Murf's words did not match ours, so there is no word highlight.
-    matched: bool
 
 
 class Clip(NamedTuple):
@@ -59,7 +57,7 @@ class Clip(NamedTuple):
 class Track(NamedTuple):
     wav: bytes
     seconds: float
-    word_starts_ms: list[int] | None
+    word_starts_ms: list[int]
 
 
 def split_sentences(narration: str) -> list[str]:
@@ -98,12 +96,13 @@ def to_wav(samples: array.array) -> bytes:
 
 def _align(text: str, words: list[dict]) -> list[int]:
     # Murf splits joined words ("ऊपर-नीचे" comes back as two) and returns punctuation as words of its own, so each of
-    # our words takes as many of Murf's as it needs to spell it. Empty when they do not spell the same text.
-    spoken = [(NOT_LETTERS.sub("", word["word"]), word["startMs"]) for word in words]
+    # our words takes as many of Murf's as it needs to spell it. Case is ignored: Murf writes "A" as "a". Empty when
+    # they do not spell the same text.
+    spoken = [(NOT_LETTERS.sub("", word["word"]).casefold(), word["startMs"]) for word in words]
     spoken = [(letters, ms) for letters, ms in spoken if letters]
     starts, k = [], 0
     for word in text.split():
-        target, spelled = NOT_LETTERS.sub("", word), ""
+        target, spelled = NOT_LETTERS.sub("", word).casefold(), ""
         if not target or k == len(spoken):
             return []
         starts.append(spoken[k][1])
@@ -135,27 +134,36 @@ def _speech(samples: array.array) -> tuple[int, int]:
     return loud[0], loud[-1] + window
 
 
+def _spread(text: str, seconds: float) -> list[int]:
+    # Each word gets a share of the clip by its length: close enough to light the words in step.
+    lengths = [len(word) + 1 for word in text.split()]
+    return [round(seconds * 1000 * sum(lengths[:k]) / sum(lengths)) for k in range(len(lengths))]
+
+
 def speak(text: str, language: str) -> Clip:
     # One Murf call per sentence: a sentence start inside a longer clip comes back about 0.2 s early.
     samples, starts = _speak(text, language)
     first, last = _speech(samples)
+    clip = samples[first:last]
+    # One sentence Murf spelled its own way must not cost the whole scene its word times, which the highlight and the
+    # other languages need.
+    if not starts:
+        log.warning("Murf words did not match, so the word times are spread: %s", text[:80])
+        return Clip(clip, _spread(text, len(clip) / SAMPLE_RATE))
     lead_ms = first * 1000 / SAMPLE_RATE
     # Murf puts the first word at 0 ms, inside the silence we cut.
-    return Clip(samples[first:last], [round(max(ms - lead_ms, 0)) for ms in starts])
+    return Clip(clip, [round(max(ms - lead_ms, 0)) for ms in starts])
 
 
 def _narrate(narration: str) -> Voice:
-    sentences, clips, word_ms, matched, at = [], [], [], True, 0.0
+    sentences, clips, word_ms, at = [], [], [], 0.0
     for text in split_sentences(narration):
         clip = speak(text, "en")
-        matched &= len(clip.word_ms) == len(text.split())
         clips.append(clip.samples)
         word_ms.append(clip.word_ms)
         sentences.append(Sentence(text, at, at + clip.seconds))
         at += clip.seconds + PAUSE_SECONDS
-    if not matched:
-        log.warning("Murf words did not match the narration, so no word highlight: %s", narration[:80])
-    return Voice(sentences, clips, word_ms, matched)
+    return Voice(sentences, clips, word_ms)
 
 
 def narrate(narration: str) -> Voice | None:
@@ -178,4 +186,4 @@ def track(voice: Voice, marks: dict[int, float], pause: array.array = PAUSE) -> 
         starts += [round(at * 1000 / SAMPLE_RATE) + ms for ms in word_ms]
         samples.extend(clip)
         samples.extend(pause)
-    return Track(to_wav(samples), len(samples) / SAMPLE_RATE, starts if voice.matched else None)
+    return Track(to_wav(samples), len(samples) / SAMPLE_RATE, starts)
