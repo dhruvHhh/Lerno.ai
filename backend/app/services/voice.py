@@ -3,6 +3,8 @@ import base64
 import io
 import logging
 import re
+import threading
+import time
 import wave
 from typing import NamedTuple
 
@@ -12,6 +14,10 @@ from app.config import MURF_API_KEY
 
 MURF_URL = "https://api.murf.ai/v1/speech/generate"
 MURF_SECONDS = 60
+# Our Murf plan takes 5 calls at a time. Another job on another machine can still go over, so a refused call waits
+# and tries again.
+_murf_slots = threading.BoundedSemaphore(5)
+MURF_TRIES = 3
 VOICES = {
     "en": {"voiceId": "en-IN-isha", "locale": "en-IN", "style": "Narration"},
     "hi": {"voiceId": "hi-IN-shweta", "locale": "hi-IN"},
@@ -74,9 +80,16 @@ def estimate(narration: str) -> list[Sentence]:
 
 
 def _post(body: dict) -> dict:
-    response = httpx.post(MURF_URL, headers={"api-key": MURF_API_KEY}, json=body, timeout=MURF_SECONDS)
-    response.raise_for_status()
-    return response.json()
+    for attempt in range(1, MURF_TRIES + 1):
+        try:
+            with _murf_slots:
+                response = httpx.post(MURF_URL, headers={"api-key": MURF_API_KEY}, json=body, timeout=MURF_SECONDS)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError:
+            if attempt == MURF_TRIES:
+                raise
+            time.sleep(attempt)
 
 
 def from_wav(wav: bytes) -> array.array:
@@ -119,10 +132,7 @@ def _speak(text: str, language: str) -> tuple[array.array, list[int]]:
     # Murf keeps the words as written only in English; other languages already come back as written.
     if language == "en":
         body["wordDurationsAsOriginalText"] = True
-    try:
-        data = _post(body)
-    except httpx.HTTPError:
-        data = _post(body)
+    data = _post(body)
     samples = from_wav(base64.b64decode(data["encodedAudio"]))
     return samples, _align(text, data["wordDurations"])
 

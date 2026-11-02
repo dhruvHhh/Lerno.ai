@@ -86,6 +86,12 @@ def _translate(language: str, english: list[str], slots: list[float], too_long: 
     return texts
 
 
+def _speak_all(texts: list[str], language: str) -> list[Clip]:
+    # All sentences at once; voice keeps the calls within Murf's limit.
+    with ThreadPoolExecutor() as pool:
+        return list(pool.map(partial(voice.speak, language=language), texts))
+
+
 def _dub_scene(scene: dict, language: str) -> dict:
     lap, took = _stopwatch(), {}
     # The translation is written for the English speaking time, which is the gap to the next sentence less its pause.
@@ -95,13 +101,14 @@ def _dub_scene(scene: dict, language: str) -> dict:
     slots = [seconds + EXTRA_SECONDS for seconds in spoken]
     texts = _translate(language, english, spoken, [])
     took["translate"] = lap()
-    clips = [voice.speak(text, language) for text in texts]
+    clips = _speak_all(texts, language)
     took["speak"] = lap()
     too_long = [n for n, (clip, slot) in enumerate(zip(clips, slots), 1) if clip.seconds > slot * FASTEST]
     if too_long:
         shorter = _translate(language, english, spoken, too_long)
-        for n in too_long:
-            texts[n - 1], clips[n - 1] = shorter[n - 1], voice.speak(shorter[n - 1], language)
+        redone = _speak_all([shorter[n - 1] for n in too_long], language)
+        for n, clip in zip(too_long, redone):
+            texts[n - 1], clips[n - 1] = shorter[n - 1], clip
         took["retry"] = lap()
     tempos = [clip.seconds / slot for clip, slot in zip(clips, slots)]
     clips = [_faster(clip, tempo) for clip, tempo in zip(clips, tempos)]

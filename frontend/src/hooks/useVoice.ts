@@ -4,12 +4,12 @@ import { api, ApiError, type Language, type LessonWithScenes, type Scene, type S
 import { forgetLesson } from "@/lib/lessonStore";
 import { saveLanguage, saveLastLanguage, savedLanguage } from "@/lib/saved";
 
-const POLL_MS = 4000;
+const POLL_MS = 2000;
 
 type Voices = Partial<Record<Language, SceneVoice[]>>;
 
 // The narration language of one lesson. Picking one that is not made yet asks the server to make it, then asks about
-// it every 4 seconds. Only that language is fetched, so the lesson's own video links, and so the playing video, stay.
+// it every 2 seconds. Only that language is fetched, so the lesson's own video links, and so the playing video, stay.
 export default function useVoice(lesson: LessonWithScenes) {
   const [language, setLanguage] = useState<Language | "en">(() => {
     const saved = savedLanguage(lesson.id);

@@ -17,6 +17,10 @@ dub_image = (
     .add_local_python_source("app", ignore=["**/__pycache__/**"])
 )
 
+# Imported here, not in the job, so the memory snapshot holds the loaded code and a new machine skips loading it.
+with dub_image.imports():
+    from app.services import dub
+
 
 # The jobs' info lines (step times, speed-ups) are hidden by default; the request lines of httpx stay hidden.
 def _show_info() -> None:
@@ -33,11 +37,10 @@ def generate_lesson(lesson_id: str, language: str | None = None) -> None:
     pipeline.run(lesson_id, language, dub_lesson.spawn)
 
 
-# Must stay under VOICE_STALE_AFTER_MINUTES, so a job never outlives the "too slow" check.
-@app.function(image=dub_image, timeout=10 * 60)
+# Must stay under VOICE_STALE_AFTER_MINUTES, so a job never outlives the "too slow" check. Stays up 5 minutes after a
+# job, so a second language picked soon after does not wait for a new machine.
+@app.function(image=dub_image, timeout=10 * 60, enable_memory_snapshot=True, scaledown_window=5 * 60)
 def dub_lesson(lesson_id: str, language: str) -> None:
-    from app.services import dub
-
     _show_info()
     dub.run(lesson_id, language)
 
