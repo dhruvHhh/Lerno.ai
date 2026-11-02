@@ -14,6 +14,7 @@ const OPTIONS: [Language | "en", string][] = [
 ];
 export const LANGUAGE_NAMES: Record<Language, string> = { hi: "Hindi", ta: "Tamil", bn: "Bengali" };
 
+const GAP = 8;
 const ITEM =
   "text-secondary-foreground hover:text-foreground focus-visible:text-foreground flex h-8 w-full cursor-pointer items-center justify-between gap-3 rounded-tile px-2.5 text-left text-[13px] outline-none transition-colors duration-150 hover:bg-white/6 focus-visible:bg-white/6";
 
@@ -28,10 +29,19 @@ export default function VoicePicker({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const label = OPTIONS.find(([code]) => code === voice.language)![1];
   const name = voice.language === "en" ? "" : LANGUAGE_NAMES[voice.language];
+
+  // Opens up when the dock, fixed to the bottom of the screen, or the screen's edge leaves no room below.
+  const show = () => {
+    const floor = document.querySelector("[data-dock]")?.getBoundingClientRect().top ?? window.innerHeight;
+    const room = Math.min(floor, window.innerHeight) - trigger.current!.getBoundingClientRect().bottom;
+    setUp(room < menu.current!.offsetHeight + GAP);
+    setOpen(true);
+  };
 
   const close = (refocus: boolean) => {
     setOpen(false);
@@ -71,12 +81,12 @@ export default function VoicePicker({
         <button
           ref={trigger}
           type="button"
-          onClick={() => (open ? close(false) : setOpen(true))}
+          onClick={() => (open ? close(false) : show())}
           onKeyDown={(event) => {
             if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
             event.preventDefault();
             event.stopPropagation();
-            setOpen(true);
+            show();
           }}
           aria-haspopup="menu"
           aria-expanded={open}
@@ -101,7 +111,8 @@ export default function VoicePicker({
         inert={!open}
         onKeyDown={onKey}
         className={cn(
-          "rounded-row absolute top-full right-0 z-30 mt-1.5 w-[200px] origin-top-right bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
+          "rounded-row absolute right-0 z-30 w-[200px] bg-[#12131b] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.55)]",
+          up ? "bottom-full mb-1.5 origin-bottom-right" : "top-full mt-1.5 origin-top-right",
           "transition-[opacity,scale] duration-[140ms] ease-out",
           open ? "scale-100 opacity-100" : "pointer-events-none scale-[0.96] opacity-0",
         )}
