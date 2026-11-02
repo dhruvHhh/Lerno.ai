@@ -1,4 +1,4 @@
-import { CaretDown, Check } from "@phosphor-icons/react";
+import { CaretUpDown, Check } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import type useVoice from "@/hooks/useVoice";
@@ -97,10 +97,8 @@ export default function VoicePicker({
           )}
         >
           <span id="voice-value">{label}</span>
-          <CaretDown
-            size={12}
-            className={cn("text-muted-foreground transition-transform duration-150", open && "rotate-180")}
-          />
+          {/* Up and down: the menu opens either way, by the room on screen. */}
+          <CaretUpDown size={14} className="text-muted-foreground" />
         </button>
       </div>
 
