@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -10,6 +11,7 @@ from app.config import (
     DAILY_LESSON_LIMIT,
     DAILY_VOICE_LIMIT,
     GLOBAL_DAILY_LESSON_LIMIT,
+    LESSON_PAGE_SIZE,
     THUMBNAIL_BUCKET,
     VIDEO_BUCKET,
     VIDEO_URL_TTL_SECONDS,
@@ -82,9 +84,13 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
     return {"id": lesson_id}
 
 
+# A page older than `before`, not a page number, so a new lesson at the top never repeats one on the next page.
 @router.get("")
-def list_lessons(user_id: str = Depends(current_user)):
-    return db.table("lessons").select(*LESSON_FIELDS).eq("user_id", user_id).order("created_at", desc=True).execute().data
+def list_lessons(before: datetime | None = None, user_id: str = Depends(current_user)):
+    query = db.table("lessons").select(*LESSON_FIELDS).eq("user_id", user_id)
+    if before:
+        query = query.lt("created_at", before.isoformat())
+    return query.order("created_at", desc=True).limit(LESSON_PAGE_SIZE).execute().data
 
 
 @router.get("/{lesson_id}")

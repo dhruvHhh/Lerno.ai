@@ -1,5 +1,5 @@
 import { Plus, SidebarSimple, WarningCircle } from "@phosphor-icons/react";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import AccountMenu from "@/components/app/AccountMenu";
@@ -18,6 +18,9 @@ const SKELETON_ROWS = 8;
 const UNKNOWN_ROWS = 3;
 // Uneven bars read as titles; equal ones read as a loading bar.
 const ROW_WIDTHS = [72, 54, 64, 46, 68, 58, 50, 62];
+// The next page starts loading about 10 rows before the end, so a normal scroll never reaches the loading rows.
+const LOAD_AHEAD = "0px 0px 320px 0px";
+const MORE_ROWS = 3;
 
 export const ICON_BUTTON =
   "grid size-8 flex-none place-items-center rounded-tile text-muted-foreground transition-colors duration-300 hover:bg-white/5 hover:text-foreground";
@@ -162,23 +165,64 @@ function LessonList({ data, onClose }: { data: AppData; onClose: () => void }) {
             </li>
           );
         })}
+        {data.lessons && data.hasMore && data.more !== "failed" && <MoreRows onNear={data.loadMore} />}
+        {data.more === "failed" && (
+          <li>
+            <button
+              type="button"
+              onClick={data.loadMore}
+              className="text-muted-foreground hover:text-foreground px-2 py-1.5 text-xs whitespace-nowrap transition-colors"
+            >
+              Couldn't load more. Try again
+            </button>
+          </li>
+        )}
       </ul>
       {expected > 0 && (
         <Placeholder loading={!data.lessons && !data.failed} className="absolute inset-x-2 top-0">
           {Array.from({ length: expected }, (_, index) => (
-            <span key={index} className="flex h-8 items-center gap-2.5 px-2">
-              <span className="grid size-4 flex-none place-items-center">
-                <i className="size-1.5 rotate-45 rounded-[2px] bg-white/8" />
-              </span>
-              <i
-                className="h-2.5 rounded-full bg-white/6 motion-safe:animate-pulse"
-                style={{ width: `${ROW_WIDTHS[index % ROW_WIDTHS.length]}%`, animationDelay: `${index * 120}ms` }}
-              />
-            </span>
+            <SkeletonRow key={index} index={index} />
           ))}
         </Placeholder>
       )}
     </div>
+  );
+}
+
+function SkeletonRow({ index }: { index: number }) {
+  return (
+    <span className="flex h-8 items-center gap-2.5 px-2">
+      <span className="grid size-4 flex-none place-items-center">
+        <i className="size-1.5 rotate-45 rounded-[2px] bg-white/8" />
+      </span>
+      <i
+        className="h-2.5 rounded-full bg-white/6 motion-safe:animate-pulse"
+        style={{ width: `${ROW_WIDTHS[index % ROW_WIDTHS.length]}%`, animationDelay: `${index * 120}ms` }}
+      />
+    </span>
+  );
+}
+
+// Loading rows at the end of the list; coming near them asks for the next page.
+function MoreRows({ onNear }: { onNear: () => void }) {
+  const ref = useRef<HTMLLIElement>(null);
+  // A new observer after each page reports at once, so a list still too short to scroll keeps loading.
+  useEffect(() => {
+    const row = ref.current!;
+    const observer = new IntersectionObserver((entries) => entries[0].isIntersecting && onNear(), {
+      root: row.closest("ul"),
+      rootMargin: LOAD_AHEAD,
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [onNear]);
+
+  return (
+    <li ref={ref} aria-hidden>
+      {Array.from({ length: MORE_ROWS }, (_, index) => (
+        <SkeletonRow key={index} index={index} />
+      ))}
+    </li>
   );
 }
 

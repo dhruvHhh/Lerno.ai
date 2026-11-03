@@ -14,6 +14,8 @@ DAILY_LESSON_LIMIT = 3
 DAILY_ATTEMPT_LIMIT = 6
 GLOBAL_DAILY_LESSON_LIMIT = 50
 NOTES_PER_LESSON_LIMIT = 100
+# The sidebar loads lessons in pages of this size as the student scrolls.
+LESSON_PAGE_SIZE = 30
 TUTOR_MESSAGE_LIMIT = 20
 STALE_AFTER_MINUTES = 25
 # Languages a student adds to their lessons; a voice already made is free.
