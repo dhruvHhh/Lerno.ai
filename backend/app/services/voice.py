@@ -141,6 +141,9 @@ def _speech(samples: array.array) -> tuple[int, int]:
     # Murf pads each clip with silence; cut it so every gap between sentences is our pause.
     window = SAMPLE_RATE // 100
     loud = [i for i in range(0, len(samples), window) if max(map(abs, samples[i:i + window])) > LOUD]
+    # A clip that is quiet all through is kept whole: a bit of extra pause beats losing the scene's voice.
+    if not loud:
+        return 0, len(samples)
     return loud[0], loud[-1] + window
 
 

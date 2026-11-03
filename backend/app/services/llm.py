@@ -10,9 +10,11 @@ from app.services.voice import Sentence
 
 PLANNER = "claude-sonnet-5-5"
 TUTOR = "claude-haiku-5-5"
-CHECK_SECONDS = 5
+CHECK_SECONDS = 8
 
 client = Anthropic()
+# The student waits for the check, so it gets one short try; they can press the button again.
+checker = client.with_options(timeout=CHECK_SECONDS, max_retries=0)
 log = logging.getLogger(__name__)
 
 
@@ -39,20 +41,18 @@ def plan_lesson(topic: str, audience: str) -> LessonPlan:
         return _ask(prompt, LessonPlan, "high")
 
 
-def check_topic(topic: str) -> TopicCheck | None:
-    # The tutor's fast model, as the student waits. None when the check can't run: our outage never blocks a lesson.
-    try:
-        response = client.with_options(timeout=CHECK_SECONDS, max_retries=0).messages.parse(
-            model=TUTOR,
-            max_tokens=1000,
-            output_config={"effort": "low"},
-            messages=[{"role": "user", "content": prompts.topic_check_prompt(topic)}],
-            output_format=TopicCheck,
-        )
-        return response.parsed_output
-    except Exception:
-        log.exception("Topic check failed, so the topic is let through")
-        return None
+def check_topic(topic: str) -> TopicCheck:
+    # The tutor's fast model, as the student waits. Thinking counts toward max_tokens, so it has room to finish.
+    response = checker.messages.parse(
+        model=TUTOR,
+        max_tokens=2000,
+        output_config={"effort": "low"},
+        messages=[{"role": "user", "content": prompts.topic_check_prompt(topic)}],
+        output_format=TopicCheck,
+    )
+    if response.parsed_output is None:
+        raise RuntimeError(f"Topic check gave no answer (stop_reason={response.stop_reason})")
+    return response.parsed_output
 
 
 def write_manim(scene: ScenePlan, sentences: list[Sentence]) -> str:

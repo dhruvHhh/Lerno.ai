@@ -45,6 +45,19 @@ def count_last_24h(table: str, user_id: str | None = None) -> int:
     return _last_24h(table, user_id).execute().count
 
 
+def log_use(table: str, user_id: str, limit: int, message: str) -> str:
+    # Logging before counting stops parallel requests from slipping past the limit.
+    log_id = db.table(table).insert({"user_id": user_id}).execute().data[0]["id"]
+    if count_last_24h(table, user_id) > limit:
+        unlog_use(table, log_id)
+        raise HTTPException(429, message)
+    return log_id
+
+
+def unlog_use(table: str, log_id: str) -> None:
+    db.table(table).delete().eq("id", log_id).execute()
+
+
 def lessons_used(user_id: str) -> int:
     # Failed lessons are free: they don't count against the user's daily limit.
     return _last_24h("lessons", user_id).neq("status", "failed").execute().count

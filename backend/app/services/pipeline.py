@@ -132,11 +132,13 @@ def expire_stale_lessons() -> None:
     )
 
 
-def delete_old_tutor_logs() -> None:
-    db.table("tutor_messages").delete().lt("created_at", window_start()).execute()
+def delete_old_logs() -> None:
+    # The limit logs only matter for 24 hours.
+    for table in ("tutor_messages", "topic_checks"):
+        db.table(table).delete().lt("created_at", window_start()).execute()
 
 
 def clean_up() -> None:
     expire_stale_lessons()
     dub.expire_stale_voices()
-    delete_old_tutor_logs()
+    delete_old_logs()

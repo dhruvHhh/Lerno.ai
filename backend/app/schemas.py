@@ -98,4 +98,4 @@ class Translation(BaseModel):
 class TopicCheck(BaseModel):
     is_maths: bool
     # A pure maths topic close to the one asked, offered to the student when the answer is no.
-    suggestion: str
+    suggestion: str | None = None

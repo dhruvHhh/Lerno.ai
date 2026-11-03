@@ -5,7 +5,7 @@ import { api, isMaking, type Lesson, type Usage } from "@/lib/api";
 import { type LessonCounts, saveCounts, savedCounts } from "@/lib/saved";
 
 const POLL_MS = 5000;
-// LESSON_PAGE_SIZE in the backend's config.py: a shorter page means the oldest lesson is loaded.
+// Asked for with each page, so a shorter page means the oldest lesson is loaded.
 const PAGE_SIZE = 30;
 
 export interface AppData {
@@ -44,7 +44,7 @@ export default function useAppData(): AppData {
   // Two requests, so a slow usage count never holds back the lesson list.
   const reload = useCallback(async () => {
     await Promise.all([
-      api<Lesson[]>("/lessons").then(
+      api<Lesson[]>(`/lessons?limit=${PAGE_SIZE}`).then(
         (next) => {
           if (!alive.current) return;
           setLessons((loaded) => withOlder(next, loaded));
@@ -65,11 +65,11 @@ export default function useAppData(): AppData {
     void reload();
   }, [reload]);
 
-  const oldest = lessons?.at(-1)?.created_at;
+  const oldest = lessons?.at(-1)?.id;
   const loadMore = useCallback(() => {
     if (!oldest || !hasMore || more === "loading") return;
     setMore("loading");
-    api<Lesson[]>(`/lessons?before=${encodeURIComponent(oldest)}`).then(
+    api<Lesson[]>(`/lessons?limit=${PAGE_SIZE}&before=${oldest}`).then(
       (page) => {
         if (!alive.current) return;
         setLessons((loaded) => [...loaded!, ...page]);
@@ -91,9 +91,10 @@ export default function useAppData(): AppData {
   return { lessons, usage, failed, lastCounts, reload, hasMore, more, loadMore };
 }
 
-// A reload gets the newest page only, so the older pages already loaded stay below it.
+// A reload gets the newest page only, so the older pages already loaded stay below it. Joined by id: a date in the
+// browser loses the database's microseconds.
 function withOlder(newest: Lesson[], loaded: Lesson[] | null) {
   if (!loaded || newest.length < PAGE_SIZE) return newest;
-  const end = Date.parse(newest.at(-1)!.created_at);
-  return [...newest, ...loaded.filter((lesson) => Date.parse(lesson.created_at) < end)];
+  const end = loaded.findIndex((lesson) => lesson.id === newest.at(-1)!.id);
+  return end < 0 ? newest : [...newest, ...loaded.slice(end + 1)];
 }

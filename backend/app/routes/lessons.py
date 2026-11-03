@@ -1,8 +1,7 @@
 import logging
-from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 from app.auth import current_user
@@ -11,8 +10,9 @@ from app.config import (
     DAILY_LESSON_LIMIT,
     DAILY_VOICE_LIMIT,
     GLOBAL_DAILY_LESSON_LIMIT,
-    LESSON_PAGE_SIZE,
+    LESSON_PAGE_LIMIT,
     THUMBNAIL_BUCKET,
+    TOPIC_CHECK_LIMIT,
     VIDEO_BUCKET,
     VIDEO_URL_TTL_SECONDS,
 )
@@ -21,8 +21,10 @@ from app.db import (
     db,
     lesson_scenes,
     lessons_used,
+    log_use,
     owned_lesson,
     thumbnail_path,
+    unlog_use,
 )
 from app.schemas import Language, LessonCreate, VoiceCreate
 from app.services import dub, llm
@@ -62,9 +64,24 @@ def _thumbnail_url(lesson_id: str, position: int) -> str:
 
 @router.post("", status_code=201)
 def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(current_user)):
-    # Before the insert, so a topic turned away is never saved and never counts toward the limits.
-    check = llm.check_topic(body.topic)
-    if check and not check.is_maths:
+    # Checked first, so a student over the limit hears it at once, without waiting for the topic check.
+    if error := _limit_error(user_id):
+        raise HTTPException(429, error)
+    log_id = log_use(
+        "topic_checks",
+        user_id,
+        TOPIC_CHECK_LIMIT,
+        f"You can try {TOPIC_CHECK_LIMIT} topics every 24 hours. Please try again later.",
+    )
+    # Before the insert, so a topic turned away is never saved. With no answer, nothing is made: a lesson needs the
+    # same AI anyway.
+    try:
+        check = llm.check_topic(body.topic)
+    except Exception:
+        log.exception("Topic check failed")
+        unlog_use("topic_checks", log_id)
+        raise HTTPException(503, "We couldn't check this topic. Please try again.")
+    if not check.is_maths:
         # Kept in the log, so wrong refusals can be found and the rule improved.
         log.warning("Not a maths topic: %r, suggested %r", body.topic, check.suggestion)
         return JSONResponse(
@@ -84,13 +101,19 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
     return {"id": lesson_id}
 
 
-# A page older than `before`, not a page number, so a new lesson at the top never repeats one on the next page.
+# The page after lesson `before`, not a page number, so a new lesson at the top never repeats one on the next page.
 @router.get("")
-def list_lessons(before: datetime | None = None, user_id: str = Depends(current_user)):
+def list_lessons(
+    before: UUID | None = None,
+    limit: int = Query(LESSON_PAGE_LIMIT, ge=1, le=LESSON_PAGE_LIMIT),
+    user_id: str = Depends(current_user),
+):
     query = db.table("lessons").select(*LESSON_FIELDS).eq("user_id", user_id)
     if before:
-        query = query.lt("created_at", before.isoformat())
-    return query.order("created_at", desc=True).limit(LESSON_PAGE_SIZE).execute().data
+        # The id breaks ties, so two lessons made in the same instant are never skipped.
+        at = owned_lesson(before, user_id, ("created_at",))["created_at"]
+        query = query.or_(f'created_at.lt."{at}",and(created_at.eq."{at}",id.lt.{before})')
+    return query.order("created_at", desc=True).order("id", desc=True).limit(limit).execute().data
 
 
 @router.get("/{lesson_id}")

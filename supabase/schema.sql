@@ -71,13 +71,22 @@ create table tutor_messages (
 );
 create index tutor_messages_user_created on tutor_messages (user_id, created_at);
 
+create table topic_checks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index topic_checks_user_created on topic_checks (user_id, created_at);
+
 -- Only the backend (service key) may touch these tables.
 alter table lessons enable row level security;
 alter table scenes enable row level security;
 alter table scene_voices enable row level security;
 alter table notes enable row level security;
 alter table tutor_messages enable row level security;
-grant select, insert, update, delete on lessons, scenes, scene_voices, notes, tutor_messages to service_role;
+alter table topic_checks enable row level security;
+grant select, insert, update, delete on lessons, scenes, scene_voices, notes, tutor_messages, topic_checks
+  to service_role;
 
 insert into storage.buckets (id, name, public) values ('videos', 'videos', false);
 -- Public so browsers can cache the thumbnails by a fixed link. Paths are lesson ids, which can't be guessed; listing and
