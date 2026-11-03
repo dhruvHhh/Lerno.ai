@@ -9,6 +9,7 @@ import GradientText from "@/components/brand/GradientText";
 import { SegmentedControl } from "@/components/ui/segmented-display";
 import type { AppData } from "@/hooks/useAppData";
 import { api, ApiError, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
+import { rememberMade } from "@/lib/lessonStore";
 import { lastLanguage, saveLevel, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 import { EASE_EXPO } from "@/lib/variants";
@@ -53,13 +54,14 @@ export default function NewLesson() {
     try {
       // The last voice the user picked is made with the lesson, so it is ready when they open it.
       const language = lastLanguage();
-      const { id } = await api<{ id: string }>("/lessons", {
+      const lesson = await api<Lesson>("/lessons", {
         method: "POST",
         body: JSON.stringify({ topic, audience: level, ...(language !== "en" && { language }) }),
       });
       saveLevel(level);
+      rememberMade(lesson);
       void reload();
-      setMadeId(id);
+      setMadeId(lesson.id);
     } catch (failure) {
       // The question stays in the box, so the user can try again without typing it twice.
       if (failure instanceof ApiError && failure.suggestion) setRefused({ topic, suggestion: failure.suggestion });

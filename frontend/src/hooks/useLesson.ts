@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ApiError, isMaking, type LessonWithScenes, type Status } from "@/lib/api";
-import { fetchLesson, storedLesson } from "@/lib/lessonStore";
+import { fetchLesson, forgetMade, madeLesson, storedLesson } from "@/lib/lessonStore";
 
 const POLL_MS = 3000;
 
@@ -21,14 +21,14 @@ interface LessonData extends LessonState {
 // Asks for the lesson every 3 seconds while it is being made. A hidden tab stops asking and asks again when it is seen.
 export default function useLesson(id: string): LessonData {
   const [stored] = useState(() => storedLesson(id));
-  const [state, setState] = useState<LessonState>({
-    lesson: stored,
-    firstStatus: stored?.status ?? null,
-    missing: false,
-    offline: false,
+  const [state, setState] = useState<LessonState>(() => {
+    const lesson = stored ?? madeLesson(id);
+    return { lesson, firstStatus: lesson?.status ?? null, missing: false, offline: false };
   });
 
   useEffect(() => {
+    // Used once: a later visit must ask, as the lesson has moved on since.
+    forgetMade(id);
     // A stored lesson is ready with fresh links; asking again would only swap the links and restart the video.
     if (stored) return;
     let active = true;

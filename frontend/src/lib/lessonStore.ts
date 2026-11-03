@@ -1,10 +1,19 @@
-import { api, type LessonWithScenes } from "@/lib/api";
+import { api, type Lesson, type LessonWithScenes } from "@/lib/api";
 
 // Video links last an hour, so a stored lesson is used only while its links still have time left.
 const FRESH_MS = 50 * 60 * 1000;
 
 const stored = new Map<string, { lesson: LessonWithScenes; at: number }>();
 const asking = new Map<string, Promise<LessonWithScenes>>();
+// A lesson just made, kept until its page opens, so the page shows the loader at once instead of asking first.
+const made = new Map<string, Lesson>();
+
+export const rememberMade = (lesson: Lesson) => made.set(lesson.id, lesson);
+export function madeLesson(id: string): LessonWithScenes | null {
+  const lesson = made.get(id);
+  return lesson ? { ...lesson, scenes: [] } : null;
+}
+export const forgetMade = (id: string) => made.delete(id);
 
 export function storedLesson(id: string) {
   const entry = stored.get(id);
@@ -27,7 +36,10 @@ export function fetchLesson(id: string) {
   return request;
 }
 
-export const forgetLessons = () => stored.clear();
+export const forgetLessons = () => {
+  stored.clear();
+  made.clear();
+};
 // After a change the stored copy doesn't have, such as a new voice, so the next visit asks again.
 export const forgetLesson = (id: string) => stored.delete(id);
 

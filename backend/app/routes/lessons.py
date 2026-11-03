@@ -89,21 +89,22 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
             {"detail": "Lerno makes maths lessons only.", "suggestion": check.suggestion}, status_code=422
         )
     fields = body.model_dump(exclude={"language"})
-    lesson_id = None
+    lesson = None
     try:
-        lesson_id = db.table("lessons").insert({"user_id": user_id, **fields}).execute().data[0]["id"]
+        lesson = db.table("lessons").insert({"user_id": user_id, **fields}).execute().data[0]
         # Counting after the insert stops parallel requests from slipping past the limits.
         if error := _limit_error(user_id):
             raise HTTPException(429, error)
         # The language the user last picked: its voice is made once the lesson is ready, so they don't wait for it.
-        request.app.state.start_generation(lesson_id, body.language)
+        request.app.state.start_generation(lesson["id"], body.language)
     except Exception:
         # No lesson was made, so the topic try is given back too.
-        if lesson_id:
-            db.table("lessons").delete().eq("id", lesson_id).execute()
+        if lesson:
+            db.table("lessons").delete().eq("id", lesson["id"]).execute()
         unlog_use("topic_checks", log_id)
         raise
-    return {"id": lesson_id}
+    # The whole lesson, so its page can show the loader at once instead of asking for it first.
+    return {field: lesson[field] for field in LESSON_FIELDS}
 
 
 # The page after lesson `before`, not a page number, so a new lesson at the top never repeats one on the next page.
