@@ -23,6 +23,14 @@
       html {
         background: #050609;
       }
+      /* Hidden before the stylesheet loads, so it never fades out on a page load. In Tailwind's base layer, so the
+         sign-out rule in index.css can still show it. */
+      @layer base {
+        #signing-out {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
     </style>
     <title>Lerno - Maths you can see</title>
   </head>

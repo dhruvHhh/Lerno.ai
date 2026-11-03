@@ -17,6 +17,8 @@ const AppShell = lazy(() => import("@/components/app/AppShell"));
 const NewLesson = lazy(() => import("@/pages/NewLesson"));
 const Lesson = lazy(() => import("@/pages/Lesson"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const Terms = lazy(() => import("@/pages/Terms"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
 
 const reduceMotion = prefersReducedMotion();
 
@@ -48,6 +50,8 @@ export default function App() {
                 </Route>
               </Route>
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
