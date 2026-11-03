@@ -48,9 +48,13 @@ def count_last_24h(table: str, user_id: str | None = None) -> int:
 def log_use(table: str, user_id: str, limit: int, message: str) -> str:
     # Logging before counting stops parallel requests from slipping past the limit.
     log_id = db.table(table).insert({"user_id": user_id}).execute().data[0]["id"]
-    if count_last_24h(table, user_id) > limit:
+    # A use turned away, or a count that failed, gives the try back.
+    try:
+        if count_last_24h(table, user_id) > limit:
+            raise HTTPException(429, message)
+    except Exception:
         unlog_use(table, log_id)
-        raise HTTPException(429, message)
+        raise
     return log_id
 
 

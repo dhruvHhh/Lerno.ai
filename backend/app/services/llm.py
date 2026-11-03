@@ -13,8 +13,8 @@ TUTOR = "claude-haiku-5-5"
 CHECK_SECONDS = 8
 
 client = Anthropic()
-# The student waits for the check, so it gets one short try; they can press the button again.
-checker = client.with_options(timeout=CHECK_SECONDS, max_retries=0)
+# The student waits for the check, so each try is short; one retry rides out a brief Haiku slowdown.
+checker = client.with_options(timeout=CHECK_SECONDS, max_retries=1)
 log = logging.getLogger(__name__)
 
 

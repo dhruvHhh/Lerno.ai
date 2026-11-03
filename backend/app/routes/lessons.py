@@ -40,12 +40,13 @@ SCENE_FIELDS = (
 VOICE_FIELDS = ("position", "language", "status", "narration", "word_starts_ms", "video_path")
 
 
-def _limit_error(user_id: str) -> str | None:
-    if lessons_used(user_id) > DAILY_LESSON_LIMIT:
+# `unsaved` is 1 before the new lesson is saved, so the counts include it either way.
+def _limit_error(user_id: str, unsaved: int = 0) -> str | None:
+    if lessons_used(user_id) + unsaved > DAILY_LESSON_LIMIT:
         return f"You can create {DAILY_LESSON_LIMIT} lessons every 24 hours. Please try again later."
-    if count_last_24h("lessons", user_id) > DAILY_ATTEMPT_LIMIT:
+    if count_last_24h("lessons", user_id) + unsaved > DAILY_ATTEMPT_LIMIT:
         return "Too many lessons failed in the last 24 hours. Please try again later."
-    if count_last_24h("lessons") > GLOBAL_DAILY_LESSON_LIMIT:
+    if count_last_24h("lessons") + unsaved > GLOBAL_DAILY_LESSON_LIMIT:
         return "Lerno is at capacity right now. Please try again later."
     return None
 
@@ -65,7 +66,7 @@ def _thumbnail_url(lesson_id: str, position: int) -> str:
 @router.post("", status_code=201)
 def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(current_user)):
     # Checked first, so a student over the limit hears it at once, without waiting for the topic check.
-    if error := _limit_error(user_id):
+    if error := _limit_error(user_id, unsaved=1):
         raise HTTPException(429, error)
     log_id = log_use(
         "topic_checks",
@@ -73,8 +74,8 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
         TOPIC_CHECK_LIMIT,
         f"You can try {TOPIC_CHECK_LIMIT} topics every 24 hours. Please try again later.",
     )
-    # Before the insert, so a topic turned away is never saved. With no answer, nothing is made: a lesson needs the
-    # same AI anyway.
+    # Before the insert, so a topic turned away is never saved. With no answer nothing is made, so the filter can't be
+    # skipped by an AI slowdown.
     try:
         check = llm.check_topic(body.topic)
     except Exception:
@@ -88,15 +89,19 @@ def create_lesson(body: LessonCreate, request: Request, user_id: str = Depends(c
             {"detail": "Lerno makes maths lessons only.", "suggestion": check.suggestion}, status_code=422
         )
     fields = body.model_dump(exclude={"language"})
-    lesson_id = db.table("lessons").insert({"user_id": user_id, **fields}).execute().data[0]["id"]
-    # Counting after the insert stops parallel requests from slipping past the limits.
+    lesson_id = None
     try:
+        lesson_id = db.table("lessons").insert({"user_id": user_id, **fields}).execute().data[0]["id"]
+        # Counting after the insert stops parallel requests from slipping past the limits.
         if error := _limit_error(user_id):
             raise HTTPException(429, error)
         # The language the user last picked: its voice is made once the lesson is ready, so they don't wait for it.
         request.app.state.start_generation(lesson_id, body.language)
     except Exception:
-        db.table("lessons").delete().eq("id", lesson_id).execute()
+        # No lesson was made, so the topic try is given back too.
+        if lesson_id:
+            db.table("lessons").delete().eq("id", lesson_id).execute()
+        unlog_use("topic_checks", log_id)
         raise
     return {"id": lesson_id}
 
