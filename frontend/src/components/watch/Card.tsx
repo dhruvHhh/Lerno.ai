@@ -13,8 +13,9 @@ interface CardProps {
   children: ReactNode;
 }
 
-// A floating panel the dock opens. It stays mounted when closed, so it can fade out and keep its scroll. On desktop it
-// sits beside the scenes panel, at the `--rail-edge` the lesson page sets.
+// A floating panel the dock opens. It stays mounted when closed, so it can fade out and keep its scroll. On a phone it
+// stops above the bar, so the tools can be switched; on desktop it sits beside the scenes panel, at the `--rail-edge`
+// the lesson page sets.
 export default function Card({ title, open, onClose, chip, footer, children }: CardProps) {
   return (
     <section
@@ -22,7 +23,7 @@ export default function Card({ title, open, onClose, chip, footer, children }: C
       aria-label={title}
       inert={!open}
       className={cn(
-        "rounded-panel fixed inset-x-2 bottom-2 z-40 flex h-[72vh] origin-bottom flex-col overflow-hidden lg:inset-x-auto lg:right-(--rail-edge) lg:bottom-24 lg:z-[29] lg:h-[min(540px,calc(100vh-140px))] lg:w-[380px] lg:origin-bottom-right",
+        "rounded-panel fixed inset-x-2 bottom-2 z-40 flex h-[72vh] origin-bottom flex-col overflow-hidden max-sm:bottom-16 lg:inset-x-auto lg:right-(--rail-edge) lg:bottom-24 lg:z-[29] lg:h-[min(540px,calc(100vh-140px))] lg:w-[380px] lg:origin-bottom-right",
         "bg-linear-to-b from-[rgba(20,18,33,0.985)] to-[rgba(10,10,18,0.99)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_0_0_1px_rgba(255,255,255,0.08),0_30px_80px_-20px_rgba(0,0,0,0.8)]",
         "ease-snappy transition-[opacity,scale,right] duration-[400ms]",
         open ? "opacity-100" : "pointer-events-none scale-[0.94] opacity-0",
