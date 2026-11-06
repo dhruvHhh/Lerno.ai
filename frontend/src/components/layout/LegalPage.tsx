@@ -29,7 +29,8 @@ export default function LegalPage({
 
   return (
     <>
-      <header className="bg-background sticky top-0 z-20 flex h-14 items-center justify-between px-6 sm:px-12">
+      {/* On wide screens Back hangs under the logo, in the empty margin beside the text; narrower, it stays in the bar. */}
+      <header className="bg-background sticky top-0 z-20 flex h-14 items-center px-6 sm:px-12">
         <Link to="/" aria-label="Lerno home" className="inline-block">
           <Logo />
         </Link>
@@ -40,7 +41,7 @@ export default function LegalPage({
             event.preventDefault();
             void navigate(-1);
           }}
-          className="text-secondary-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
+          className="text-secondary-foreground hover:text-foreground absolute top-1/2 right-6 flex -translate-y-1/2 items-center gap-1.5 text-sm transition-colors sm:right-12 xl:top-full xl:right-auto xl:left-12 xl:translate-y-2"
         >
           <ArrowLeft size={14} />
           Back

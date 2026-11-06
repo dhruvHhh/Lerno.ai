@@ -98,13 +98,7 @@ export function RailIndex({ sections, active, minutes, position, onJump }: Index
           <svg aria-hidden width={LINE_X * 2} height={shape.height} className="absolute top-0 left-0" fill="none">
             <path ref={wave} d={shape.path} stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} />
             <path ref={read} d={shape.path} stroke="var(--color-accent)" strokeWidth={1.5} strokeLinecap="round" />
-            <circle
-              ref={dot}
-              r={3.5}
-              fill="var(--color-accent-soft)"
-              stroke="var(--color-background)"
-              strokeWidth={2}
-            />
+            <circle ref={dot} r={5} fill="var(--color-accent-soft)" stroke="var(--color-background)" strokeWidth={2} />
           </svg>
         )}
         <ol ref={list} className="relative">
