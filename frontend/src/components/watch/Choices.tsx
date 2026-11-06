@@ -6,13 +6,15 @@ interface ChoicesProps {
   picked: number | undefined;
   onPick: (choice: number) => void;
   small?: boolean;
+  // Two columns when the parent is a wide enough @container, so all the answers fit in the video box.
+  wide?: boolean;
 }
 
 // Once a choice is picked, all lock: the right one turns green, a wrong pick turns red.
-export default function Choices({ choices, correct, picked, onPick, small }: ChoicesProps) {
+export default function Choices({ choices, correct, picked, onPick, small, wide }: ChoicesProps) {
   const answered = picked !== undefined;
   return (
-    <div className="grid gap-2">
+    <div className={cn("grid gap-2", wide && "@xl:grid-cols-2")}>
       {choices.map((choice, k) => (
         <button
           key={k}

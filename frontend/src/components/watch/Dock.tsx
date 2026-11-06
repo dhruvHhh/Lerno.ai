@@ -40,7 +40,8 @@ export default function Dock({ card, onPick }: DockProps) {
       ref={dock}
       data-dock
       className={cn(
-        "fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2 lg:bottom-[26px]",
+        // On a phone the hidden tools still take up room, which must not block taps on the page below them.
+        "fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2 max-sm:pointer-events-none lg:bottom-[26px]",
         "sm:rounded-surface sm:flex-row sm:gap-1 sm:bg-[rgba(14,13,24,0.86)] sm:p-1 sm:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)]",
         "ease-snappy transition-[right] duration-[450ms] lg:right-(--rail-edge)",
       )}
@@ -57,7 +58,7 @@ export default function Dock({ card, onPick }: DockProps) {
           aria-pressed={card === name}
           aria-keyshortcuts={key}
           className={cn(
-            "group rounded-row relative flex h-9 items-center gap-2 px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200",
+            "group rounded-row relative flex h-9 items-center gap-2 px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 max-sm:pointer-events-auto",
             card === name
               ? "bg-accent/16 text-foreground shadow-[inset_0_0_0_1px_rgba(155,124,255,0.35)]"
               : "text-secondary-foreground hover:text-foreground hover:bg-white/6",
@@ -81,7 +82,7 @@ export default function Dock({ card, onPick }: DockProps) {
         onClick={() => setOpen(!open)}
         aria-label={open ? "Close lesson tools" : "Lesson tools"}
         aria-expanded={open}
-        className="text-foreground grid size-[52px] place-items-center rounded-full bg-[rgba(14,13,24,0.9)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] sm:hidden"
+        className="text-foreground pointer-events-auto grid size-[52px] place-items-center rounded-full bg-[rgba(14,13,24,0.9)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.09),0_12px_32px_rgba(0,0,0,0.5)] sm:hidden"
       >
         <Plus
           size={20}
