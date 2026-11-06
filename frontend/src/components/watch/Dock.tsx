@@ -1,5 +1,6 @@
 import { ChatCircle, CheckCircle, NotePencil } from "@phosphor-icons/react";
 
+import { HINT } from "@/components/watch/shared";
 import { cn } from "@/lib/utils";
 
 export type CardName = "tutor" | "notes" | "quiz";
@@ -45,8 +46,7 @@ export default function Dock({ card, onPick }: DockProps) {
         >
           <Icon size={17} weight={card === name ? "fill" : "regular"} />
           {label}
-          {/* Shows after a short wait, so passing over the bar stays quiet. */}
-          <span className="text-muted-foreground pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 rounded-[7px] bg-[#16171f] px-2 py-1 text-[11px] font-normal whitespace-nowrap opacity-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-opacity duration-150 group-hover:opacity-100 group-hover:delay-500 max-sm:hidden">
+          <span className={HINT}>
             Press <kbd className="text-foreground font-sans">{key}</kbd>
           </span>
         </button>

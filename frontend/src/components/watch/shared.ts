@@ -17,6 +17,12 @@ export const FOLDED = "grid-rows-[0fr] opacity-0";
 
 export const DOCK_KEYS: Record<string, CardName> = { t: "tutor", n: "notes", q: "quiz" };
 
+export const NOTES_FULL = "This lesson has 100 notes. Delete one to add more.";
+
+// A small tip above a `group relative` button. It shows after a short wait, so passing over a control stays quiet.
+export const HINT =
+  "text-muted-foreground pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 rounded-[7px] bg-[#16171f] px-2 py-1 text-[11px] font-normal whitespace-nowrap opacity-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] transition-opacity duration-150 group-hover:opacity-100 group-hover:delay-500 max-sm:hidden";
+
 export const BUTTON =
   "text-secondary-foreground hover:text-foreground h-8 rounded-tile px-3.5 text-[13px] font-medium transition-[background-color,color,opacity] duration-250 hover:bg-white/6";
 export const SOLID =

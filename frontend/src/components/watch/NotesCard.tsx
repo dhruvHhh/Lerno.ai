@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { NotePencil } from "@phosphor-icons/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import ActionButton, { type ActionState } from "@/components/watch/ActionButton";
 import Card from "@/components/watch/Card";
-import { BUTTON, DONE_MS, FOLD, FOLD_MS, FOLDED, NOTE_MAX, SOLID, wait } from "@/components/watch/shared";
+import { BUTTON, DONE_MS, FOLD, FOLD_MS, FOLDED, NOTE_MAX, NOTES_FULL, SOLID, wait } from "@/components/watch/shared";
 import Stamp from "@/components/watch/Stamp";
 import type { Note } from "@/hooks/useNotes";
 import type { Scene } from "@/lib/api";
@@ -19,6 +20,11 @@ interface NotesCardProps {
   onDropped: (id: string) => void;
   // Notes picked from a marker on the bar: the card shows them and lights them once. `at` replays the light.
   focus: { ids: string[]; at: number } | null;
+  onAdd: () => void;
+  // The note box lives on the video, so a scene's quiz or a video that didn't load leaves nowhere to write.
+  canAdd: boolean;
+  full: boolean;
+  moment: ReactNode;
 }
 
 export default function NotesCard({
@@ -31,6 +37,10 @@ export default function NotesCard({
   onDelete,
   onDropped,
   focus,
+  onAdd,
+  canAdd,
+  full,
+  moment,
 }: NotesCardProps) {
   // Deleted notes fold away first, then leave the list. A scene whose notes are all folding folds with them.
   const [folding, setFolding] = useState<string[]>([]);
@@ -47,10 +57,28 @@ export default function NotesCard({
       open={open}
       onClose={onClose}
       chip={notes.length > 0 && <span className="text-accent-soft text-xs">{notes.length} saved</span>}
+      footer={
+        canAdd && (
+          <div className="flex-none border-t border-white/6 p-3.5">
+            {full ? (
+              <p className="text-muted-foreground px-1 text-center text-xs">{NOTES_FULL}</p>
+            ) : (
+              <button
+                type="button"
+                onClick={onAdd}
+                className="text-foreground rounded-tile focus-visible:ring-accent/60 flex h-10 w-full items-center justify-center gap-2 bg-white/8 text-[13px] font-medium transition-colors outline-none hover:bg-white/12 focus-visible:ring-2"
+              >
+                <NotePencil size={16} />
+                <span className="tabular-nums">Add a note at {moment}</span>
+              </button>
+            )}
+          </div>
+        )
+      }
     >
       {!notes.length && (
         <p className="text-muted-foreground px-2.5 py-8 text-center text-[13px]">
-          No notes yet. Use the note button in the player to save a thought at the current moment.
+          No notes yet.{canAdd && " Save a thought at the current moment."}
         </p>
       )}
       {notes.length > 0 && (

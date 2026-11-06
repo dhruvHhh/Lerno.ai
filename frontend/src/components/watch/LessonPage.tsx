@@ -10,7 +10,7 @@ import { CompleteOverlay, QuizOverlay } from "@/components/watch/Overlays";
 import QuizCard from "@/components/watch/QuizCard";
 import ScenesPanel from "@/components/watch/ScenesPanel";
 import Scrub from "@/components/watch/Scrub";
-import { DOCK_KEYS, SOLID, scoreOf } from "@/components/watch/shared";
+import { DOCK_KEYS, HINT, NOTES_FULL, SOLID, scoreOf } from "@/components/watch/shared";
 import TutorCard from "@/components/watch/TutorCard";
 import VoicePicker, { LANGUAGE_NAMES } from "@/components/watch/VoicePicker";
 import useFullscreen from "@/hooks/useFullscreen";
@@ -451,10 +451,11 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
                     onClick={openNotepad}
                     disabled={notesFull}
                     aria-label="Add a note"
-                    title={notesFull ? "This lesson has 100 notes. Delete one to add more." : undefined}
-                    className={cn(CONTROL, "disabled:cursor-default disabled:opacity-40")}
+                    title={notesFull ? NOTES_FULL : undefined}
+                    className={cn(CONTROL, "group relative disabled:cursor-default disabled:opacity-40")}
                   >
                     <NotePencil size={18} />
+                    {!notesFull && <span className={HINT}>Add a note</span>}
                   </button>
                   <button
                     type="button"
@@ -560,6 +561,10 @@ export default function LessonPage({ lesson, refresh, className }: LessonPagePro
         onDelete={notes.remove}
         onDropped={notes.drop}
         focus={notesFocus}
+        onAdd={openNotepad}
+        canAdd={hasVideo && !overlay}
+        full={notesFull}
+        moment={<Clock video={videoEl} />}
       />
       <QuizCard
         open={card === "quiz"}
@@ -677,7 +682,14 @@ function Narration({
   );
 }
 
+function Clock({ video }: { video: HTMLVideoElement | null }) {
+  return formatTime(useVideoTime(video, (v) => Math.floor(stampOf(v)), 0));
+}
+
 function Moment({ video, scene }: { video: HTMLVideoElement | null; scene: number }) {
-  const seconds = useVideoTime(video, (v) => Math.floor(stampOf(v)), 0);
-  return `Scene ${scene} · ${formatTime(seconds)}`;
+  return (
+    <>
+      Scene {scene} · <Clock video={video} />
+    </>
+  );
 }
