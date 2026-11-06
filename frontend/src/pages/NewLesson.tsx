@@ -45,6 +45,7 @@ export default function NewLesson() {
   const [refused, setRefused] = useState<{ topic: string; suggestion: string } | null>(null);
   const [tooShort, setTooShort] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const pickSuggestion = useRef<() => void>(null);
 
   const limit = limitNotice(lessons, usage);
   const newUser = lessons ? lessons.length === 0 : !lastCounts?.lessons;
@@ -52,6 +53,8 @@ export default function NewLesson() {
   const submit = async () => {
     const topic = question.trim();
     if (!topic || sending || limit) return;
+    // Sending the refused topic again would only spend a try.
+    if (refused) return pickSuggestion.current?.();
     if (topic.length < 3) return setTooShort(true);
     setSending(true);
     setError("");
@@ -140,7 +143,11 @@ export default function NewLesson() {
             inputRef={input}
             vanishing={!!madeId}
             onVanished={openLesson}
-            cover={refused && <TopicSuggestion key={refused.topic} {...refused} onTaken={takeSuggestion} />}
+            cover={
+              refused && (
+                <TopicSuggestion key={refused.topic} ref={pickSuggestion} {...refused} onTaken={takeSuggestion} />
+              )
+            }
           />
           {/* Right under the box, as a form shows a field's error, lined up with the box's text. */}
           <AnimatePresence initial={false}>

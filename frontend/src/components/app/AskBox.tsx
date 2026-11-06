@@ -102,7 +102,7 @@ export default function AskBox({
       <canvas ref={canvas} className="pointer-events-none absolute top-0 left-0 z-[3]" />
       <button
         type="submit"
-        aria-label={busy ? "Checking your question" : "Make lesson"}
+        aria-label={busy ? "Checking your question" : cover ? "Use the suggestion" : "Make lesson"}
         className={cn(
           "group/send absolute top-2 right-2 z-[4] grid size-9 place-items-center rounded-full sm:size-10",
           "ease-snappy transition-[background-color,color,box-shadow,scale] duration-300 active:scale-94",

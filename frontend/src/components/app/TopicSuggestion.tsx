@@ -1,6 +1,6 @@
 import { ArrowRight } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
-import { useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 
 import { EASE_EXPO } from "@/lib/variants";
 
@@ -9,11 +9,13 @@ interface TopicSuggestionProps {
   suggestion: string;
   // Called once the suggestion sits where the box draws its text, so the box can take over with no jump.
   onTaken: () => void;
+  // Lets the box's arrow and Enter pick the suggestion too.
+  ref?: Ref<() => void>;
 }
 
 // Drawn over the ask box's own text, in the same place and font: the topic it turned away is struck through, and the
 // maths topic offered sits beside it. Picking the offer slides it left into the text's place.
-export default function TopicSuggestion({ topic, suggestion, onTaken }: TopicSuggestionProps) {
+export default function TopicSuggestion({ topic, suggestion, onTaken, ref }: TopicSuggestionProps) {
   const reduceMotion = useReducedMotion();
   const row = useRef<HTMLDivElement>(null);
   const text = useRef<HTMLSpanElement>(null);
@@ -22,8 +24,10 @@ export default function TopicSuggestion({ topic, suggestion, onTaken }: TopicSug
 
   const take = () => {
     if (reduceMotion) return onTaken();
+    if (landing !== null) return;
     setLanding(row.current!.getBoundingClientRect().left - text.current!.getBoundingClientRect().left);
   };
+  useImperativeHandle(ref, () => take);
 
   const after = (delay: number) => ({
     initial: reduceMotion ? false : { opacity: 0, x: -4 },
