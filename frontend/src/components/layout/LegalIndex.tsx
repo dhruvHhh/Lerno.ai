@@ -14,7 +14,7 @@ interface IndexProps {
 
 const LINE_X = 12;
 const BEND_MIN = 2;
-const BEND_MAX = 11;
+const BEND_MAX = 7;
 
 const timeLeft = (minutes: number | null) => {
   if (minutes === null) return "";
@@ -24,13 +24,18 @@ const timeLeft = (minutes: number | null) => {
 // A wave down the list: the longer a section, the wider its bend, so the shape shows what is long before it is read.
 function drawWave(rows: number[], lengths: number[]) {
   const longest = Math.max(...lengths);
-  let path = `M${LINE_X} ${rows[0]}`;
-  for (let i = 0; i < rows.length - 1; i++) {
-    const bend = (BEND_MIN + (BEND_MAX - BEND_MIN) * (lengths[i] / longest)) * (i % 2 ? -1 : 1);
-    const step = (rows[i + 1] - rows[i]) / 3;
-    path += ` C${LINE_X + bend} ${rows[i] + step} ${LINE_X + bend} ${rows[i] + step * 2} ${LINE_X} ${rows[i + 1]}`;
-  }
-  return path;
+  const peaks = rows.slice(0, -1).map((row, i) => ({
+    x: LINE_X + (BEND_MIN + (BEND_MAX - BEND_MIN) * (lengths[i] / longest)) * (i % 2 ? -1 : 1),
+    y: (row + rows[i + 1]) / 2,
+  }));
+  const points = [{ x: peaks[0].x, y: rows[0] }, ...peaks, { x: peaks.at(-1)!.x, y: rows.at(-1)! }];
+  // The line runs straight down through every point, so each curve meets the next without a corner.
+  return points.reduce((path, point, i) => {
+    if (i === 0) return `M${point.x} ${point.y}`;
+    const before = points[i - 1];
+    const middle = (before.y + point.y) / 2;
+    return `${path} C${before.x} ${middle} ${point.x} ${middle} ${point.x} ${point.y}`;
+  }, "");
 }
 
 export function RailIndex({ sections, active, minutes, position, onJump }: IndexProps) {
