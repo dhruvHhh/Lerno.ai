@@ -29,28 +29,27 @@ export default function LegalPage({
 
   return (
     <>
-      {/* On wide screens Back hangs under the logo, in the empty margin beside the text; narrower, it stays in the bar. */}
       <header className="bg-background sticky top-0 z-20 flex h-14 items-center px-6 sm:px-12">
         <Link to="/" aria-label="Lerno home" className="inline-block">
           <Logo />
         </Link>
-        <Link
-          to="/"
-          onClick={(event) => {
-            if (!cameFromLerno) return;
-            event.preventDefault();
-            void navigate(-1);
-          }}
-          className="text-secondary-foreground hover:text-foreground absolute top-1/2 right-6 flex -translate-y-1/2 items-center gap-1.5 text-sm transition-colors sm:right-12 xl:top-full xl:right-auto xl:left-12 xl:translate-y-2"
-        >
-          <ArrowLeft size={14} />
-          Back
-        </Link>
       </header>
 
-      <main className="mx-auto grid max-w-[1040px] gap-16 px-6 pt-10 pb-24 sm:px-12 sm:pt-14 lg:grid-cols-[minmax(0,680px)_minmax(0,240px)] lg:justify-between">
+      <main className="mx-auto grid max-w-[1040px] gap-16 px-6 pt-8 pb-24 sm:px-12 sm:pt-10 lg:grid-cols-[minmax(0,680px)_minmax(0,240px)] lg:justify-between">
         <article className="min-w-0">
-          <h1 className="text-[32px] leading-tight font-semibold tracking-[-0.03em] sm:text-[40px]">{title}</h1>
+          <Link
+            to="/"
+            onClick={(event) => {
+              if (!cameFromLerno) return;
+              event.preventDefault();
+              void navigate(-1);
+            }}
+            className="text-secondary-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Back
+          </Link>
+          <h1 className="mt-4 text-[32px] leading-tight font-semibold tracking-[-0.03em] sm:text-[40px]">{title}</h1>
           <p className="text-muted-foreground mt-3 text-sm">Last updated {UPDATED}</p>
           <div className="text-secondary-foreground mt-8 text-[15px] leading-7">{intro}</div>
 
