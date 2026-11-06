@@ -1,3 +1,4 @@
+import { CaretDown } from "@phosphor-icons/react";
 import { AnimatePresence, m } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router";
@@ -6,13 +7,17 @@ import AskBox, { MAX_QUESTION } from "@/components/app/AskBox";
 import ContinueWatching from "@/components/app/ContinueWatching";
 import TopicSuggestion from "@/components/app/TopicSuggestion";
 import GradientText from "@/components/brand/GradientText";
-import { SegmentedControl } from "@/components/ui/segmented-display";
+import Picker from "@/components/ui/picker";
 import type { AppData } from "@/hooks/useAppData";
-import { api, ApiError, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
+import { api, ApiError, LEVEL_CLASSES, LEVELS, type Lesson, type Level, type Usage } from "@/lib/api";
 import { rememberMade } from "@/lib/lessonStore";
 import { lastLanguage, saveLevel, savedLevel } from "@/lib/saved";
 import { cn } from "@/lib/utils";
 import { EASE_EXPO } from "@/lib/variants";
+
+const LEVEL_OPTIONS = (Object.keys(LEVELS) as Level[]).map(
+  (level) => [level, `${LEVELS[level]}, ${LEVEL_CLASSES[level]}`] as const,
+);
 
 const EXAMPLES = [
   "Why is the area under y = x² from 0 to 2 equal to 8/3?",
@@ -97,7 +102,8 @@ export default function NewLesson() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(450px_260px_at_50%_26%,rgba(122,96,230,0.16),transparent)]" />
       <GraphPaper />
 
-      <section className="relative z-[1] mt-[12vh] w-full max-w-[640px] text-center lg:mt-[19vh]">
+      {/* Above the section below, which the level menu opens over. */}
+      <section className="relative z-[2] mt-[12vh] w-full max-w-[640px] text-center lg:mt-[19vh]">
         <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.03em] text-balance lg:text-[40px]">
           What do you want to <GradientText>understand?</GradientText>
         </h1>
@@ -154,7 +160,7 @@ export default function NewLesson() {
         </div>
 
         <div className="mt-3.5 flex flex-col items-center gap-2.5 px-1.5 sm:flex-row sm:justify-between sm:gap-4">
-          <SegmentedControl label="Level" options={LEVELS} value={level} onChange={setLevel} />
+          <Picker label="Explain it for" options={LEVEL_OPTIONS} value={level} onPick={setLevel} icon={CaretDown} />
           <span className={cn("text-xs tabular-nums", tooShort || full ? "text-danger" : "text-muted-foreground")}>
             {hint}
           </span>

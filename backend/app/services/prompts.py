@@ -5,9 +5,9 @@ from app.schemas import ScenePlan
 from app.services.voice import Sentence
 
 AUDIENCES = {
-    "school": "a school student",
-    "high_school": "a high school student",
-    "college": "a college student",
+    "school": "a school student in Class 6-8",
+    "high_school": "a high school student in Class 9-12",
+    "college": "a university student",
 }
 LANGUAGES = {"hi": "Hindi", "ta": "Tamil", "bn": "Bengali"}
 

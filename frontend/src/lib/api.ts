@@ -50,6 +50,12 @@ export interface Usage {
 }
 
 export const LEVELS: Record<Level, string> = { school: "School", high_school: "High school", college: "College" };
+// Who each level is for, in the words students use. The backend's AUDIENCES in prompts.py gives the AI the same ranges.
+export const LEVEL_CLASSES: Record<Level, string> = {
+  school: "Class 6–8",
+  high_school: "Class 9–12",
+  college: "University",
+};
 
 export type LessonWithScenes = Lesson & { scenes: Scene[] };
 
