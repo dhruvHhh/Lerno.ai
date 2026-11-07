@@ -35,6 +35,12 @@ const SECTIONS = [
             turned away because they were not maths. We use these to fix problems and improve Lerno.
           </li>
           <li>
+            <b>Visit counts:</b> Vercel Web Analytics counts visits to our pages. It records the page, the site you came
+            from, your approximate location, and your type of device, operating system and browser. It isn&apos;t linked
+            to your account, and lesson links are counted without the lesson&apos;s ID. The way it tells visitors apart
+            is discarded after 24 hours.
+          </li>
+          <li>
             <b>On your device only:</b> your browser keeps your settings and progress, such as where you stopped a
             video, your quiz answers and your chosen level. This stays in your browser and is not sent to us.
           </li>
@@ -86,7 +92,7 @@ const SECTIONS = [
             <b>Modal:</b> the servers that make lessons and voices.
           </li>
           <li>
-            <b>Vercel:</b> hosts the website.
+            <b>Vercel:</b> hosts the website and counts visits.
           </li>
           <li>
             <b>Anthropic (Claude):</b> the AI that writes lessons, checks that a topic is maths, translates narration,
@@ -167,9 +173,10 @@ const SECTIONS = [
     title: "Cookies and browser storage",
     body: (
       <p>
-        We don't use advertising or tracking cookies, and we don't use analytics tools that follow you. Lerno uses your
-        browser's storage only to keep you signed in and to remember your settings and progress. You can clear it in
-        your browser settings at any time; you will then be signed out and lose your saved progress on that device.
+        We don't use advertising or tracking cookies. Our visit counts don't use third-party cookies and don't build a
+        profile of you. Lerno uses your browser's storage only to keep you signed in and to remember your settings and
+        progress. You can clear it in your browser settings at any time; you will then be signed out and lose your saved
+        progress on that device.
       </p>
     ),
   },
@@ -180,8 +187,8 @@ const SECTIONS = [
       <p>
         Many Lerno users are school students. If you are under 18, you may use Lerno only with the permission of a
         parent or guardian, who should read this policy with you. We collect only what Lerno needs to work, and we never
-        show ads or track children&apos;s behaviour. A parent or guardian can ask us to see or delete a child&apos;s
-        data at {MAIL}.
+        show ads or build profiles of children. A parent or guardian can ask us to see or delete a child&apos;s data at{" "}
+        {MAIL}.
       </p>
     ),
   },

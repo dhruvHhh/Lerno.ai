@@ -1,3 +1,4 @@
+import { Analytics, type BeforeSendEvent } from "@vercel/analytics/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
@@ -15,10 +16,17 @@ window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
 });
 
+// Every lesson link counts as one page, and link data such as password reset codes never leaves.
+const countedUrl = (event: BeforeSendEvent) => {
+  const { origin, pathname } = new URL(event.url);
+  return { ...event, url: origin + (pathname.startsWith("/lesson/") ? "/lesson" : pathname) };
+};
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
+    <Analytics mode={import.meta.env.DEV ? "development" : "production"} beforeSend={countedUrl} />
   </StrictMode>,
 );
