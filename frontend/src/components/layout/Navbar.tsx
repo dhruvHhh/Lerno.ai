@@ -29,7 +29,7 @@ function NavActions() {
       <Link to="/login" className={LINK_CLASS}>
         Sign in
       </Link>
-      <CtaLink to="/signup">Get started</CtaLink>
+      <CtaLink to="/signup">Start for free</CtaLink>
     </>
   );
 }

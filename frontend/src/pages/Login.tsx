@@ -51,7 +51,7 @@ export default function Login() {
         <Message text={failure} error />
         <SubmitButton pending={pending}>{pending ? "Signing in…" : "Sign in"}</SubmitButton>
 
-        <AuthSwitch prompt="Don't have an account?" label="Sign up" to="/signup" />
+        <AuthSwitch prompt="Don't have an account?" label="Create account" to="/signup" />
       </AuthForm>
     </AuthLayout>
   );
