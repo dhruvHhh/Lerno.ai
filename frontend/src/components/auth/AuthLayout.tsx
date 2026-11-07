@@ -40,7 +40,7 @@ export default function AuthLayout({ shapes, children }: { shapes: ShapeSet; chi
         <Suspense>
           <MathSurface
             shapes={shapes}
-            className="overflow-hidden border-l border-white/8 bg-[#07080d] bg-[radial-gradient(80%_60%_at_50%_45%,rgba(155,124,255,0.14),transparent_70%)]"
+            className="sticky top-0 h-svh overflow-hidden border-l border-white/8 bg-[#07080d] bg-[radial-gradient(80%_60%_at_50%_45%,rgba(155,124,255,0.14),transparent_70%)]"
           />
         </Suspense>
       )}
