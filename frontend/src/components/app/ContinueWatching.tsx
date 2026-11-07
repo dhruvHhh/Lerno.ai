@@ -73,8 +73,10 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
 
   const progress = savedProgress(lesson.id);
   const current = progress?.scene ?? 1;
-  const shown = scenes.find((scene) => scene.position === current) ?? scenes.find((scene) => scene.thumbnail_url);
-  const duration = shown?.duration_seconds ?? 0;
+  const scene = scenes.find(({ position }) => position === current);
+  // A scene that couldn't animate has no picture, so another scene stands in.
+  const picture = scene?.thumbnail_url ?? scenes.find(({ thumbnail_url }) => thumbnail_url)?.thumbnail_url;
+  const duration = scene?.duration_seconds ?? 0;
   const watched =
     progress && scenes.length ? (current - 1 + (duration && Math.min(progress.time / duration, 1))) / scenes.length : 0;
 
@@ -91,9 +93,9 @@ function LessonCard({ lesson, enter, index }: { lesson: Lesson; enter: boolean; 
       style={{ animationDelay: `${SETTLE_MS + index * 70}ms` }}
     >
       <div className="rounded-tile relative row-span-2 aspect-video overflow-hidden bg-[#0a0b10]">
-        {shown?.thumbnail_url && (
+        {picture && (
           <Thumbnail
-            src={shown.thumbnail_url}
+            src={picture}
             className="opacity-85 transition-[opacity,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] group-hover:opacity-100"
           />
         )}
