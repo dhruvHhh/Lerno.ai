@@ -19,15 +19,31 @@ const LEVEL_OPTIONS = (Object.keys(LEVELS) as Level[]).map(
   (level) => [level, `${LEVELS[level]}, ${LEVEL_CLASSES[level]}`] as const,
 );
 
-const EXAMPLES = [
-  "Why is the area under y = x² from 0 to 2 equal to 8/3?",
-  "What does a derivative actually measure?",
-  "How do eigenvectors stay on their own line?",
-  "Why does the harmonic series never stop growing?",
-  "What is a Fourier series doing to a square wave?",
-];
-
-const CHIPS = ["Area under x² from 0 to 2", "What does a derivative measure?", "Why does e^(iπ) = −1?"];
+// The box cycles through a level's examples; a new user also gets the first few as buttons.
+const EXAMPLES: Record<Level, string[]> = {
+  school: [
+    "Why is the angle sum of a triangle 180°?",
+    "How do you find the area of a circle?",
+    "What does a negative number mean?",
+    "Why do we flip the fraction when we divide?",
+    "What does the Pythagoras theorem show?",
+  ],
+  high_school: [
+    "Why does the quadratic formula work?",
+    "What does a derivative measure?",
+    "How does the sine curve come from a circle?",
+    "Why is the area under y = x² from 0 to 2 equal to 8/3?",
+    "What is a logarithm actually doing?",
+  ],
+  college: [
+    "How do eigenvectors stay on their own line?",
+    "Why does e^(iπ) = −1?",
+    "What is a Fourier series doing to a square wave?",
+    "Why does the harmonic series never stop growing?",
+    "What does a determinant measure?",
+  ],
+};
+const CHIP_COUNT = 3;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const COUNTER_FROM = 180;
@@ -119,7 +135,7 @@ export default function NewLesson() {
             aria-label="Example questions"
             className="-mx-4 mt-5 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 sm:mx-0 sm:mt-[26px] sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
           >
-            {CHIPS.map((chip) => (
+            {EXAMPLES[level].slice(0, CHIP_COUNT).map((chip) => (
               <button
                 key={chip}
                 type="button"
@@ -137,7 +153,7 @@ export default function NewLesson() {
             value={question}
             onChange={type}
             onSubmit={submit}
-            examples={EXAMPLES}
+            examples={EXAMPLES[level]}
             locked={sending || !!limit}
             busy={sending && !madeId}
             inputRef={input}

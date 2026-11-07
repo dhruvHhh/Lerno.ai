@@ -74,7 +74,7 @@ export default function AskBox({
         <div className="text-muted-foreground pointer-events-none absolute inset-y-0 right-16 left-5 flex items-center overflow-hidden text-[15px] whitespace-nowrap sm:left-[26px] sm:text-base">
           <AnimatePresence mode="wait" initial={false}>
             <m.span
-              key={example}
+              key={examples[example]}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
