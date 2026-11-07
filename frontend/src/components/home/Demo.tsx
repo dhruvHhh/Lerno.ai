@@ -3,7 +3,9 @@ import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import LessonVideo from "@/components/lesson/LessonVideo";
+import VideoControls from "@/components/lesson/VideoControls";
 import { DEMO_LESSONS, type Lesson } from "@/content/demo-lessons";
+import useVideoControls from "@/hooks/useVideoControls";
 import { KEY } from "@/lib/styles";
 import { afterPageLoad, cn } from "@/lib/utils";
 import { EASE } from "@/lib/variants";
@@ -123,10 +125,10 @@ export default function Demo() {
                       onAnimationComplete={() => incoming && !loading && setOutgoing(null)}
                       className={cn("absolute inset-0", incoming && "z-10")}
                     >
-                      <LessonVideo
+                      <DemoClip
                         lesson={item}
                         onPlaying={incoming ? () => setLoading(false) : undefined}
-                        onTimeUpdate={incoming ? (event) => followScene(event.currentTarget.currentTime) : undefined}
+                        onSecond={incoming ? followScene : undefined}
                       />
                     </m.div>
                   );
@@ -193,5 +195,30 @@ export default function Demo() {
         </div>
       </div>
     </section>
+  );
+}
+
+interface DemoClipProps {
+  lesson: Lesson;
+  onPlaying?: () => void;
+  onSecond?: (second: number) => void;
+}
+
+function DemoClip({ lesson, onPlaying, onSecond }: DemoClipProps) {
+  const { videoRef, videoProps, controls } = useVideoControls(onSecond);
+  return (
+    <>
+      <LessonVideo
+        ref={videoRef}
+        lesson={lesson}
+        preload="metadata"
+        onClick={controls.toggle}
+        onPlaying={onPlaying}
+        {...videoProps}
+        className="cursor-pointer"
+      />
+      {/* A phone film is short: the full fade would dim almost half of the diagram. */}
+      <VideoControls controls={controls} className="max-sm:pt-3 max-sm:pb-1.5" />
+    </>
   );
 }
