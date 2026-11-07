@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useState } from "react";
 
 import AuthForm from "@/components/auth/AuthForm";
 import AuthLayout from "@/components/auth/AuthLayout";
@@ -15,19 +15,23 @@ import { supabase } from "@/lib/supabase";
 // The emailed link signs the reader in, so a session here means the link worked.
 export default function ResetPassword() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const [changed, setChanged] = useState(false);
 
   const { errors, failure, pending, clearError, submit } = useAuthForm(async (data) => {
     const { error } = await supabase.auth.updateUser({ password: String(data.get("password")) });
     if (error) return authMessage(error);
-    navigate("/new", { replace: true });
+    setChanged(true);
   });
 
   if (loading) return null;
 
   return (
     <AuthLayout shapes={SURFACES}>
-      {user ? (
+      {changed ? (
+        <Notice title="Password changed" link={{ label: "Continue to Lerno", to: "/new" }}>
+          Use your new password the next time you sign in.
+        </Notice>
+      ) : user ? (
         <AuthForm title="Set a new password" subtitle="Choose one you haven't used here before." onSubmit={submit}>
           <PasswordField
             label="New password"
@@ -43,7 +47,7 @@ export default function ResetPassword() {
           <SubmitButton pending={pending}>{pending ? "Saving…" : "Save password"}</SubmitButton>
         </AuthForm>
       ) : (
-        <Notice title="This link has expired" link={{ label: "Send a new link", to: "/forgot-password" }}>
+        <Notice title="This reset link doesn't work" link={{ label: "Send a new link", to: "/forgot-password" }}>
           Reset links work once and only for a short time. Ask for a new one and use it straight away.
         </Notice>
       )}
