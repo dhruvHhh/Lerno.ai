@@ -99,7 +99,7 @@ export function AskPanel() {
         <div className="flex items-center justify-between gap-3 border-t border-white/6 pt-5">
           <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <TimerIcon className="size-3.5" />
-            About 1 min · Animated
+            Ready in about 2 min · Animated
           </span>
           <m.span
             variants={press}

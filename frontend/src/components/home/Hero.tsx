@@ -9,7 +9,7 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 
 const VALUES = [
   { icon: StackIcon, label: "3 levels" },
-  { icon: TimerIcon, label: "1-minute lessons" },
+  { icon: TimerIcon, label: "Ready in about 2 minutes" },
   { icon: ChatCircleDotsIcon, label: "AI tutor" },
 ];
 
@@ -61,7 +61,7 @@ export default function Hero() {
           <DemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
         </div>
 
-        <ul className="text-foreground mt-10 flex justify-center gap-x-5 text-xs whitespace-nowrap sm:gap-x-6 sm:text-sm">
+        <ul className="text-foreground mt-10 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs whitespace-nowrap sm:gap-x-6 sm:text-sm">
           {VALUES.map(({ icon: Icon, label }, index) => (
             <li key={label} className="flex items-center gap-2">
               {index > 0 && <span aria-hidden="true" className="bg-border mr-4 hidden h-4 w-px sm:block" />}
