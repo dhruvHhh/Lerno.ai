@@ -168,9 +168,17 @@ export default function NewLesson() {
 
         <div className="mt-3.5 flex flex-col items-center gap-2.5 px-1.5 sm:flex-row sm:justify-between sm:gap-4">
           <Picker label="Explain it for" options={LEVEL_OPTIONS} value={level} onPick={setLevel} icon={CaretDown} />
-          <span className={cn("text-xs tabular-nums", tooShort || full ? "text-danger" : "text-muted-foreground")}>
-            {hint}
-          </span>
+          {hint && (
+            <span className={cn("text-xs tabular-nums", tooShort || full ? "text-danger" : "text-muted-foreground")}>
+              {hint}
+            </span>
+          )}
+          {/* Wide screens have this in the sidebar; here the sidebar is closed. */}
+          {usage && (
+            <span className="text-muted-foreground text-xs tabular-nums lg:hidden">
+              {Math.max(usage.limit - usage.used, 0)} of {usage.limit} lessons left
+            </span>
+          )}
         </div>
 
         {(limit || error) && (

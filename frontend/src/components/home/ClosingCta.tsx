@@ -23,7 +23,8 @@ export default function ClosingCta() {
           Start learning for free
         </CtaLink>
       </div>
-      <p className="text-secondary-foreground mt-4 text-sm">Free to start</p>
+      {/* The number is DAILY_LESSON_LIMIT in the server's config. */}
+      <p className="text-secondary-foreground mt-4 text-sm">Free to start: 3 lessons every 24 hours.</p>
     </section>
   );
 }
